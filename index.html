@@ -220,6 +220,12 @@ body[data-role="user"] .admin-only{ display:none !important; }
 /* user admin */
 .tag.st-pending{ background:#ffe08a; } .tag.st-approved{ background:#a6e3b8; } .tag.st-rejected{ background:#f3b0a6; }
 
+textarea.paste{ display:block; width:100%; min-height:130px; resize:vertical; padding:9px 10px; border:1px solid var(--line); border-radius:3px; background:var(--paper); color:var(--ink); font:12.5px/1.4 ui-monospace,Consolas,monospace; white-space:pre; overflow:auto; }
+#dlgImport{ width:min(680px, calc(100vw - 32px)); }
+#dlgImport .auth-tabs{ margin-bottom:14px; }
+#impBody table.data thead th:nth-child(2){ text-align:left; }
+table.sample{ font-size:12px; } table.sample th, table.sample td{ padding:3px 8px; }
+
 /* dialogs */
 dialog{ border:1px solid var(--line); border-radius:6px; padding:0; background:var(--surface); color:var(--ink); width:min(560px, calc(100vw - 32px)); }
 dialog::backdrop{ background:rgba(10,20,26,.5); }
@@ -310,8 +316,24 @@ dialog footer{ display:flex; justify-content:flex-end; gap:8px; padding:12px 20p
 </div>
 </div>
 
-<dialog id="dlgImport" aria-labelledby="impT"><header><h2 id="impT">นำเข้าข้อมูล</h2></header><div class="body" id="impBody"></div>
-  <footer><button class="btn" id="impCancel">ยกเลิก</button><button class="btn primary" id="impOk">นำเข้าเดือนที่เลือก</button></footer></dialog>
+<dialog id="dlgImport" aria-labelledby="impT"><header><h2 id="impT">นำเข้าข้อมูล</h2></header>
+  <div class="body">
+    <div id="impSrc">
+      <div class="auth-tabs" role="tablist" aria-label="แหล่งข้อมูล">
+        <button role="tab" id="impTabFile" aria-selected="true" aria-controls="impPaneFile">ไฟล์ Excel (.xlsx)</button>
+        <button role="tab" id="impTabPaste" aria-selected="false" aria-controls="impPanePaste">วางจาก Google Sheet</button>
+      </div>
+      <div id="impPaneFile" role="tabpanel"><p>เลือกไฟล์บันทึก Chiller รูปแบบเดิม (.xlsx / .xls / .xlsm)</p><button class="btn primary" id="impPick">เลือกไฟล์</button></div>
+      <div id="impPanePaste" role="tabpanel" hidden>
+        <label class="fld" for="impPaste">วางข้อมูลที่คัดลอกจากแท็บ Main_CHILLER (รวมแถวหัวคอลัมน์)</label>
+        <textarea id="impPaste" class="paste" rows="7" spellcheck="false" placeholder="ใน Google Sheet: คลิกที่ช่อง A1 → Ctrl+A → Ctrl+C แล้วกลับมาวางที่นี่ด้วย Ctrl+V"></textarea>
+        <div class="row" style="align-items:center;margin-top:8px"><button class="btn primary" id="impRead">อ่านข้อมูลที่วาง</button><span class="legend-note" id="impPasteInfo" style="margin:0"></span></div>
+        <p class="legend-note">ไม่ต้องเชื่อม Google Drive — แอปอ่านเฉพาะข้อความที่วางในช่องนี้ ไม่ได้เข้าถึงชีตของคุณ · ข้อมูลที่วางไม่ถูกส่งไปที่ใด</p>
+      </div>
+    </div>
+    <div id="impBody"></div>
+  </div>
+  <footer><button class="btn" id="impBack" hidden>เปลี่ยนแหล่งข้อมูล</button><button class="btn" id="impCancel">ยกเลิก</button><button class="btn primary" id="impOk" hidden>นำเข้าเดือนที่เลือก</button></footer></dialog>
 
 <dialog id="dlgExport" aria-labelledby="expT"><header><h2 id="expT">ส่งออกรายงาน</h2></header><div class="body">
   <fieldset class="opt"><legend>ขอบเขต</legend>
@@ -611,7 +633,8 @@ function toTimeStr(v, SSF){
   if(v==null) return '';
   if(v instanceof Date) return pad(v.getHours())+':'+pad(v.getMinutes())+':'+pad(v.getSeconds());
   if(typeof v==='number'){ let f=v-Math.floor(v); let s=Math.round(f*86400); return pad(Math.floor(s/3600)%24)+':'+pad(Math.floor(s%3600/60))+':'+pad(s%60); }
-  return String(v).trim();
+  const s=String(v).trim(), m=s.match(/^(\d{1,2})[:.](\d{2})(?:[:.](\d{2}))?/);
+  return m ? pad(m[1])+':'+m[2]+':'+(m[3]||'00') : s;
 }
 if(typeof module!=='undefined') module.exports = { toRecord, checkRecord, DEFAULT_FILTER, matrix, ctMatrix, bestPerMonth, bestGroups, beforeAfter, regressionModel, predictWith, equationText, ols, pT, FIELDS, CT_NAMES };
 
@@ -1082,7 +1105,7 @@ function viewData(v){
   <fieldset class="opt"><legend>สีตัวอักษร</legend><div class="themes">${TEXTS.map(t=>`<label class="tsw"><input type="radio" name="thTx" value="${t[0]}" ${th.text===t[0]?'checked':''}><div class="aa" style="color:${tcol[t[0]]};background:var(--paper);border-radius:4px;padding:4px 8px">Aa กขค 0.845</div><span>${t[1]}</span></label>`).join('')}</div>
   ${th.bg==='dark'?'<p class="legend-note">บนพื้นมืด ตัวอักษร “ดำ” จะแสดงเป็นสีขาวอ่อนเพื่อให้อ่านออก ส่วนสีส้มและน้ำเงินจะปรับเป็นโทนสว่าง</p>':''}</fieldset>
   <button class="btn small" id="thReset">คืนค่าสีเริ่มต้น</button></section>
-  ${isAdmin?`<section class="panel"><div class="drop" id="drop"><p><b>ลากไฟล์ .xlsx มาวางที่นี่</b> หรือ <button class="btn primary" id="pick2">เลือกไฟล์</button></p><p class="legend-note">ใช้แบบฟอร์มบันทึก chiller เดิม (DAY_record, Chiller running, Sum_…) · เดือนที่มีอยู่แล้วจะถูกแทนที่ด้วยข้อมูลใหม่</p></div></section>`:`<section class="panel"><p class="legend-note">การนำเข้าและลบข้อมูลทำได้เฉพาะผู้ดูแลระบบ</p></section>`}
+  ${isAdmin?`<section class="panel"><div class="drop" id="drop"><p><b>ลากไฟล์ .xlsx มาวางที่นี่</b> หรือ <button class="btn primary" id="pick2">เลือกไฟล์</button> <button class="btn" id="pastePick">วางข้อมูลจาก Google Sheet</button></p><p class="legend-note">ใช้แบบฟอร์มบันทึก chiller เดิม (DAY_record, Chiller running, Sum_…) · เดือนที่มีอยู่แล้วจะถูกแทนที่ด้วยข้อมูลใหม่</p></div></section>`:`<section class="panel"><p class="legend-note">การนำเข้าและลบข้อมูลทำได้เฉพาะผู้ดูแลระบบ</p></section>`}
   <section class="grid2"><div class="panel"><h3>ข้อมูลรายเดือน</h3><div class="tscroll"><table class="data"><thead><tr><th>เดือน</th><th>บันทึก</th><th>ผ่านเกณฑ์</th><th>แหล่งข้อมูล</th><th></th></tr></thead><tbody>
   ${byM.map(x=>`<tr><th scope="row">${mLabel(x.m,true)}</th><td>${x.n}</td><td>${x.ok}</td><td class="wrap">${x.imp?`นำเข้าจาก ${esc(x.imp.fileName||'')}<br><small>${esc((x.imp.importedAt||'').slice(0,16).replace('T',' '))}</small>`:'chiller_aug_26.xlsx (ตั้งต้น)'}</td><td>${x.imp&&isAdmin?`<button class="btn small" data-del="${x.m}">ลบข้อมูลที่นำเข้า</button>`:''}</td></tr>`).join('')}
   </tbody></table></div></div>
@@ -1115,7 +1138,7 @@ function viewData(v){
   $$('input[name=thTx]',v).forEach(i=>i.onchange=()=>setThemePart({text:i.value}));
   $('#thReset').onclick=()=>setThemePart({bg:'gray',text:'black'});
   if(isAdmin){
-    $('#pick2').onclick=()=>$('#file').click();
+    $('#pick2').onclick=()=>$('#file').click(); $('#pastePick').onclick=()=>openImport('paste');
     const dz=$('#drop'); dz.ondragover=e=>{e.preventDefault(); dz.classList.add('over');}; dz.ondragleave=()=>dz.classList.remove('over');
     dz.ondrop=e=>{ e.preventDefault(); dz.classList.remove('over'); const fl=e.dataTransfer.files[0]; if(fl) handleFile(fl); };
   }
@@ -1131,7 +1154,67 @@ function viewData(v){
 
 /* ---------------- Import ---------------- */
 let pendingImport=null;
-function openImport(){ if(!S.user||S.user.role!=='admin'){ toast('เฉพาะผู้ดูแลระบบที่นำเข้าข้อมูลได้'); return; } $('#file').click(); }
+const isAdminUser = () => S.user && S.user.role==='admin';
+function impTab(which){
+  const paste = which==='paste';
+  $('#impTabFile').setAttribute('aria-selected',!paste); $('#impTabPaste').setAttribute('aria-selected',paste);
+  $('#impPaneFile').hidden=paste; $('#impPanePaste').hidden=!paste;
+}
+function impShowSource(which){
+  pendingImport=null; $('#impBody').innerHTML=''; $('#impSrc').hidden=false; $('#impOk').hidden=true; $('#impBack').hidden=true; $('#impPasteInfo').textContent='';
+  impTab(which||'file'); const dlg=$('#dlgImport'); if(!dlg.open) dlg.showModal();
+  if(which==='paste') $('#impPaste').focus();
+}
+function openImport(which){ if(!isAdminUser()){ toast('เฉพาะผู้ดูแลระบบที่นำเข้าข้อมูลได้'); return; } impShowSource(which==='paste'?'paste':'file'); }
+
+/* ---- วางข้อมูลจาก Google Sheet (TSV) ---- */
+function parseTSV(text){
+  const rows=[]; let row=[], cur='', q=false;
+  for(let i=0;i<text.length;i++){ const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){ cur+='"'; i++; } else q=false; } else cur+=c; }
+    else if(c==='"' && cur===''){ q=true; }
+    else if(c==='\t'){ row.push(cur); cur=''; }
+    else if(c==='\n'||c==='\r'){ if(c==='\r'&&text[i+1]==='\n') i++; row.push(cur); rows.push(row); row=[]; cur=''; }
+    else cur+=c;
+  }
+  if(cur!==''||row.length){ row.push(cur); rows.push(row); }
+  return rows;
+}
+function cleanCell(s){
+  s=String(s).replace(/\u00a0/g,' ').trim(); if(s==='') return null; let m;
+  if((m=s.match(/^(-?[\d,]*\.?\d+)\s*%$/))) return parseFloat(m[1].replace(/,/g,''))/100;
+  if(/^-?\d{1,3}(,\d{3})+(\.\d+)?$/.test(s)) return parseFloat(s.replace(/,/g,''));
+  if(/^-?\d+(\.\d+)?$/.test(s)) return parseFloat(s);
+  return s;
+}
+function readPasted(){
+  const txt=$('#impPaste').value;
+  if(!txt.trim()){ toast('ยังไม่ได้วางข้อมูล'); return; }
+  try{
+    const aoa=parseTSV(txt).map(r=>r.map(cleanCell));
+    let parsed; try{ parsed=parseSheetRows(aoa, window.XLSX?XLSX.SSF:null); }
+    catch(e){ if(/Chiller running/.test(e.message)) throw new Error('ไม่พบแถวหัวคอลัมน์ (มีคำว่า “Chiller running”) — ให้คัดลอกตั้งแต่ช่อง A1 ที่มีหัวคอลัมน์ลงมา'); throw e; }
+    if(!parsed.rows.length) throw new Error('พบหัวคอลัมน์แต่ไม่มีแถวข้อมูลที่อ่านได้ — ตรวจว่าคอลัมน์ DAY_record มีวันที่ เช่น 28/4/2569');
+    stageImport('วางจาก Google Sheet', parsed, {paste:true, cols:Math.max(...aoa.slice(0,5).map(r=>r.length))});
+  }catch(e){ toast('อ่านข้อมูลที่วางไม่สำเร็จ: '+(e.message||e)); }
+}
+function stageImport(fileName, parsed, o={}){
+  const byM = groupBy(parsed.rows, r=>r[0].slice(0,7));
+  pendingImport = { fileName, fields:parsed.fields, byM };
+  const iD=FIELDS.indexOf('d'), iT=FIELDS.indexOf('t'), iC=FIELDS.indexOf('ch'), iK=FIELDS.indexOf('chkw'), iR=FIELDS.indexOf('tr'), iA=FIELDS.indexOf('kwtr'), iP=FIELDS.indexOf('kwtrp');
+  const pick=[...parsed.rows.slice(0,3), ...(parsed.rows.length>3?[parsed.rows[parsed.rows.length-1]]:[])];
+  const cell=(v,d)=>isNum(v)?fmt(v,d):'<span class="na">–</span>';
+  $('#impBody').innerHTML = `<p><b>${esc(fileName)}</b> มี ${parsed.rows.length.toLocaleString()} บันทึก เลือกเดือนที่ต้องการนำเข้า</p>
+    <table class="data"><thead><tr><th></th><th>เดือน</th><th>บันทึก</th><th>ผลการนำเข้า</th></tr></thead><tbody>
+    ${[...byM].sort((a,b)=>a[0].localeCompare(b[0])).map(([m,a])=>`<tr><td><input type="checkbox" checked value="${m}" aria-label="นำเข้า ${mLabel(m,true)}"></td><th scope="row">${mLabel(m,true)}</th><td>${a.length}</td><td>${S.months.includes(m)?'<span class="bad">แทนที่ข้อมูลเดิม</span>':'<span class="good">เพิ่มเดือนใหม่</span>'}</td></tr>`).join('')}</tbody></table>
+    <p class="legend-note" style="margin-top:12px">ตรวจความถูกต้อง — แถวแรก 3 แถว และแถวสุดท้าย</p>
+    <div class="tscroll"><table class="data sample"><thead><tr><th>วันที่</th><th>เวลา</th><th>ชุด</th><th>kW</th><th>TR</th><th>kW/TR</th><th>kW/TRp</th></tr></thead><tbody>
+    ${pick.map(r=>`<tr><th scope="row">${esc(r[iD])}</th><td>${esc(r[iT])}</td><td>${esc(r[iC])}</td><td>${cell(r[iK],1)}</td><td>${cell(r[iR],1)}</td><td>${cell(r[iA],3)}</td><td>${cell(r[iP],3)}</td></tr>`).join('')}</tbody></table></div>
+    ${parsed.missing.length?`<p class="legend-note">ไม่พบคอลัมน์ ${parsed.missing.map(esc).join(', ')} — ระบบคำนวณค่าแทนเท่าที่ทำได้</p>`:''}
+    ${o.paste?'<p class="legend-note">ข้อมูลที่วางมีความละเอียดตามที่แสดงในชีต — ถ้าชีตตั้งให้แสดงทศนิยมน้อยเกินไป ค่าที่ได้จะหยาบกว่านำเข้าจากไฟล์ .xlsx</p>':''}`;
+  $('#impSrc').hidden=true; $('#impOk').hidden=false; $('#impBack').hidden=false;
+  const dlg=$('#dlgImport'); if(!dlg.open) dlg.showModal();
+}
 async function handleFile(file){
   if(!S.user||S.user.role!=='admin'){ toast('เฉพาะผู้ดูแลระบบที่นำเข้าข้อมูลได้'); return; }
   if(!window.XLSX){ toast('ตัวอ่านไฟล์ Excel ยังโหลดไม่เสร็จ ลองอีกครั้งในไม่กี่วินาที'); return; }
@@ -1142,18 +1225,12 @@ async function handleFile(file){
     let parsed=null, err=null;
     for(const name of wb.SheetNames){ try{ const aoa = XLSX.utils.sheet_to_json(wb.Sheets[name], {header:1, raw:true, defval:null}); const p = parseSheetRows(aoa, XLSX.SSF); if(p.rows.length){ parsed=p; break; } }catch(e){ err=e; } }
     if(!parsed) throw err || new Error('ไม่พบแถวข้อมูลในไฟล์');
-    const byM = groupBy(parsed.rows, r=>r[0].slice(0,7));
-    pendingImport = { fileName:file.name, fields:parsed.fields, byM };
-    $('#impBody').innerHTML = `<p><b>${esc(file.name)}</b> มี ${parsed.rows.length.toLocaleString()} บันทึก เลือกเดือนที่ต้องการนำเข้า</p>
-      <table class="data"><thead><tr><th></th><th>เดือน</th><th>บันทึก</th><th>ผลการนำเข้า</th></tr></thead><tbody>
-      ${[...byM].sort((a,b)=>a[0].localeCompare(b[0])).map(([m,a])=>`<tr><td><input type="checkbox" checked value="${m}" aria-label="นำเข้า ${mLabel(m,true)}"></td><th scope="row">${mLabel(m,true)}</th><td>${a.length}</td><td>${S.months.includes(m)?'<span class="bad">แทนที่ข้อมูลเดิม</span>':'<span class="good">เพิ่มเดือนใหม่</span>'}</td></tr>`).join('')}</tbody></table>
-      ${parsed.missing.length?`<p class="legend-note">ไม่พบคอลัมน์ ${parsed.missing.map(esc).join(', ')} — ระบบคำนวณค่าแทนเท่าที่ทำได้</p>`:''}`;
-    $('#dlgImport').showModal();
+    stageImport(file.name, parsed);
   }catch(e){ toast('อ่านไฟล์ไม่สำเร็จ: '+(e.message||e)); }
 }
 async function confirmImport(){
   const p=pendingImport; if(!p) return; const sel=$$('#impBody input:checked').map(i=>i.value);
-  $('#dlgImport').close(); if(!sel.length) return;
+  $('#dlgImport').close(); $('#impPaste').value=''; if(!sel.length) return;
   const meta={ importedAt:new Date().toISOString(), fileName:p.fileName }; let saved=true;
   for(const m of sel){
     const rows=p.byM.get(m); S.imported.set(m,{fields:p.fields, rows, ...meta});
@@ -1400,9 +1477,12 @@ function bindApp(){
   $$('.nav button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
   $('#rangeFrom').onchange=e=>{ S.range.from=e.target.value; if(S.range.from>S.range.to) S.range.to=S.range.from; renderRangeControls(); render(); };
   $('#rangeTo').onchange=e=>{ S.range.to=e.target.value; if(S.range.to<S.range.from) S.range.from=S.range.to; renderRangeControls(); render(); };
-  $('#btnImport').onclick=openImport; $('#btnExport').onclick=openExport;
+  $('#btnImport').onclick=()=>openImport(); $('#btnExport').onclick=openExport;
+  $('#impTabFile').onclick=()=>impTab('file'); $('#impTabPaste').onclick=()=>{ impTab('paste'); $('#impPaste').focus(); };
+  $('#impPick').onclick=()=>$('#file').click(); $('#impRead').onclick=readPasted; $('#impBack').onclick=()=>impShowSource($('#impTabPaste').getAttribute('aria-selected')==='true'?'paste':'file');
+  $('#impPaste').oninput=e=>{ const n=e.target.value.length; $('#impPasteInfo').textContent = n? (n>=1e6?(n/1e6).toFixed(1)+' ล้านตัวอักษร':(n/1e3).toFixed(0)+' พันตัวอักษร')+' ที่วางแล้ว' : ''; };
   $('#file').onchange=e=>{ const f=e.target.files[0]; e.target.value=''; if(f) handleFile(f); };
-  $('#impOk').onclick=confirmImport; $('#impCancel').onclick=()=>{ pendingImport=null; $('#dlgImport').close(); };
+  $('#impOk').onclick=confirmImport; $('#impCancel').onclick=()=>{ pendingImport=null; $('#impPaste').value=''; $('#dlgImport').close(); };
   $$('input[name=expMode]').forEach(i=>i.onchange=syncExpMode); $('#expOk').onclick=doExport; $('#expCancel').onclick=()=>$('#dlgExport').close();
 }
 async function enterApp(user){
