@@ -15,14 +15,15 @@
   --paper:#eef2f4; --surface:#ffffff; --sunk:#e5ebee; --line:#d6dee2; --bar:#15252f; --bar-txt:#eef2f4;
   --ink:#15252f; --muted:color-mix(in srgb, var(--ink) 86%, var(--surface));
   --chw:#1d6a8d; --chw-2:#7fb3cc; --cdw:#b86f22; --cdw-2:#e0ae78; --slate:#7d8a92; --good:#2f7a52; --bad:#b4432f;
+  --s-plant:#1a47b8; --s-chiller:#1fa259;
   --cond:'IBM Plex Sans Condensed','IBM Plex Sans Thai','Arial Narrow',sans-serif;
   --body:'IBM Plex Sans Thai','Leelawadee UI',Tahoma,system-ui,sans-serif;
   box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
 :root[data-theme="dark"]{ --paper:#0e181e; --surface:#15222a; --sunk:#1b2b34; --line:#2a3b44; --bar:#060d11; --bar-txt:#e3ebee; --ink:#e3ebee;
-  --chw:#56a8cc; --chw-2:#2f6f8c; --cdw:#dd9442; --cdw-2:#8f5a22; --slate:#6c7a83; --good:#63c08c; --bad:#e3765f; }
+  --chw:#56a8cc; --chw-2:#2f6f8c; --cdw:#dd9442; --cdw-2:#8f5a22; --slate:#6c7a83; --good:#63c08c; --bad:#e3765f; --s-plant:#5b9bff; --s-chiller:#5be3a0; }
 :root[data-theme="sea"]{ --paper:#bfe0ee; --surface:#e8f5fa; --sunk:#d0e9f3; --line:#93c1d4; --bar:#0a4361; --bar-txt:#e8f5fa; --ink:#0d1f2a;
-  --chw:#0b5f86; --chw-2:#5aa5c6; --cdw:#a4570c; --cdw-2:#e2b073; --slate:#587480; --good:#1f6b45; --bad:#a63a26; }
+  --chw:#0b5f86; --chw-2:#5aa5c6; --cdw:#a4570c; --cdw-2:#e2b073; --slate:#587480; --good:#1f6b45; --bad:#a63a26; --s-plant:#123fa6; --s-chiller:#1a9a54; }
 :root[data-text="black"]{ --ink:#0f1a20; }
 :root[data-text="orange"]{ --ink:#8c4104; }
 :root[data-text="blue"]{ --ink:#0f2a85; }
@@ -775,7 +776,7 @@ function loadTheme(){ try{ const t=JSON.parse(localStorage.getItem(THEME_KEY)||'
 function saveTheme(t){ try{ localStorage.setItem(THEME_KEY, JSON.stringify(t)); }catch(e){} }
 function applyTheme(t){ document.documentElement.dataset.theme=t.bg; document.documentElement.dataset.text=t.text; }
 function setThemePart(p){ const t={...loadTheme(),...p}; saveTheme(t); applyTheme(t); render(); }
-const PAL = () => ({ ink:cssVar('--ink'), muted:cssVar('--muted'), line:cssVar('--line'), chw:cssVar('--chw'), chw2:cssVar('--chw-2'), cdw:cssVar('--cdw'), cdw2:cssVar('--cdw-2'), slate:cssVar('--slate'), good:cssVar('--good'), bad:cssVar('--bad') });
+const PAL = () => ({ ink:cssVar('--ink'), muted:cssVar('--muted'), line:cssVar('--line'), chw:cssVar('--chw'), chw2:cssVar('--chw-2'), cdw:cssVar('--cdw'), cdw2:cssVar('--cdw-2'), slate:cssVar('--slate'), good:cssVar('--good'), bad:cssVar('--bad'), plant:cssVar('--s-plant'), chiller:cssVar('--s-chiller') });
 const SERIES = () => { const p=PAL(); return [p.chw, p.cdw, p.good, p.slate, '#7a5ea8', '#b0487a', '#3f8f9b', '#8a8a2e', '#5b6fd6', '#c45d3a', '#2f6d4a', '#9a6b3f']; };
 function killCharts(){ S.charts.forEach(c=>c.destroy()); S.charts=[]; }
 function chartDefaults(){
@@ -909,8 +910,8 @@ function viewOverview(v){
   $$('[data-ref]',v).forEach(b=>b.onclick=()=>{ S.sel.refBasis=b.dataset.ref; render(); });
   const p=PAL(), byM=ms.map(m=>energyStats(ea.filter(r=>r.m===m)));
   mkChart($('#cTrend'), { type:'line', data:{ labels: ms.map(m=>mLabel(m)), datasets:[
-    { label:'kW/TRp plant', data: ms.map(m=>mean(rs.filter(r=>r.m===m).map(r=>r.kwtrp))), borderColor:p.ink, backgroundColor:p.ink, tension:.25 },
-    { label:'kW/TR chiller', data: ms.map(m=>mean(rs.filter(r=>r.m===m).map(r=>r.kwtr))), borderColor:p.chw, backgroundColor:p.chw, tension:.25 },
+    { label:'kW/TRp plant', data: ms.map(m=>mean(rs.filter(r=>r.m===m).map(r=>r.kwtrp))), borderColor:p.plant, backgroundColor:p.plant, tension:.25, borderWidth:2.5, pointRadius:4, pointStyle:'circle' },
+    { label:'kW/TR chiller', data: ms.map(m=>mean(rs.filter(r=>r.m===m).map(r=>r.kwtr))), borderColor:p.chiller, backgroundColor:p.chiller, tension:.25, borderWidth:2.5, pointRadius:5, pointStyle:'rectRot' },
     { label:'มาตรฐาน kW/TRp', data: ms.map(()=>S.settings.stdKwtrp), borderColor:p.bad, borderDash:[5,5], pointRadius:0 },
   ]}, options:{ maintainAspectRatio:false, plugins:{legend:{position:'bottom'}}, scales:{y:{title:{display:true,text:'kW/TR'}}} } });
   mkChart($('#cKwh'), { type:'bar', data:{ labels: ms.map((m,i)=>[mLabel(m), byM[i].days+' วัน']), datasets:[['Chiller','ch',p.chw],['CHP','chp',p.chw2],['CDP','cdp',p.cdw2],['Cooling','ct',p.cdw]].map(([l,k,c])=>({label:l, data:byM.map(e=>Math.round(e[k])), backgroundColor:c})) },
@@ -1267,7 +1268,7 @@ async function doExport(){
   }
   toast('ส่งออกรายงานแล้ว');
 }
-const RP = { chw:'#1d6a8d', chw2:'#7fb3cc', cdw:'#b86f22', cdw2:'#e0ae78', slate:'#8b979f', bad:'#b4432f', ink:'#15252f' };
+const RP = { plant:'#1a47b8', chiller:'#1fa259', chw:'#1d6a8d', chw2:'#7fb3cc', cdw:'#b86f22', cdw2:'#e0ae78', slate:'#8b979f', bad:'#b4432f', ink:'#15252f' };
 async function chartImage(cfg, w=960, h=360){
   const c=document.createElement('canvas'); c.width=w; c.height=h; c.style.cssText='position:fixed;left:-99999px;top:0'; document.body.appendChild(c);
   cfg.options={...(cfg.options||{}), responsive:false, animation:false, devicePixelRatio:2};
@@ -1286,8 +1287,8 @@ async function buildReportHTML(a,b){
   const title = a===b ? `ประจำเดือน ${mLabel(a,true)}` : `ช่วง ${mLabel(a,true)} – ${mLabel(b,true)}`;
   const mtab = (mx, key, d, nameFn=u=>u) => `<table><thead><tr><th>อุปกรณ์</th>${D.ms.map(m=>`<th>${mLabel(m)}</th>`).join('')}${D.ms.length>1?'<th>ทั้งช่วง</th>':''}</tr></thead><tbody>${mx.units.map(u=>`<tr><th>${esc(nameFn(u))}</th>${D.ms.map(m=>`<td>${mx.cells[u][m].n?fmt(mx.cells[u][m][key],d):'–'}</td>`).join('')}${D.ms.length>1?`<td><b>${fmt(mx.cells[u].all[key],d)}</b></td>`:''}</tr>`).join('')}</tbody></table>`;
   const imgTrend = D.ms.length>1 ? await chartImage({ type:'line', data:{ labels:D.ms.map(m=>mLabel(m)), datasets:[
-    {label:'kW/TRp plant', data:D.ms.map(m=>mean(D.rs.filter(r=>r.m===m).map(r=>r.kwtrp))), borderColor:RP.ink, backgroundColor:RP.ink},
-    {label:'kW/TR chiller', data:D.ms.map(m=>mean(D.rs.filter(r=>r.m===m).map(r=>r.kwtr))), borderColor:RP.chw, backgroundColor:RP.chw},
+    {label:'kW/TRp plant', data:D.ms.map(m=>mean(D.rs.filter(r=>r.m===m).map(r=>r.kwtrp))), borderColor:RP.plant, backgroundColor:RP.plant},
+    {label:'kW/TR chiller', data:D.ms.map(m=>mean(D.rs.filter(r=>r.m===m).map(r=>r.kwtr))), borderColor:RP.chiller, backgroundColor:RP.chiller},
     {label:'มาตรฐาน kW/TRp', data:D.ms.map(()=>s.stdKwtrp), borderColor:RP.bad, borderDash:[5,5], pointRadius:0}]}, options:{plugins:{legend:{position:'bottom'}}} }) : '';
   const imgChBar = await chartImage({ type:'bar', data:{ labels:D.mxCh.units, datasets:[['Chiller','kwtr',RP.chw],['CHP','chpkwtr',RP.chw2],['CDP','cdpkwtr',RP.cdw2],['Cooling','ctkwtr',RP.cdw]].map(([l,k,c])=>({label:l, data:D.mxCh.units.map(u=>D.mxCh.cells[u].all[k]), backgroundColor:c})) }, options:{plugins:{legend:{position:'bottom'}, title:{display:true,text:'องค์ประกอบ kW/TRp รายชุด'}}, scales:{x:{stacked:true}, y:{stacked:true}}} });
   const rowsBA = D.ba.rows.filter(r=>r.b.n||r.a.n);
