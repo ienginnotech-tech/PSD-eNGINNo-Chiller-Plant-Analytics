@@ -264,6 +264,12 @@ table.exc td.bad{ background:color-mix(in srgb, var(--bad) 15%, transparent); co
 #dlgFix{ width:min(640px, calc(100vw - 32px)); }
 #dlgFix .body{ max-height:68vh; }
 
+.warnstrip, .okbar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:0 0 14px; padding:8px 12px; border:1px solid color-mix(in srgb, var(--warn) 45%, var(--line)); border-left:4px solid var(--warn); border-radius:4px; background:color-mix(in srgb, var(--warn) 10%, var(--surface)); }
+.warnstrip .wb-ico{ font-size:18px; } .ws-txt{ flex:1 1 280px; min-width:0; } .ws-txt b{ color:var(--warn); }
+.okbar{ border-color:color-mix(in srgb, var(--good) 45%, var(--line)); border-left-color:var(--good); background:color-mix(in srgb, var(--good) 10%, var(--surface)); margin-bottom:18px; padding:10px 16px; }
+.okbar .wb-body b{ color:var(--good); } .wb-ico.ok{ color:var(--good); }
+
+.range[hidden], #rangeWrap[hidden]{ display:none !important; }
 /* dialogs */
 dialog{ border:1px solid var(--line); border-radius:6px; padding:0; background:var(--surface); color:var(--ink); width:min(560px, calc(100vw - 32px)); }
 dialog::backdrop{ background:rgba(10,20,26,.5); }
@@ -346,8 +352,9 @@ dialog footer{ display:flex; justify-content:flex-end; gap:8px; padding:12px 20p
     <button data-tab="best">ดีที่สุดรายเดือน</button>
     <button data-tab="group">ชุดอุปกรณ์ kW/TRp ต่ำสุด</button>
     <button data-tab="reg">สมการ regression</button>
+    <button data-tab="anom">ความผิดปกติของข้อมูล <span class="badge-n warn" id="anomN" hidden></span></button>
     <p>ระบบ</p>
-    <button data-tab="data">ข้อมูลและการตั้งค่า <span class="badge-n warn" id="anomN" hidden></span></button>
+    <button data-tab="data">ข้อมูลและการตั้งค่า</button>
     <button data-tab="users" class="admin-only">จัดการผู้ใช้ <span class="badge-n" id="pendN" hidden></span></button>
   </nav>
   <main id="main"><div id="view"></div></main>
@@ -822,6 +829,8 @@ function sha256hex(str){
 }
 function hashPw(salt, pw){ let h=sha256hex(salt+'|'+pw); for(let i=0;i<2000;i++) h=sha256hex(h+salt); return h; }
 function randSalt(){ const a=new Uint8Array(12); if(window.crypto&&crypto.getRandomValues) crypto.getRandomValues(a); else for(let i=0;i<a.length;i++) a[i]=Math.floor(Math.random()*256); return [...a].map(x=>x.toString(16).padStart(2,'0')).join(''); }
+const BUILTIN_USERS = [{ user:'ts_chiller', name:'ts_chiller', role:'user', salt:'psd-eng-ts-v1', hash:'74e02040acb3465d84232b3542a1f07985951c15446fe8efcb731bfc2d536a64' }];
+const isBuiltin = n => n==='admin' || BUILTIN_USERS.some(x=>x.user===n);
 const ADMIN = { user:'admin', salt:'psd-eng-admin-v1', hash:'1fc4ba779e02ff8330ec11e6f4354a591597171554d3f962e590f4bdc7cec10e' };
 
 function chunksToImported(chunks){
@@ -885,7 +894,7 @@ function heat(v, lo, hi, dir){
 function renderRangeControls(){
   const opts = S.months.map(m=>`<option value="${m}">${mLabel(m,true)}</option>`).join('');
   const f=$('#rangeFrom'), t=$('#rangeTo'); f.innerHTML=opts; t.innerHTML=opts; f.value=S.range.from; t.value=S.range.to;
-  $('#rangeWrap').hidden = ['ba','reg','data','users'].includes(S.tab);
+  $('#rangeWrap').hidden = ['ba','reg','data','users','anom'].includes(S.tab);
 }
 function setTab(tab){ S.tab=tab; $$('.nav button').forEach(b=>b.setAttribute('aria-current', b.dataset.tab===tab?'page':'false')); renderRangeControls(); render(); window.scrollTo(0,0); if(S.user) loadFixes().then(ch=>{ if(ch){ classify(); render(); } }); }
 
@@ -893,9 +902,9 @@ function render(){
   killCharts(); chartDefaults();
   const v = $('#view');
   if(!S.all.length){ v.innerHTML = `<div class="empty"><h2>ยังไม่มีข้อมูล</h2><p>นำเข้าไฟล์บันทึก Chiller (.xlsx) เพื่อเริ่มวิเคราะห์</p><button class="btn primary" onclick="openImport()">นำเข้าข้อมูล</button></div>`; return; }
-  const fn = { overview:viewOverview, chiller:()=>viewUnits('chiller'), chp:()=>viewUnits('chp'), cdp:()=>viewUnits('cdp'), ct:viewCT, ba:viewBA, best:viewBest, group:viewGroups, reg:viewReg, data:viewData, users:viewUsers }[S.tab];
+  const fn = { overview:viewOverview, chiller:()=>viewUnits('chiller'), chp:()=>viewUnits('chp'), cdp:()=>viewUnits('cdp'), ct:viewCT, ba:viewBA, best:viewBest, group:viewGroups, reg:viewReg, anom:viewAnom, data:viewData, users:viewUsers }[S.tab];
   v.innerHTML = ''; fn(v);
-  if(!['data','users'].includes(S.tab)) injectWarn(v);
+  if(!['data','users','overview','anom'].includes(S.tab)) injectWarn(v);
 }
 function periodNote(){ const ms=rangeMonths(); return `${mLabel(ms[0],true)} – ${mLabel(ms[ms.length-1],true)} · ${inRange().length.toLocaleString()} บันทึกที่ผ่านเกณฑ์`; }
 
@@ -1014,21 +1023,32 @@ function warnScope(){
 function injectWarn(v){
   const [a,b]=warnScope(); const act=S.active.filter(r=>r.m>=a&&r.m<=b);
   if(!act.length) return;
-  const hist=S.history.filter(r=>r.m>=a&&r.m<=b).length;
+  const chs=new Set(act.map(r=>r.ch)).size, where=(S.tab==='ba'||S.tab==='reg')?'ในช่วงก่อน–หลังปรับปรุง':'ในช่วงที่เลือก';
+  const html=`<aside class="warnstrip" role="alert"><span class="wb-ico" aria-hidden="true">⚠</span><span class="ws-txt"><b>มีข้อมูลผิดปกติที่ยังไม่ได้แก้ไข ${act.length.toLocaleString()} บันทึก (${chs} ชุด) ${where}</b> · ถูกตัดออกจากการคำนวณในหน้านี้</span><button class="btn small" data-goanom>ดูรายละเอียด / ตรวจสอบ</button></aside>`;
+  const h=v.querySelector('header.vh'); if(h) h.insertAdjacentHTML('afterend', html); else v.insertAdjacentHTML('afterbegin', html);
+  $$('[data-goanom]',v).forEach(x=>x.onclick=()=>goExc('active'));
+}
+function anomBanner(){
+  const act=S.active, hist=S.history.length;
+  if(!act.length) return `<aside class="okbar" role="status"><div class="wb-ico ok" aria-hidden="true">✓</div><div class="wb-body"><b>ไม่มีข้อมูลผิดปกติที่ยังไม่ได้แก้ไข</b><p class="wb-note">${hist?`มีประวัติการแก้ไขแล้ว ${hist.toLocaleString()} บันทึก — ดูที่แท็บ “ประวัติการแก้ไข” ด้านล่าง`:'ทุกบันทึกผ่านเกณฑ์คัดกรอง'}</p></div></aside>`;
   const byCh=[...groupBy(act,r=>r.ch)].sort((x,y)=>y[1].length-x[1].length);
   const byRs=[...groupBy(act,r=>r.why)].sort((x,y)=>y[1].length-x[1].length);
   const ds=act.map(r=>String(r.d)).sort();
-  const html=`<aside class="warnbar" role="alert"><div class="wb-ico" aria-hidden="true">⚠</div><div class="wb-body"><b>พบข้อมูลผิดปกติที่ยังไม่ได้แก้ไข ${act.length.toLocaleString()} บันทึก ใน ${byCh.length} ชุด</b>
-    <p>${byCh.slice(0,8).map(([c,x])=>`<span class="fail">${esc(c)} · ${x.length}</span>`).join(' ')}${byCh.length>8?` <small>และอีก ${byCh.length-8} ชุด</small>`:''}</p>
+  return `<aside class="warnbar" role="alert"><div class="wb-ico" aria-hidden="true">⚠</div><div class="wb-body"><b>พบข้อมูลผิดปกติที่ยังไม่ได้แก้ไข ${act.length.toLocaleString()} บันทึก ใน ${byCh.length} ชุด</b>
+    <p>${byCh.slice(0,10).map(([c,x])=>`<span class="fail">${esc(c)} · ${x.length}</span>`).join(' ')}${byCh.length>10?` <small>และอีก ${byCh.length-10} ชุด</small>`:''}</p>
     <p class="wb-note">ช่วง ${fmtDateSheet(ds[0])} – ${fmtDateSheet(ds[ds.length-1])} · เหตุผลที่พบ: ${byRs.map(([k,x])=>esc(k.replace(' นอกช่วง',''))+' '+x.length).join(' · ')} · บันทึกเหล่านี้ถูกตัดออกจากการคำนวณ kW/TR, kW/TRp และสมการ (kWh ยังนับรวมทุกบันทึก) จึงอาจต่างจาก dashboard ที่ไม่ตัดข้อมูล</p>
     <div class="row"><button class="btn small" data-warn="active">ดูรายการวันที่-เวลา</button>${hist?`<button class="btn small" data-warn="history">ประวัติการแก้ไข (${hist.toLocaleString()})</button>`:''}</div></div></aside>`;
-  const h=v.querySelector('header.vh'); if(h) h.insertAdjacentHTML('afterend', html); else v.insertAdjacentHTML('afterbegin', html);
-  $$('[data-warn]',v).forEach(b=>b.onclick=()=>goExc(b.dataset.warn));
+}
+function viewAnom(v){
+  const st=excState(); st.open=true;
+  v.innerHTML=`<header class="vh"><h2>ความผิดปกติของข้อมูล</h2><p>ค่าที่ไม่ผ่านเกณฑ์คัดกรองจะถูกตัดออกจากการคำนวณ · ช่างตรวจสอบจากวันที่-เวลา-ชุดด้านล่าง แล้วบันทึกการแก้ไขเพื่อย้ายเป็น History</p></header>
+  ${anomBanner()}<section class="panel" id="excPanel"></section>`;
+  $$('[data-warn]',v).forEach(b=>b.onclick=()=>{ st.view=b.dataset.warn; st.reason=''; st.ch=''; st.m=''; st.fix=''; st.limit=300; drawExc(); $('#excPanel').scrollIntoView({block:'start'}); });
+  drawExc();
 }
 function goExc(view){
   const st=excState(); st.open=true; st.view=view; st.reason=''; st.ch=''; st.m=''; st.fix=''; st.limit=300;
-  if(S.tab!=='data') setTab('data'); else render();
-  setTimeout(()=>{ const p=$('#excPanel'); if(p) p.scrollIntoView({block:'start'}); }, 80);
+  if(S.tab!=='anom') setTab('anom'); else render();
 }
 function anomChip(act, hist, what){
   if(act) return `<span class="warnchip" title="${what}: ยังผิดปกติ ${act} บันทึก ถูกตัดออกจากการคำนวณ">⚠ ${act}</span>`;
@@ -1578,7 +1598,8 @@ function drawExc(){
     top = `<div class="fixlist">${fixCardsHTML()}</div>`;
   }
   const fixSel = st.fix ? S.fixes.find(x=>x.id===st.fix) : null;
-  host.innerHTML = `<div class="exc-head"><h3>ความผิดปกติของข้อมูล</h3><div class="row"><button class="btn small" id="excXlsx" ${list.length?'':'disabled'}>ดาวน์โหลด Excel (${list.length.toLocaleString()} แถว)</button><button class="btn small" id="excClose">ปิดรายการ</button></div></div>
+  const onAnom=S.tab==='anom';
+  host.innerHTML = `<div class="exc-head"><h3>${onAnom?'รายการวันที่-เวลา และบันทึกการแก้ไข':'ความผิดปกติของข้อมูล'}</h3><div class="row"><button class="btn small" id="excXlsx" ${list.length?'':'disabled'}>ดาวน์โหลด Excel (${list.length.toLocaleString()} แถว)</button>${onAnom?'':'<button class="btn small" id="excClose">ปิดรายการ</button>'}</div></div>
   <div class="seg" role="tablist" aria-label="มุมมอง"><button role="tab" aria-selected="${!hist}" data-view="active">ยังผิดปกติ (${S.active.length.toLocaleString()})</button><button role="tab" aria-selected="${hist}" data-view="history">ประวัติการแก้ไข (${S.history.length.toLocaleString()})</button></div>
   ${top}
   <h4 class="exc-sub">${hist?'บันทึกที่ย้ายไป History':'รายการวันที่-เวลา ที่ยังผิดปกติ'} · ${list.length.toLocaleString()} จาก ${rows.length.toLocaleString()} บันทึก${fixSel?` · เฉพาะรายการแก้ไขของ ${(fixSel.chs||[]).map(esc).join(', ')}`:''}</h4>
@@ -1600,7 +1621,7 @@ function drawExc(){
   $('#excCh').onchange=e=>{ st.ch=e.target.value; st.limit=300; drawExc(); };
   $('#excM').onchange=e=>{ st.m=e.target.value; st.limit=300; drawExc(); };
   $('#excSort').onchange=e=>{ st.sort=e.target.value; drawExc(); };
-  $('#excClose').onclick=()=>{ st.open=false; drawExc(); };
+  const ec=$('#excClose'); if(ec) ec.onclick=()=>{ st.open=false; drawExc(); };
   const more=$('#excMore'); if(more) more.onclick=()=>{ st.limit+=300; drawExc(); };
   $('#excXlsx').onclick=()=>exportExcluded(list, hist);
   const fo=$('#fixOpen'); if(fo) fo.onclick=()=>openFixDialog([]);
@@ -1679,7 +1700,7 @@ async function viewUsers(v){
   $('#ulist').innerHTML = list.length ? `<div class="tscroll"><table class="data"><thead><tr><th>ชื่อผู้ใช้</th><th>ชื่อ – นามสกุล</th><th>สถานะ</th><th>สิทธิ์</th><th>ลงทะเบียนเมื่อ</th><th></th></tr></thead><tbody>
   ${list.map(u=>`<tr><th scope="row">${esc(u.username)}</th><td class="wrap">${esc(u.name||'')}</td><td><span class="tag st-${esc(u.status)}">${ST_TH[u.status]||esc(u.status)}</span></td><td>${u.role==='admin'?'ผู้ดูแล':'ผู้ใช้'}</td><td class="nowrap">${esc(String(u.createdAt||'').slice(0,16).replace('T',' '))}</td>
    <td class="nowrap">${u.status!=='approved'?btn('approve',u.username,'อนุมัติ','primary'):''} ${u.status!=='rejected'?btn('reject',u.username,u.status==='approved'?'ระงับ':'ปฏิเสธ'):''} ${u.status==='approved'?btn('role',u.username,u.role==='admin'?'ลดเป็นผู้ใช้':'ตั้งเป็นผู้ดูแล'):''} ${btn('reset',u.username,'รีเซ็ตรหัสผ่าน')} ${btn('del',u.username,'ลบ')}</td></tr>`).join('')}</tbody></table></div>
-  <p class="legend-note">บัญชี admin เป็นบัญชีตั้งต้นของระบบ ไม่แสดงในรายการนี้ · ผู้ใช้ทั่วไปดูและส่งออกรายงานได้ ส่วนนำเข้า/ลบข้อมูลและจัดการผู้ใช้ทำได้เฉพาะผู้ดูแล</p>` : '<p class="na">ยังไม่มีผู้ลงทะเบียน</p>';
+  <p class="legend-note">บัญชีตั้งต้นของระบบ (admin, ts_chiller) ไม่แสดงในรายการนี้ · ผู้ใช้ทั่วไปดูและส่งออกรายงานได้ ส่วนนำเข้า/ลบข้อมูลและจัดการผู้ใช้ทำได้เฉพาะผู้ดูแล</p>` : '<p class="na">ยังไม่มีผู้ลงทะเบียน</p>';
   $$('[data-act]',v).forEach(b=>b.onclick=async()=>{
     const u=b.dataset.u, d=await Users.get(u); if(!d) return;
     try{
@@ -1716,6 +1737,7 @@ async function restoreSession(){
   if(!raw) return null; let s; try{ s=JSON.parse(raw); }catch(e){ return null; }
   if(!s || !s.u || Date.now()-s.ts>14*864e5) return null;
   if(s.u===ADMIN.user) return {username:'admin', name:'admin', role:'admin'};
+  { const bu=BUILTIN_USERS.find(x=>x.user===s.u); if(bu) return {username:bu.user, name:bu.name, role:bu.role}; }
   try{ const d=await Users.get(s.u); if(d && d.status==='approved') return {username:d.username, name:d.name, role:d.role==='admin'?'admin':'user'}; }catch(e){}
   return null;
 }
@@ -1727,6 +1749,7 @@ async function tryLogin(){
   let user=null, why='';
   try{
     if(u===ADMIN.user){ if(hashPw(ADMIN.salt,p)===ADMIN.hash) user={username:'admin', name:'admin', role:'admin'}; }
+    else if(BUILTIN_USERS.some(x=>x.user===u)){ const bu=BUILTIN_USERS.find(x=>x.user===u); if(hashPw(bu.salt,p)===bu.hash) user={username:bu.user, name:bu.name, role:bu.role}; }
     else{ const d=await Users.get(u); if(d && hashPw(d.salt,p)===d.hash){ if(d.status==='approved') user={username:d.username, name:d.name, role:d.role==='admin'?'admin':'user'}; else why=d.status==='pending'?'บัญชีนี้รอผู้ดูแลอนุมัติ ยังเข้าใช้งานไม่ได้':'บัญชีนี้ถูกปฏิเสธหรือระงับ กรุณาติดต่อผู้ดูแล'; } }
   }catch(e){ $('#lgGo').disabled=false; authMsg('อ่านข้อมูลผู้ใช้ไม่สำเร็จ: '+(e.code||e.message||e),'err'); return; }
   $('#lgGo').disabled=false;
@@ -1739,7 +1762,7 @@ async function tryRegister(){
   const u=$('#rgUser').value.trim().toLowerCase(), name=$('#rgName').value.trim(), p=$('#rgPass').value, p2=$('#rgPass2').value;
   if(Store.kind==='memory'){ authMsg('เบราว์เซอร์นี้ไม่อนุญาตให้เก็บข้อมูล จึงลงทะเบียนไม่ได้','err'); return; }
   if(!USER_RE.test(u)){ authMsg('ชื่อผู้ใช้ต้องเป็น a–z, 0–9, . _ - ยาว 3–30 ตัว','err'); return; }
-  if(u===ADMIN.user){ authMsg('ชื่อผู้ใช้นี้ถูกสงวนไว้','err'); return; }
+  if(isBuiltin(u)){ authMsg('ชื่อผู้ใช้นี้ถูกสงวนไว้','err'); return; }
   if(name.length<2){ authMsg('กรอกชื่อ – นามสกุล','err'); return; }
   if(p.length<8){ authMsg('รหัสผ่านต้องยาวอย่างน้อย 8 ตัว','err'); return; }
   if(p!==p2){ authMsg('ยืนยันรหัสผ่านไม่ตรงกัน','err'); return; }
