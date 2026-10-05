@@ -52,7 +52,7 @@ button,select,input{ font:inherit; color:inherit; }
 
 /* shell */
 .shell{ display:grid; grid-template-columns:clamp(190px,14vw,250px) minmax(0,1fr); min-height:calc(100vh - 52px); }
-.nav{ border-right:1px solid var(--line); padding:18px 10px; position:sticky; top:52px; align-self:start; height:calc(100vh - 52px); overflow:auto; }
+.nav{ border-right:1px solid var(--line); padding:18px 10px 0; position:sticky; top:var(--topH,52px); align-self:start; height:calc(100vh - var(--topH,52px)); overflow:auto; display:flex; flex-direction:column; }
 .nav p{ margin:18px 10px 4px; font-size:12px; color:var(--muted); }
 .nav p:first-child{ margin-top:0; }
 .nav button{ display:block; width:100%; text-align:left; border:0; background:none; padding:7px 10px; border-radius:3px; cursor:pointer; color:var(--ink); }
@@ -270,6 +270,17 @@ table.exc td.bad{ background:color-mix(in srgb, var(--bad) 15%, transparent); co
 .okbar .wb-body b{ color:var(--good); } .wb-ico.ok{ color:var(--good); }
 
 .range[hidden], #rangeWrap[hidden]{ display:none !important; }
+/* user box: bottom-left of sidebar (moves into the header on narrow screens) */
+.userbox{ display:flex; font-size:13px; }
+.userbox .who b{ font-weight:600; } .userbox .who small{ opacity:.8; }
+.nav .userbox{ flex-direction:column; gap:8px; margin-top:auto; position:sticky; bottom:0; padding:12px 6px 14px; border-top:1px solid var(--line); background:var(--paper); }
+.nav .userbox .who{ display:block; line-height:1.35; overflow-wrap:anywhere; } .nav .userbox .who small{ display:block; }
+.nav .userbox .btn{ border:1px solid var(--line); background:var(--surface); text-align:center; padding:7px 10px; width:100%; }
+.nav .userbox .btn:hover{ background:var(--sunk); }
+.top .userbox{ flex-direction:row; align-items:center; gap:10px; }
+.top .userbox .who small{ display:inline; margin-left:6px; }
+@media (max-width:640px){ .top .userbox .who small{ display:none; } }
+
 /* dialogs */
 dialog{ border:1px solid var(--line); border-radius:6px; padding:0; background:var(--surface); color:var(--ink); width:min(560px, calc(100vw - 32px)); }
 dialog::backdrop{ background:rgba(10,20,26,.5); }
@@ -286,7 +297,7 @@ dialog footer{ display:flex; justify-content:flex-end; gap:8px; padding:12px 20p
 
 @media (max-width:980px){
   .shell{ grid-template-columns:minmax(0,1fr); }
-  .nav{ position:sticky; top:auto; height:auto; display:flex; gap:4px; overflow-x:auto; padding:8px 12px; border-right:0; border-bottom:1px solid var(--line); background:var(--paper); }
+  .nav{ position:sticky; top:auto; height:auto; display:flex; flex-direction:row; gap:4px; overflow-x:auto; padding:8px 12px; border-right:0; border-bottom:1px solid var(--line); background:var(--paper); }
   .nav p, .nav .foot{ display:none; }
   .nav button{ width:auto; white-space:nowrap; flex:none; }
   .nav button[aria-current="page"]{ box-shadow:inset 0 -3px 0 var(--chw); }
@@ -336,7 +347,6 @@ dialog footer{ display:flex; justify-content:flex-end; gap:8px; padding:12px 20p
   <button class="btn admin-only" id="btnImport">นำเข้าข้อมูล</button>
   <button class="btn primary" id="btnExport">ส่งออกรายงาน</button>
   <input type="file" id="file" accept=".xlsx,.xls,.xlsm" hidden>
-  <div class="userchip"><span><b id="uName"></b> <small id="uRole"></small></span><button class="btn" id="btnLogout">ออกจากระบบ</button></div>
 </header>
 <div class="shell">
   <nav class="nav" aria-label="เมนูหลัก">
@@ -356,6 +366,7 @@ dialog footer{ display:flex; justify-content:flex-end; gap:8px; padding:12px 20p
     <p>ระบบ</p>
     <button data-tab="data">ข้อมูลและการตั้งค่า</button>
     <button data-tab="users" class="admin-only">จัดการผู้ใช้ <span class="badge-n" id="pendN" hidden></span></button>
+    <div class="userbox" id="userbox"><span class="who"><b id="uName"></b><small id="uRole"></small></span><button class="btn" id="btnLogout">ออกจากระบบ</button></div>
   </nav>
   <main id="main"><div id="view"></div></main>
 </div>
@@ -896,7 +907,7 @@ function renderRangeControls(){
   const f=$('#rangeFrom'), t=$('#rangeTo'); f.innerHTML=opts; t.innerHTML=opts; f.value=S.range.from; t.value=S.range.to;
   $('#rangeWrap').hidden = ['ba','reg','data','users','anom'].includes(S.tab);
 }
-function setTab(tab){ S.tab=tab; $$('.nav button').forEach(b=>b.setAttribute('aria-current', b.dataset.tab===tab?'page':'false')); renderRangeControls(); render(); window.scrollTo(0,0); if(S.user) loadFixes().then(ch=>{ if(ch){ classify(); render(); } }); }
+function setTab(tab){ S.tab=tab; $$('.nav button[data-tab]').forEach(b=>b.setAttribute('aria-current', b.dataset.tab===tab?'page':'false')); renderRangeControls(); render(); window.scrollTo(0,0); if(S.user) loadFixes().then(ch=>{ if(ch){ classify(); render(); } }); }
 
 function render(){
   killCharts(); chartDefaults();
@@ -1782,8 +1793,16 @@ function bindAuth(){
   ['lgUser','lgPass'].forEach(id=>$('#'+id).onkeydown=enter(tryLogin)); ['rgUser','rgName','rgPass','rgPass2'].forEach(id=>$('#'+id).onkeydown=enter(tryRegister));
   $('#btnLogout').onclick=logout;
 }
+const narrowMQ = window.matchMedia ? matchMedia('(max-width:980px)') : null;
+function placeUser(){
+  const box=$('#userbox'); if(!box) return; const target = (narrowMQ && narrowMQ.matches) ? $('.top') : $('.nav');
+  if(box.parentElement!==target) target.appendChild(box);
+}
+function syncTopH(){ const h=$('.top'); if(h) document.documentElement.style.setProperty('--topH', h.offsetHeight+'px'); }
+if(narrowMQ){ try{ narrowMQ.addEventListener('change', ()=>{ placeUser(); syncTopH(); }); }catch(e){} }
 function bindApp(){
-  $$('.nav button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+  $$('.nav button[data-tab]').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+  placeUser(); try{ new ResizeObserver(syncTopH).observe($('.top')); }catch(e){} syncTopH();
   $('#rangeFrom').onchange=e=>{ S.range.from=e.target.value; if(S.range.from>S.range.to) S.range.to=S.range.from; renderRangeControls(); render(); };
   $('#rangeTo').onchange=e=>{ S.range.to=e.target.value; if(S.range.to<S.range.from) S.range.from=S.range.to; renderRangeControls(); render(); };
   $('#btnImport').onclick=()=>openImport(); $('#btnExport').onclick=openExport;
