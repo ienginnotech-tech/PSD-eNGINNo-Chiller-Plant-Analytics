@@ -15,15 +15,15 @@
   --paper:#eef2f4; --surface:#ffffff; --sunk:#e5ebee; --line:#d6dee2; --bar:#15252f; --bar-txt:#eef2f4;
   --ink:#15252f; --muted:color-mix(in srgb, var(--ink) 86%, var(--surface));
   --chw:#1d6a8d; --chw-2:#7fb3cc; --cdw:#b86f22; --cdw-2:#e0ae78; --slate:#7d8a92; --good:#2f7a52; --bad:#b4432f;
-  --s-plant:#1a47b8; --s-chiller:#1fa259;
+  --s-plant:#1a47b8; --s-chiller:#1fa259; --warn:#9a5200;
   --cond:'IBM Plex Sans Condensed','IBM Plex Sans Thai','Arial Narrow',sans-serif;
   --body:'IBM Plex Sans Thai','Leelawadee UI',Tahoma,system-ui,sans-serif;
   box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
 :root[data-theme="dark"]{ --paper:#0e181e; --surface:#15222a; --sunk:#1b2b34; --line:#2a3b44; --bar:#060d11; --bar-txt:#e3ebee; --ink:#e3ebee;
-  --chw:#56a8cc; --chw-2:#2f6f8c; --cdw:#dd9442; --cdw-2:#8f5a22; --slate:#6c7a83; --good:#63c08c; --bad:#e3765f; --s-plant:#5b9bff; --s-chiller:#5be3a0; }
+  --chw:#56a8cc; --chw-2:#2f6f8c; --cdw:#dd9442; --cdw-2:#8f5a22; --slate:#6c7a83; --good:#63c08c; --bad:#e3765f; --s-plant:#5b9bff; --s-chiller:#5be3a0; --warn:#ffbf5e; }
 :root[data-theme="sea"]{ --paper:#bfe0ee; --surface:#e8f5fa; --sunk:#d0e9f3; --line:#93c1d4; --bar:#0a4361; --bar-txt:#e8f5fa; --ink:#0d1f2a;
-  --chw:#0b5f86; --chw-2:#5aa5c6; --cdw:#a4570c; --cdw-2:#e2b073; --slate:#587480; --good:#1f6b45; --bad:#a63a26; --s-plant:#123fa6; --s-chiller:#1a9a54; }
+  --chw:#0b5f86; --chw-2:#5aa5c6; --cdw:#a4570c; --cdw-2:#e2b073; --slate:#587480; --good:#1f6b45; --bad:#a63a26; --s-plant:#123fa6; --s-chiller:#1a9a54; --warn:#8c4a00; }
 :root[data-text="black"]{ --ink:#0f1a20; }
 :root[data-text="orange"]{ --ink:#8c4104; }
 :root[data-text="blue"]{ --ink:#0f2a85; }
@@ -205,6 +205,7 @@ details{ margin:10px 0; } summary{ cursor:pointer; color:var(--chw); font-size:1
 .userchip b{ font-weight:600; } .userchip small{ opacity:.75; }
 .badge-n{ display:inline-block; min-width:18px; padding:0 5px; margin-left:6px; border-radius:9px; background:var(--bad); color:#fff; font-size:12px; text-align:center; }
 .badge-n[hidden]{ display:none; }
+.nav button:has(.badge-n:not([hidden])){ display:flex; align-items:center; justify-content:space-between; gap:8px; }
 body[data-role="user"] .admin-only{ display:none !important; }
 
 /* appearance settings */
@@ -226,6 +227,42 @@ textarea.paste{ display:block; width:100%; min-height:130px; resize:vertical; pa
 #dlgImport .auth-tabs{ margin-bottom:14px; }
 #impBody table.data thead th:nth-child(2){ text-align:left; }
 table.sample{ font-size:12px; } table.sample th, table.sample td{ padding:3px 8px; }
+
+/* excluded records */
+.exc-head{ display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; justify-content:space-between; margin-bottom:6px; }
+.exc-head h3{ margin:0; }
+.exc-form{ margin:10px 0 12px; }
+table.exc{ font-size:13px; } table.exc td, table.exc th{ vertical-align:top; padding:6px 8px; } table.exc td.wrap{ min-width:132px; }
+table.exc td small{ color:var(--muted); font-size:12px; }
+table.exc td.bad{ background:color-mix(in srgb, var(--bad) 15%, transparent); color:var(--bad); font-weight:600; }
+.fail{ display:inline-block; padding:1px 8px; margin:1px 2px; border-radius:10px; font-size:12px; background:color-mix(in srgb, var(--bad) 14%, transparent); color:var(--bad); white-space:nowrap; }
+.dir-high{ color:var(--bad); } .dir-low{ color:var(--chw); } .dir-na{ color:var(--muted); }
+
+/* anomaly warnings + history */
+.warnbar{ display:flex; gap:14px; align-items:flex-start; margin:0 0 18px; padding:12px 16px; border:1px solid color-mix(in srgb, var(--warn) 45%, var(--line)); border-left:5px solid var(--warn); border-radius:4px; background:color-mix(in srgb, var(--warn) 11%, var(--surface)); }
+.wb-ico{ font-size:26px; line-height:1; color:var(--warn); } .wb-body{ min-width:0; flex:1; } .wb-body b{ color:var(--warn); font-size:16px; }
+.wb-body p{ margin:6px 0; } .wb-note{ color:var(--muted); font-size:13px; } .wb-body .row{ margin-top:8px; }
+.warnchip, .okchip, .offchip{ display:inline-block; padding:0 8px; border-radius:10px; font-size:12px; font-weight:600; white-space:nowrap; }
+.warnchip{ background:color-mix(in srgb, var(--warn) 18%, transparent); color:var(--warn); }
+.okchip{ background:color-mix(in srgb, var(--good) 16%, transparent); color:var(--good); }
+.offchip{ background:var(--sunk); color:var(--muted); }
+.badge-n.warn{ background:var(--warn); color:#fff; } :root[data-theme="dark"] .badge-n.warn{ color:#1a1000; }
+.exc-split{ font:500 13px var(--body); color:var(--muted); }
+.exc-sub{ margin:16px 0 8px; font:600 15px var(--body); }
+.okline{ margin:8px 0 4px; color:var(--good); font-weight:600; }
+.seg{ display:flex; border:1px solid var(--line); border-radius:4px; overflow:hidden; margin:8px 0 14px; width:max-content; max-width:100%; }
+.seg button{ border:0; background:var(--sunk); padding:7px 14px; cursor:pointer; font-weight:500; }
+.seg button[aria-selected="true"]{ background:var(--bar); color:var(--bar-txt); }
+.fixcard{ border:1px solid var(--line); border-left:4px solid var(--good); border-radius:4px; padding:12px 14px; margin:0 0 12px; background:var(--surface); }
+.fixcard.off{ border-left-color:var(--slate); opacity:.78; }
+.fixcard header{ padding:0; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.fx-meta{ margin:4px 0; color:var(--muted); font-size:13px; } .fx-meta b{ color:var(--ink); }
+.fx-log{ list-style:none; margin:8px 0; padding:0; } .fx-log li{ padding:6px 10px; border-left:3px solid var(--line); margin:0 0 6px; background:var(--paper); border-radius:0 3px 3px 0; } .fx-log small{ color:var(--muted); }
+.fx-add{ display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; margin-top:8px; }
+.fx-add textarea, textarea.fxta{ flex:1 1 280px; width:100%; min-height:48px; padding:7px 9px; border:1px solid var(--line); border-radius:3px; background:var(--paper); color:var(--ink); font:inherit; }
+.fx-add .btn.on{ background:var(--bar); color:var(--bar-txt); }
+#dlgFix{ width:min(640px, calc(100vw - 32px)); }
+#dlgFix .body{ max-height:68vh; }
 
 /* dialogs */
 dialog{ border:1px solid var(--line); border-radius:6px; padding:0; background:var(--surface); color:var(--ink); width:min(560px, calc(100vw - 32px)); }
@@ -310,13 +347,15 @@ dialog footer{ display:flex; justify-content:flex-end; gap:8px; padding:12px 20p
     <button data-tab="group">ชุดอุปกรณ์ kW/TRp ต่ำสุด</button>
     <button data-tab="reg">สมการ regression</button>
     <p>ระบบ</p>
-    <button data-tab="data">ข้อมูลและการตั้งค่า</button>
+    <button data-tab="data">ข้อมูลและการตั้งค่า <span class="badge-n warn" id="anomN" hidden></span></button>
     <button data-tab="users" class="admin-only">จัดการผู้ใช้ <span class="badge-n" id="pendN" hidden></span></button>
   </nav>
   <main id="main"><div id="view"></div></main>
 </div>
 </div>
 
+<dialog id="dlgFix" aria-labelledby="fxT"><header><h2 id="fxT">บันทึกว่าแก้ไขแล้ว → ย้ายไป History</h2></header><div class="body" id="fixBody"></div>
+  <footer><button class="btn" onclick="document.getElementById('dlgFix').close()">ยกเลิก</button><button class="btn primary" id="fxOk">ย้ายไป History</button></footer></dialog>
 <dialog id="dlgImport" aria-labelledby="impT"><header><h2 id="impT">นำเข้าข้อมูล</h2></header>
   <div class="body">
     <div id="impSrc">
@@ -427,6 +466,24 @@ function checkRecord(r, f){
   if(isNum(r.loadPct) && (r.loadPct<f.loadMin || r.loadPct>f.loadMax)) return '%Load นอกช่วง';
   if(isNum(r.twb) && (r.twb<f.twbMin || r.twb>f.twbMax)) return 'Twb นอกช่วง';
   return null;
+}
+
+/* รายละเอียดทุกเกณฑ์ที่ไม่ผ่าน (ตามลำดับเดียวกับ checkRecord — รายการแรกคือเหตุผลที่ใช้นับ) */
+function explainRecord(r, f){
+  const out=[];
+  if(!r.ch){ out.push({col:null,label:'ชื่อ chiller',reason:'ไม่มีชื่อ chiller',val:null,lo:null,hi:null,dir:'na'}); return out; }
+  const chk=(col,label,reason,v,lo,hi,optional)=>{
+    if(!isNum(v)){ if(!optional) out.push({col,label,reason,val:null,lo,hi,dir:'na'}); return; }
+    if(v<lo) out.push({col,label,reason,val:v,lo,hi,dir:'low'});
+    else if(v>hi) out.push({col,label,reason,val:v,lo,hi,dir:'high'});
+  };
+  chk('tr','TR','TR นอกช่วง',r.tr,f.trMin,f.trMax);
+  chk('kwtr','kW/TR','kW/TR นอกช่วง',r.kwtr,f.kwtrMin,f.kwtrMax);
+  chk('kwtrp','kW/TRp','kW/TRp นอกช่วง',r.kwtrp,f.kwtrpMin,f.kwtrpMax);
+  chk('dT','ΔT CHW','ΔT CHW นอกช่วง',r.dT,f.dTMin,f.dTMax);
+  chk('loadPct','%Load','%Load นอกช่วง',r.loadPct,f.loadMin,f.loadMax,true);
+  chk('twb','Twb','Twb นอกช่วง',r.twb,f.twbMin,f.twbMax,true);
+  return out;
 }
 
 function statBlock(recs){
@@ -637,7 +694,7 @@ function toTimeStr(v, SSF){
   const s=String(v).trim(), m=s.match(/^(\d{1,2})[:.](\d{2})(?:[:.](\d{2}))?/);
   return m ? pad(m[1])+':'+m[2]+':'+(m[3]||'00') : s;
 }
-if(typeof module!=='undefined') module.exports = { toRecord, checkRecord, DEFAULT_FILTER, matrix, ctMatrix, bestPerMonth, bestGroups, beforeAfter, regressionModel, predictWith, equationText, ols, pT, FIELDS, CT_NAMES };
+if(typeof module!=='undefined') module.exports = { toRecord, checkRecord, explainRecord, DEFAULT_FILTER, matrix, ctMatrix, bestPerMonth, bestGroups, beforeAfter, regressionModel, predictWith, equationText, ols, pT, FIELDS, CT_NAMES };
 
 /* ===== PSD_eNGINNo Chiller Plant Analytic System — UI ===== */
 const $ = (s, el=document) => el.querySelector(s);
@@ -650,14 +707,14 @@ const DEFAULT_SETTINGS = { filter:{...DEFAULT_FILTER}, before:['2569-04','2569-0
 function loadSettings(){ try{ const s=JSON.parse(localStorage.getItem(LS_KEY)||'null'); if(s) return {...DEFAULT_SETTINGS, ...s, filter:{...DEFAULT_FILTER, ...(s.filter||{})}, reg:{...DEFAULT_SETTINGS.reg, ...(s.reg||{})}}; }catch(e){} return JSON.parse(JSON.stringify(DEFAULT_SETTINGS)); }
 function saveSettings(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(S.settings)); }catch(e){} }
 
-const S = { settings: loadSettings(), seed:new Map(), imported:new Map(), all:[], valid:[], excluded:[], months:[], range:{from:null,to:null}, tab:'overview', charts:[], sel:{}, user:null };
+const S = { settings: loadSettings(), seed:new Map(), imported:new Map(), all:[], valid:[], excluded:[], months:[], range:{from:null,to:null}, tab:'overview', charts:[], sel:{}, user:null, fixes:[], active:[], history:[] };
 
 /* ---------------- data store (db capability → IndexedDB → memory) ---------------- */
 const Store = {
   kind:'memory', db:null, idb:null,
   async init(){
     try{ if(window.claude && typeof window.claude.use==='function'){ const db = await window.claude.use('db'); if(db){ this.db=db; this.kind='db'; return; } } }catch(e){}
-    try{ this.idb = await new Promise((res,rej)=>{ const q=indexedDB.open('psd_chiller',2); q.onupgradeneeded=()=>{ const d=q.result; if(!d.objectStoreNames.contains('chunks')) d.createObjectStore('chunks',{keyPath:'id'}); if(!d.objectStoreNames.contains('users')) d.createObjectStore('users',{keyPath:'username'}); }; q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error); }); this.kind='idb'; }catch(e){ this.kind='memory'; }
+    try{ this.idb = await new Promise((res,rej)=>{ const q=indexedDB.open('psd_chiller',3); q.onupgradeneeded=()=>{ const d=q.result; if(!d.objectStoreNames.contains('chunks')) d.createObjectStore('chunks',{keyPath:'id'}); if(!d.objectStoreNames.contains('users')) d.createObjectStore('users',{keyPath:'username'}); if(!d.objectStoreNames.contains('fixes')) d.createObjectStore('fixes',{keyPath:'id'}); }; q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error); }); this.kind='idb'; }catch(e){ this.kind='memory'; }
   },
   async loadAll(){
     try{
@@ -713,6 +770,37 @@ const Users = {
   }
 };
 
+/* ---------------- ประวัติการแก้ไขความผิดปกติ (fixes) ---------------- */
+const Fixes = {
+  mem:new Map(),
+  async list(){
+    if(Store.kind==='db'){ const sn=await Store.db.collection('fixes').limit(500).get(); return sn.docs.map(x=>x.data()).filter(Boolean); }
+    if(Store.kind==='idb') return (await idbReq('fixes','readonly',st=>st.getAll())) || [];
+    return [...this.mem.values()];
+  },
+  async put(d){
+    if(Store.kind==='db') await Store.db.collection('fixes').doc(d.id).set(d);
+    else if(Store.kind==='idb') await idbReq('fixes','readwrite',st=>st.put(d));
+    else this.mem.set(d.id, d);
+  }
+};
+let fixSig='';
+async function loadFixes(){
+  try{ const l=await Fixes.list(); l.sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));
+    const sig=JSON.stringify(l.map(f=>[f.id,!!f.reopened,(f.log||[]).length])), changed=sig!==fixSig; fixSig=sig; S.fixes=l; return changed; }
+  catch(e){ return false; }
+}
+function classify(){
+  const fx=S.fixes.filter(f=>!f.reopened);
+  S.active=[]; S.history=[];
+  for(const r of S.excluded){
+    let hit=null; const d=String(r.d);
+    for(const f of fx){ if((f.chs||[]).includes(r.ch) && d<=f.upTo && (!hit || f.upTo<hit.upTo)) hit=f; }
+    r.fix=hit; (hit?S.history:S.active).push(r);
+  }
+  const b=document.getElementById('anomN'); if(b){ b.textContent=S.active.length; b.hidden=!S.active.length; }
+}
+
 /* ---------------- sha-256 (pure JS) + password hashing ---------------- */
 const SHA_K = new Uint32Array([0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2]);
 function sha256hex(str){
@@ -749,7 +837,7 @@ function rebuild(){
   for(const m of months){ const src = S.imported.get(m) || S.seed.get(m); for(const a of src.rows) S.all.push(toRecord(a, src.fields)); }
   S.excluded=[]; S.valid=[];
   for(const r of S.all){ const why = checkRecord(r, S.settings.filter); r.why=why; if(why) S.excluded.push(r); else S.valid.push(r); }
-  S.months = months;
+  S.months = months; classify();
   if(!S.range.from || !months.includes(S.range.from)) S.range.from = months.includes('2569-04') ? '2569-04' : months[0];
   if(!S.range.to || !months.includes(S.range.to)) S.range.to = months.includes('2569-08') ? '2569-08' : months[months.length-1];
   if(S.range.from > S.range.to) [S.range.from, S.range.to] = [S.range.to, S.range.from];
@@ -799,7 +887,7 @@ function renderRangeControls(){
   const f=$('#rangeFrom'), t=$('#rangeTo'); f.innerHTML=opts; t.innerHTML=opts; f.value=S.range.from; t.value=S.range.to;
   $('#rangeWrap').hidden = ['ba','reg','data','users'].includes(S.tab);
 }
-function setTab(tab){ S.tab=tab; $$('.nav button').forEach(b=>b.setAttribute('aria-current', b.dataset.tab===tab?'page':'false')); renderRangeControls(); render(); window.scrollTo(0,0); }
+function setTab(tab){ S.tab=tab; $$('.nav button').forEach(b=>b.setAttribute('aria-current', b.dataset.tab===tab?'page':'false')); renderRangeControls(); render(); window.scrollTo(0,0); if(S.user) loadFixes().then(ch=>{ if(ch){ classify(); render(); } }); }
 
 function render(){
   killCharts(); chartDefaults();
@@ -807,6 +895,7 @@ function render(){
   if(!S.all.length){ v.innerHTML = `<div class="empty"><h2>ยังไม่มีข้อมูล</h2><p>นำเข้าไฟล์บันทึก Chiller (.xlsx) เพื่อเริ่มวิเคราะห์</p><button class="btn primary" onclick="openImport()">นำเข้าข้อมูล</button></div>`; return; }
   const fn = { overview:viewOverview, chiller:()=>viewUnits('chiller'), chp:()=>viewUnits('chp'), cdp:()=>viewUnits('cdp'), ct:viewCT, ba:viewBA, best:viewBest, group:viewGroups, reg:viewReg, data:viewData, users:viewUsers }[S.tab];
   v.innerHTML = ''; fn(v);
+  if(!['data','users'].includes(S.tab)) injectWarn(v);
 }
 function periodNote(){ const ms=rangeMonths(); return `${mLabel(ms[0],true)} – ${mLabel(ms[ms.length-1],true)} · ${inRange().length.toLocaleString()} บันทึกที่ผ่านเกณฑ์`; }
 
@@ -917,11 +1006,47 @@ function viewOverview(v){
   mkChart($('#cKwh'), { type:'bar', data:{ labels: ms.map((m,i)=>[mLabel(m), byM[i].days+' วัน']), datasets:[['Chiller','ch',p.chw],['CHP','chp',p.chw2],['CDP','cdp',p.cdw2],['Cooling','ct',p.cdw]].map(([l,k,c])=>({label:l, data:byM.map(e=>Math.round(e[k])), backgroundColor:c})) },
     options:{ maintainAspectRatio:false, plugins:{legend:{position:'bottom'}, tooltip:{callbacks:{footer:it=>'รวม '+fmtInt(it.reduce((a,x)=>a+x.parsed.y,0))+' kWh'}}}, scales:{x:{stacked:true}, y:{stacked:true,title:{display:true,text:'kWh'}}} } });
 }
+/* ---------------- คำเตือนความผิดปกติของข้อมูล ---------------- */
+function warnScope(){
+  if(S.tab==='ba'||S.tab==='reg'){ const s=S.settings; return [[s.before[0],s.after[0]].sort()[0], [s.before[1],s.after[1]].sort().pop()]; }
+  return [S.range.from, S.range.to];
+}
+function injectWarn(v){
+  const [a,b]=warnScope(); const act=S.active.filter(r=>r.m>=a&&r.m<=b);
+  if(!act.length) return;
+  const hist=S.history.filter(r=>r.m>=a&&r.m<=b).length;
+  const byCh=[...groupBy(act,r=>r.ch)].sort((x,y)=>y[1].length-x[1].length);
+  const byRs=[...groupBy(act,r=>r.why)].sort((x,y)=>y[1].length-x[1].length);
+  const ds=act.map(r=>String(r.d)).sort();
+  const html=`<aside class="warnbar" role="alert"><div class="wb-ico" aria-hidden="true">⚠</div><div class="wb-body"><b>พบข้อมูลผิดปกติที่ยังไม่ได้แก้ไข ${act.length.toLocaleString()} บันทึก ใน ${byCh.length} ชุด</b>
+    <p>${byCh.slice(0,8).map(([c,x])=>`<span class="fail">${esc(c)} · ${x.length}</span>`).join(' ')}${byCh.length>8?` <small>และอีก ${byCh.length-8} ชุด</small>`:''}</p>
+    <p class="wb-note">ช่วง ${fmtDateSheet(ds[0])} – ${fmtDateSheet(ds[ds.length-1])} · เหตุผลที่พบ: ${byRs.map(([k,x])=>esc(k.replace(' นอกช่วง',''))+' '+x.length).join(' · ')} · บันทึกเหล่านี้ถูกตัดออกจากการคำนวณ kW/TR, kW/TRp และสมการ (kWh ยังนับรวมทุกบันทึก) จึงอาจต่างจาก dashboard ที่ไม่ตัดข้อมูล</p>
+    <div class="row"><button class="btn small" data-warn="active">ดูรายการวันที่-เวลา</button>${hist?`<button class="btn small" data-warn="history">ประวัติการแก้ไข (${hist.toLocaleString()})</button>`:''}</div></div></aside>`;
+  const h=v.querySelector('header.vh'); if(h) h.insertAdjacentHTML('afterend', html); else v.insertAdjacentHTML('afterbegin', html);
+  $$('[data-warn]',v).forEach(b=>b.onclick=()=>goExc(b.dataset.warn));
+}
+function goExc(view){
+  const st=excState(); st.open=true; st.view=view; st.reason=''; st.ch=''; st.m=''; st.fix=''; st.limit=300;
+  if(S.tab!=='data') setTab('data'); else render();
+  setTimeout(()=>{ const p=$('#excPanel'); if(p) p.scrollIntoView({block:'start'}); }, 80);
+}
+function anomChip(act, hist, what){
+  if(act) return `<span class="warnchip" title="${what}: ยังผิดปกติ ${act} บันทึก ถูกตัดออกจากการคำนวณ">⚠ ${act}</span>`;
+  if(hist) return `<span class="okchip" title="${what}: แก้ไขแล้ว ${hist} บันทึก (ดูประวัติในหน้าข้อมูลและการตั้งค่า)">✓ ${hist}</span>`;
+  return '<span class="na">–</span>';
+}
+const monthAnom = m => anomChip(S.active.filter(r=>r.m===m).length, S.history.filter(r=>r.m===m).length, mLabel(m,true));
+function chBadge(ch){
+  const ms=rangeMonths(), a=ms[0], b=ms[ms.length-1];
+  const act=S.active.filter(r=>r.ch===ch&&r.m>=a&&r.m<=b).length, hist=S.history.filter(r=>r.ch===ch&&r.m>=a&&r.m<=b).length;
+  return (act||hist) ? ' '+anomChip(act,hist,ch) : '';
+}
+
 function monthlyPlantTable(rs, ms, ea){
-  const row = (lbl, st, en, cls='') => `<tr class="${cls}"><th scope="row">${lbl}</th><td>${st.n}</td><td>${en.days}</td><td>${fmt(st.tr,0)}</td><td>${fmt(st.kwtr)}</td><td>${fmt(st.chpkwtr,4)}</td><td>${fmt(st.cdpkwtr,4)}</td><td>${fmt(st.ctkwtr,4)}</td><td class="strong">${fmt(st.kwtrp)}</td><td class="strong">${fmtInt(en.kwh)}</td><td>${fmt(st.twb,1)}</td><td>${fmt(st.theff*100,1)}</td></tr>`;
-  return `<div class="tscroll"><table class="data"><thead><tr><th>เดือน</th><th>บันทึก</th><th>วัน</th><th>TR เฉลี่ย</th><th>Chiller kW/TR</th><th>CHP kW/TR</th><th>CDP kW/TR</th><th>CT kW/TR</th><th>kW/TRp</th><th>kWh</th><th>Twb °F</th><th>CT eff. %</th></tr></thead><tbody>
-  ${ms.map(m=>row(mLabel(m,true), statBlock(rs.filter(r=>r.m===m)), energyStats(ea.filter(r=>r.m===m)))).join('')}${row('ทั้งช่วง', statBlock(rs), energyStats(ea),'total')}</tbody></table></div>
-  <p class="legend-note">บันทึก/kW/TR/kW/TRp นับเฉพาะข้อมูลที่ผ่านเกณฑ์ · kWh และจำนวนวันนับทุกบันทึกที่มี kW รวม</p>`;
+  const row = (lbl, st, en, cls='', ex='<span class="na">–</span>') => `<tr class="${cls}"><th scope="row">${lbl}</th><td>${st.n}</td><td>${en.days}</td><td>${fmt(st.tr,0)}</td><td>${fmt(st.kwtr)}</td><td>${fmt(st.chpkwtr,4)}</td><td>${fmt(st.cdpkwtr,4)}</td><td>${fmt(st.ctkwtr,4)}</td><td class="strong">${fmt(st.kwtrp)}</td><td class="strong">${fmtInt(en.kwh)}</td><td>${fmt(st.twb,1)}</td><td>${fmt(st.theff*100,1)}</td><td>${ex}</td></tr>`;
+  return `<div class="tscroll"><table class="data"><thead><tr><th>เดือน</th><th>บันทึก</th><th>วัน</th><th>TR เฉลี่ย</th><th>Chiller kW/TR</th><th>CHP kW/TR</th><th>CDP kW/TR</th><th>CT kW/TR</th><th>kW/TRp</th><th>kWh</th><th>Twb °F</th><th>CT eff. %</th><th>ความผิดปกติ</th></tr></thead><tbody>
+  ${ms.map(m=>row(mLabel(m,true), statBlock(rs.filter(r=>r.m===m)), energyStats(ea.filter(r=>r.m===m)), '', monthAnom(m))).join('')}${row('ทั้งช่วง', statBlock(rs), energyStats(ea),'total', anomChip(S.active.filter(r=>ms.includes(r.m)).length, S.history.filter(r=>ms.includes(r.m)).length, 'ทั้งช่วง'))}</tbody></table></div>
+  <p class="legend-note">บันทึก/kW/TR/kW/TRp นับเฉพาะข้อมูลที่ผ่านเกณฑ์ · kWh และจำนวนวันนับทุกบันทึกที่มี kW รวม · ⚠ = จำนวนบันทึกผิดปกติที่ยังไม่แก้ไข (ถูกตัดออก) · ✓ = แก้ไขแล้ว อยู่ในประวัติ</p>`;
 }
 
 /* ---------------- Unit matrices (Chiller / CHP / CDP) ---------------- */
@@ -934,12 +1059,12 @@ function metricChips(kind, metrics){
   const cur = S.sel[kind+'M'] || metrics[0][0];
   return `<div class="chips" role="radiogroup" aria-label="ตัวชี้วัด">${metrics.map(m=>`<button role="radio" aria-checked="${m[0]===cur}" data-m="${m[0]}">${esc(m[1])}</button>`).join('')}</div>`;
 }
-function matrixTable(mx, ms, metric, selKey, nameFn){
+function matrixTable(mx, ms, metric, selKey, nameFn, badgeFn){
   const [key,, d, dir] = metric;
   const vals = mx.units.flatMap(u=>ms.map(m=>mx.cells[u][m].n?mx.cells[u][m][key]:null)).filter(isNum);
   const lo=Math.min(...vals), hi=Math.max(...vals);
   return `<div class="tscroll"><table class="data matrix"><thead><tr><th>อุปกรณ์</th>${ms.map(m=>`<th>${mLabel(m)}</th>`).join('')}<th>ทั้งช่วง</th></tr></thead><tbody>
-  ${mx.units.map(u=>`<tr data-u="${esc(u)}" tabindex="0" class="${S.sel[selKey]===u?'on':''}"><th scope="row">${esc(nameFn(u))}</th>${ms.map(m=>{ const c=mx.cells[u][m]; return `<td style="${c.n?heat(c[key],lo,hi,dir):''}">${c.n? fmt(c[key],d):'<span class="na">–</span>'}</td>`; }).join('')}<td class="strong">${fmt(mx.cells[u].all[key],d)}</td></tr>`).join('')}
+  ${mx.units.map(u=>`<tr data-u="${esc(u)}" tabindex="0" class="${S.sel[selKey]===u?'on':''}"><th scope="row">${esc(nameFn(u))}${badgeFn?badgeFn(u):''}</th>${ms.map(m=>{ const c=mx.cells[u][m]; return `<td style="${c.n?heat(c[key],lo,hi,dir):''}">${c.n? fmt(c[key],d):'<span class="na">–</span>'}</td>`; }).join('')}<td class="strong">${fmt(mx.cells[u].all[key],d)}</td></tr>`).join('')}
   </tbody></table></div><p class="legend-note">${dir==='none'?'':'เขียว = ดีกว่า · แดง = แย่กว่า (เทียบภายในตาราง) · '}เลือกแถวเพื่อดูรายละเอียดด้านล่าง</p>`;
 }
 function bindRows(v, selKey){ $$('tr[data-u]', v).forEach(tr=>{ const go=()=>{ S.sel[selKey]=tr.dataset.u; render(); $('#detail')?.scrollIntoView({block:'nearest'}); }; tr.onclick=go; tr.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();go();} }; }); }
@@ -949,7 +1074,7 @@ function viewUnits(kind){
   const metric = def.metrics.find(m=>m[0]===(S.sel[kind+'M']||def.metrics[0][0])) || def.metrics[0];
   if(!S.sel[kind] || !mx.units.includes(S.sel[kind])) S.sel[kind]=mx.units[0];
   v.innerHTML = `<header class="vh"><h2>${esc(def.title)}</h2><p>${esc(periodNote())}</p></header>
-  <section class="panel">${metricChips(kind, def.metrics)}${matrixTable(mx, ms, metric, kind, def.name)}</section>
+  <section class="panel">${metricChips(kind, def.metrics)}${matrixTable(mx, ms, metric, kind, def.name, chBadge)}</section>
   <section class="panel" id="detail"></section>`;
   $$('.chips button', v).forEach(b=>b.onclick=()=>{ S.sel[kind+'M']=b.dataset.m; render(); });
   bindRows(v, kind);
@@ -1096,6 +1221,10 @@ function viewData(v){
   const s=S.settings, f=s.filter;
   const byM = S.months.map(m=>{ const a=S.all.filter(r=>r.m===m); return { m, n:a.length, ok:a.filter(r=>!r.why).length, imp:S.imported.get(m) }; });
   const reasons=[...groupBy(S.excluded, r=>r.why)].sort((a,b)=>b[1].length-a[1].length);
+  const dirCount = a => a.reduce((o,r)=>{ const e=explainRecord(r,f)[0]; const k=e?e.dir:'na'; o[k]=(o[k]||0)+1; return o; },{});
+  const dfmt = (x,y) => (isNum(x)&&isNum(y)) ? ((y-x>=0?'+':'−')+fmt(Math.abs(y-x),3)) : '–';
+  const cmpRow = (label, all, val) => { const a1=mean(all.map(r=>r.kwtrp)), v1=mean(val.map(r=>r.kwtrp)), a2=mean(all.map(r=>r.kwtr)), v2=mean(val.map(r=>r.kwtr));
+    return `<tr><th scope="row">${label}</th><td>${all.length}</td><td>${all.length-val.length}</td><td>${fmt(a1,3)}</td><td class="strong">${fmt(v1,3)}</td><td>${dfmt(a1,v1)}</td><td>${fmt(a2,3)}</td><td class="strong">${fmt(v2,3)}</td><td>${dfmt(a2,v2)}</td></tr>`; };
   const num=(id,val,step,lbl)=>`<input type="number" id="${id}" value="${val}" step="${step}" aria-label="${lbl}">`;
   const mopt = cur => S.months.map(m=>`<option value="${m}" ${m===cur?'selected':''}>${mLabel(m,true)}</option>`).join('');
   const isAdmin = S.user && S.user.role==='admin', th=loadTheme(), tcol=TXT_COL[th.bg==='dark'?'dark':'light'];
@@ -1110,9 +1239,14 @@ function viewData(v){
   <section class="grid2"><div class="panel"><h3>ข้อมูลรายเดือน</h3><div class="tscroll"><table class="data"><thead><tr><th>เดือน</th><th>บันทึก</th><th>ผ่านเกณฑ์</th><th>แหล่งข้อมูล</th><th></th></tr></thead><tbody>
   ${byM.map(x=>`<tr><th scope="row">${mLabel(x.m,true)}</th><td>${x.n}</td><td>${x.ok}</td><td class="wrap">${x.imp?`นำเข้าจาก ${esc(x.imp.fileName||'')}<br><small>${esc((x.imp.importedAt||'').slice(0,16).replace('T',' '))}</small>`:'chiller_aug_26.xlsx (ตั้งต้น)'}</td><td>${x.imp&&isAdmin?`<button class="btn small" data-del="${x.m}">ลบข้อมูลที่นำเข้า</button>`:''}</td></tr>`).join('')}
   </tbody></table></div></div>
-  <div class="panel"><h3>ข้อมูลที่ถูกตัดออก ${S.excluded.length} บันทึก</h3><div class="tscroll"><table class="data"><thead><tr><th>เหตุผล</th><th>จำนวน</th><th>ชุดที่พบมากสุด</th></tr></thead><tbody>
-  ${reasons.map(([k,a])=>{ const t=[...groupBy(a,r=>r.ch)].sort((x,y)=>y[1].length-x[1].length)[0]; return `<tr><th scope="row">${esc(k)}</th><td>${a.length}</td><td>${esc(t[0])} (${t[1].length})</td></tr>`; }).join('')||'<tr><td colspan="3">ไม่มี</td></tr>'}</tbody></table></div>
-  <p class="legend-note">ตรวจตามลำดับ: TR → kW/TR → kW/TRp → ΔT → %Load → Twb · นับเฉพาะเหตุผลแรกที่พบ</p></div></section>
+  <div class="panel"><h3>ข้อมูลที่ถูกตัดออก ${S.excluded.length} บันทึก <small class="exc-split">· ยังผิดปกติ ${S.active.length} · แก้ไขแล้ว ${S.history.length}</small></h3><div class="tscroll"><table class="data"><thead><tr><th>เหตุผล</th><th>จำนวน</th><th>ต่ำกว่าช่วง</th><th>สูงกว่าช่วง</th><th>ชุดที่พบมากสุด</th><th></th></tr></thead><tbody>
+  ${reasons.map(([k,a])=>{ const t=[...groupBy(a,r=>r.ch)].sort((x,y)=>y[1].length-x[1].length)[0]; const d=dirCount(a); return `<tr><th scope="row">${esc(k)}</th><td>${a.length}</td><td>${d.low||'–'}</td><td>${d.high||'–'}</td><td>${esc(t[0])} (${t[1].length})</td><td><button class="btn small" data-exc="${esc(k)}">ดูรายการ</button></td></tr>`; }).join('')||'<tr><td colspan="6">ไม่มี</td></tr>'}</tbody></table></div>
+  <div class="row" style="margin-top:12px"><button class="btn primary" id="excOpen" ${S.excluded.length?'':'disabled'}>ดูรายการวันที่-เวลา ที่ถูกตัดออก (${S.excluded.length})</button></div>
+  <p class="legend-note">ตรวจตามลำดับ: TR → kW/TR → kW/TRp → ΔT → %Load → Twb · นับเฉพาะเหตุผลแรกที่พบ · “ต่ำกว่า/สูงกว่าช่วง” นับตามเหตุผลแรกนี้ (กรณีไม่มีค่า จะรวมในจำนวนแต่ไม่นับเป็นต่ำ/สูง)</p></div></section>
+  <section class="panel"><h3>เทียบค่าเฉลี่ยกับ dashboard</h3><div class="tscroll"><table class="data"><thead><tr><th rowspan="2">เดือน</th><th rowspan="2">บันทึก</th><th rowspan="2">ถูกตัดออก</th><th colspan="3">kW/TRp เฉลี่ย</th><th colspan="3">kW/TR chiller เฉลี่ย</th></tr><tr><th>ทุกบันทึก</th><th>ผ่านเกณฑ์</th><th>ต่างกัน</th><th>ทุกบันทึก</th><th>ผ่านเกณฑ์</th><th>ต่างกัน</th></tr></thead><tbody>
+  ${S.months.map(m=>cmpRow(mLabel(m,true), S.all.filter(r=>r.m===m), S.valid.filter(r=>r.m===m))).join('')}${cmpRow('ทุกเดือน', S.all, S.valid)}</tbody></table></div>
+  <p class="legend-note">“ทุกบันทึก” = เฉลี่ยทุกแถวที่มีค่า รวมแถวที่ถูกตัดออก (ค่านี้ควรใกล้กับ dashboard ที่ไม่คัดกรองข้อมูล) · “ผ่านเกณฑ์” = ค่าที่ webapp ใช้วิเคราะห์ · แถวที่ถูกตัดออกส่วนใหญ่มี kW/TR ต่ำผิดปกติ จึงดึงค่าเฉลี่ยทุกบันทึกให้ต่ำลง · kWh นับทุกบันทึก ไม่ตัดออก</p></section>
+  <section class="panel" id="excPanel" hidden></section>
   <section class="panel"><h3>เกณฑ์คัดกรองข้อมูล</h3><div class="form">
     <label>kW/TR ${num('fKwtrMin',f.kwtrMin,0.01,'kW/TR ต่ำสุด')} – ${num('fKwtrMax',f.kwtrMax,0.01,'kW/TR สูงสุด')}</label>
     <label>kW/TRp ${num('fKwtrpMin',f.kwtrpMin,0.01,'kW/TRp ต่ำสุด')} – ${num('fKwtrpMax',f.kwtrpMax,0.01,'kW/TRp สูงสุด')}</label>
@@ -1138,6 +1272,10 @@ function viewData(v){
   $$('input[name=thBg]',v).forEach(i=>i.onchange=()=>setThemePart({bg:i.value}));
   $$('input[name=thTx]',v).forEach(i=>i.onchange=()=>setThemePart({text:i.value}));
   $('#thReset').onclick=()=>setThemePart({bg:'gray',text:'black'});
+  const openExc = reason => { const st=excState(); st.open=true; st.reason=reason||''; st.ch=''; st.m=''; st.fix=''; st.limit=300; st.view = reason ? ((S.active.some(r=>r.why===reason)||!S.history.some(r=>r.why===reason))?'active':'history') : (S.active.length?'active':'history'); drawExc(); const p=$('#excPanel'); if(p) p.scrollIntoView({block:'start'}); };
+  $('#excOpen').onclick=()=>openExc('');
+  $$('[data-exc]',v).forEach(b=>b.onclick=()=>openExc(b.dataset.exc));
+  drawExc();
   if(isAdmin){
     $('#pick2').onclick=()=>$('#file').click(); $('#pastePick').onclick=()=>openImport('paste');
     const dz=$('#drop'); dz.ondragover=e=>{e.preventDefault(); dz.classList.add('over');}; dz.ondragleave=()=>dz.classList.remove('over');
@@ -1279,7 +1417,8 @@ async function chartImage(cfg, w=960, h=360){
 }
 function reportData(a,b){
   const ms = monthsBetween(S.months,a,b); const rs = S.valid.filter(r=>r.m>=a&&r.m<=b); const ra = S.all.filter(r=>r.m>=a&&r.m<=b);
-  return { ms, rs, ra, en:energyStats(ra), enBy:new Map(ms.map(m=>[m,energyStats(ra.filter(r=>r.m===m))])), st:statBlock(rs), mxCh:matrix(rs,ms,r=>r.ch), mxCT:ctMatrix(rs,ms), bp:bestPerMonth(rs,ms,S.settings.minN), g:bestGroups(rs,S.settings.groupMinN),
+  const exA=S.active.filter(r=>r.m>=a&&r.m<=b), exH=S.history.filter(r=>r.m>=a&&r.m<=b), exCh=[...groupBy(exA,r=>r.ch)].sort((x,y)=>y[1].length-x[1].length).map(([c,x])=>c+' '+x.length);
+  return { ms, rs, ra, ex:{act:exA.length, hist:exH.length, chs:exCh}, en:energyStats(ra), enBy:new Map(ms.map(m=>[m,energyStats(ra.filter(r=>r.m===m))])), st:statBlock(rs), mxCh:matrix(rs,ms,r=>r.ch), mxCT:ctMatrix(rs,ms), bp:bestPerMonth(rs,ms,S.settings.minN), g:bestGroups(rs,S.settings.groupMinN),
     ba:beforeAfter(S.valid,S.settings.before,S.settings.after), mb:regressionModel(S.valid,S.settings.before,S.settings.reg), ma:regressionModel(S.valid,S.settings.after,S.settings.reg), sv:savingsCalc() };
 }
 async function buildReportHTML(a,b){
@@ -1313,6 +1452,7 @@ ul.ins{padding-left:18px} ul.ins li{margin:4px 0}
 </style></head><body><button class="pbtn" onclick="window.print()">พิมพ์ / บันทึกเป็น PDF</button><div class="wrap">
 <header><h1>PSD_eNGINNo Chiller Plant Analysis</h1><p>รายงาน${title}</p><p>ข้อมูลผ่านเกณฑ์ ${D.rs.length.toLocaleString()} บันทึก · เกณฑ์ kW/TR ${s.filter.kwtrMin}–${s.filter.kwtrMax}, kW/TRp ${s.filter.kwtrpMin}–${s.filter.kwtrpMax}, ΔT ${s.filter.dTMin}–${s.filter.dTMax} °F · สร้างเมื่อ ${new Date().toLocaleString('th-TH')}</p></header>
 <h2>สรุปผู้บริหาร</h2><div class="kpi"><div><b>${fmt(D.st.kwtrp)}</b><span>kW/TRp plant (มาตรฐาน ${s.stdKwtrp})</span></div><div><b>${fmt(D.st.kwtr)}</b><span>Chiller kW/TR (มาตรฐาน ${s.stdKwtr})</span></div><div><b>${fmt(D.st.chpkwtr,4)}</b><span>CHP kW/TR</span></div><div><b>${fmt(D.st.cdpkwtr,4)}</b><span>CDP kW/TR</span></div><div><b>${fmt(D.st.ctkwtr,4)}</b><span>Cooling kW/TR</span></div><div style="border-top-color:#2f7a52"><b>${fmtInt(D.en.kwh)}</b><span>kWh ทั้ง plant (${D.en.n.toLocaleString()} บันทึก × ${D.en.hours} ชม. · ${D.en.days} วัน)</span></div></div>
+<p class="note"><b>ข้อมูลที่ถูกตัดออกจากการคำนวณในช่วงนี้ ${D.ex.act+D.ex.hist} บันทึก</b> — ยังผิดปกติ ${D.ex.act}${D.ex.chs.length?' ('+D.ex.chs.map(esc).join(', ')+')':''} · แก้ไขแล้ว (History) ${D.ex.hist} · kWh นับรวมทุกบันทึก</p>
 <ul class="ins">${ins.map(x=>`<li>${x}</li>`).join('')}</ul>
 ${imgTrend?`<img src="${imgTrend}" alt="แนวโน้มรายเดือน">`:''}
 <table><thead><tr><th>เดือน</th><th>บันทึก</th><th>TR</th><th>Chiller kW/TR</th><th>CHP</th><th>CDP</th><th>CT</th><th>kW/TRp</th><th>kWh</th><th>วัน</th><th>Twb °F</th><th>CT eff. %</th></tr></thead><tbody>${D.ms.map(m=>{const t=statBlock(D.rs.filter(r=>r.m===m)), e=D.enBy.get(m); return `<tr><th>${mLabel(m,true)}</th><td>${t.n}</td><td>${fmt(t.tr,0)}</td><td>${fmt(t.kwtr)}</td><td>${fmt(t.chpkwtr,4)}</td><td>${fmt(t.cdpkwtr,4)}</td><td>${fmt(t.ctkwtr,4)}</td><td><b>${fmt(t.kwtrp)}</b></td><td><b>${fmtInt(e.kwh)}</b></td><td>${e.days}</td><td>${fmt(t.twb,1)}</td><td>${fmt(t.theff*100,1)}</td></tr>`;}).join('')}</tbody></table>
@@ -1355,7 +1495,8 @@ function buildWorkbook(a,b){
     ['เดือน','บันทึก','TR','Chiller kW/TR','CHP kW/TR','CDP kW/TR','CT kW/TR','kW/TRp','Twb F','CT eff','kWh ทั้ง plant','วันที่มีข้อมูล','kWh Chiller','kWh CHP','kWh CDP','kWh Cooling'],
     ...D.ms.map(m=>{const t=statBlock(D.rs.filter(r=>r.m===m)), e=D.enBy.get(m); return [m,t.n,r4(t.tr),r4(t.kwtr),r4(t.chpkwtr),r4(t.cdpkwtr),r4(t.ctkwtr),r4(t.kwtrp),r4(t.twb),r4(t.theff),Math.round(e.kwh),e.days,Math.round(e.ch),Math.round(e.chp),Math.round(e.cdp),Math.round(e.ct)];}),
     ['รวม',D.rs.length,null,null,null,null,null,r4(D.st.kwtrp),null,null,Math.round(D.en.kwh),D.en.days,Math.round(D.en.ch),Math.round(D.en.chp),Math.round(D.en.cdp),Math.round(D.en.ct)],
-    [],['หมายเหตุ','kWh = kW รวมต่อบันทึก × '+D.en.hours+' ชม. นับทุกบันทึกที่มี kW รวม']]);
+    [],['หมายเหตุ','kWh = kW รวมต่อบันทึก × '+D.en.hours+' ชม. นับทุกบันทึกที่มี kW รวม'],
+    ['ข้อมูลที่ถูกตัดออก','ยังผิดปกติ '+D.ex.act+' · แก้ไขแล้ว (History) '+D.ex.hist+(D.ex.chs.length?' · ชุดที่ยังผิดปกติ: '+D.ex.chs.join(', '):'')]]);
   const H=['เดือน','Chiller','n','kW/TR','kW/TRp','kW','TR','%Load','dT F','Evap app F','Cond app F','CHP kW','CHP GPM/kW','CHP kW/TR','CDP kW','CDP GPM/kW','CDP kW/TR','CT kW','CT kW/TR'];
   const rowsU=[H]; for(const u of D.mxCh.units) for(const m of D.ms){ const c=D.mxCh.cells[u][m]; if(c.n) rowsU.push([m,u,c.n,...['kwtr','kwtrp','chkw','tr','loadPct','dT','eapp','capp','chp','chpeff','chpkwtr','cdp','cdpeff','cdpkwtr','ct','ctkwtr'].map(k=>r4(c[k]))]); }
   add('Chiller_CHP_CDP', rowsU);
@@ -1378,6 +1519,150 @@ function buildWorkbook(a,b){
 
 /* ---------------- misc ---------------- */
 let toastT; function toast(msg){ const t=$('#toast'); t.textContent=msg; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true, 4500); }
+
+/* ---------------- รายการที่ถูกตัดออก / ความผิดปกติ / ประวัติการแก้ไข ---------------- */
+const EXC_COLS=[['chkw','kW',1],['gpm','GPM',0],['chs','CHS °F',1],['chr','CHR °F',1],['dT','ΔT °F',1],['tr','TR',0],['kwtr','kW/TR',3],['kwtrp','kW/TRp',3],['loadPct','%Load',1],['twb','Twb °F',1]];
+const EXC_DEC={tr:0,kwtr:3,kwtrp:3,dT:1,loadPct:1,twb:1};
+const excState = () => S.sel.exc || (S.sel.exc={open:false, view:'active', reason:'', ch:'', m:'', sort:'new', limit:300, fix:''});
+const nfx = (v,d) => isNum(v) ? v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}) : '–';
+const fmtDateSheet = d => { const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d)); return m ? `${+m[3]}/${+m[2]}/${m[1]}` : String(d||''); };
+const fmtTimeSheet = t => String(t||'').replace(/^0(\d:)/,'$1');
+const fmtStamp = iso => { const d=new Date(iso); return isNaN(d) ? String(iso||'') : `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()+543} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
+const DIR_TH = {high:'สูงกว่าช่วง', low:'ต่ำกว่าช่วง', na:'ไม่มีค่า'};
+const shortWhy = k => String(k||'').replace(' นอกช่วง','');
+function failText(x){
+  if(x.dir==='na') return `${x.label}: ไม่มีค่า / คำนวณไม่ได้`;
+  const d = EXC_DEC[x.col] ?? 2, over = x.dir==='high' ? x.val-x.hi : x.lo-x.val;
+  return `${x.label} ${DIR_TH[x.dir]} · ค่า ${nfx(x.val,d)} · เกณฑ์ ${nfx(x.lo,d)}–${nfx(x.hi,d)} · ${x.dir==='high'?'เกิน':'ขาด'} ${nfx(over,d)}`;
+}
+function excFiltered(rows, st){
+  const list=rows.filter(x=>(!st.reason||x.e[0].reason===st.reason)&&(!st.ch||x.r.ch===st.ch)&&(!st.m||x.r.m===st.m)&&(!st.fix||(x.r.fix&&x.r.fix.id===st.fix)));
+  list.sort((a,b)=>{ const ka=a.r.d+' '+a.r.t, kb=b.r.d+' '+b.r.t; return st.sort==='old' ? ka.localeCompare(kb) : kb.localeCompare(ka); });
+  return list;
+}
+function fixCardsHTML(){
+  if(!S.fixes.length) return '<p class="na">ยังไม่มีประวัติการแก้ไข — เมื่อช่างแก้ไขแล้ว ให้กด “บันทึกว่าแก้ไขแล้ว” ที่แท็บ “ยังผิดปกติ”</p>';
+  const st=excState();
+  return S.fixes.map(f=>{
+    const recs=S.history.filter(r=>r.fix&&r.fix.id===f.id), ds=recs.map(r=>String(r.d)).sort();
+    const rs=[...groupBy(recs,r=>r.why)].sort((x,y)=>y[1].length-x[1].length).map(([k,x])=>`${esc(shortWhy(k))} ${x.length}`).join(' · ');
+    const perCh=(f.chs||[]).map(c=>`${esc(c)} ${recs.filter(r=>r.ch===c).length}`).join(' · ');
+    const off=!!f.reopened;
+    return `<article class="fixcard ${off?'off':''}"><header><b>${(f.chs||[]).map(esc).join(', ')}</b><span class="${off?'offchip':'okchip'}">${off?'ยกเลิกแล้ว (เปิดเป็นผิดปกติอีกครั้ง)':'แก้ไขแล้ว · อยู่ใน History'}</span></header>
+    <p class="fx-meta">${off?`เคยย้ายถึงวันที่ ${fmtDateSheet(f.upTo)} (${f.n0||0} บันทึก)`:`ย้ายบันทึกที่ผิดปกติถึงวันที่ <b>${fmtDateSheet(f.upTo)}</b> · ${recs.length} บันทึก${ds.length?` (${fmtDateSheet(ds[0])} – ${fmtDateSheet(ds[ds.length-1])})`:''}${f.n0&&f.n0!==recs.length?` · ตอนย้าย ${f.n0}`:''}`}${rs?` · ${rs}`:''}${f.chs&&f.chs.length>1&&!off?` · ${perCh}`:''}</p>
+    <p class="fx-meta">วันที่ช่างแก้ไข: ${esc(f.fixedOn||'–')} · ย้ายโดย ${esc(f.byName||f.by||'')} เมื่อ ${esc(fmtStamp(f.createdAt))}${off?` · เปิดใหม่โดย ${esc(f.reopenedByName||f.reopenedBy||'')} เมื่อ ${esc(fmtStamp(f.reopenedAt))}`:''}</p>
+    ${(f.log&&f.log.length)?`<ul class="fx-log">${f.log.map(l=>`<li><small>${esc(fmtStamp(l.at))} · ${esc(l.byName||l.by||'')}</small><br>${esc(l.text).replace(/\n/g,'<br>')}</li>`).join('')}</ul>`:'<p class="na">ยังไม่มีบันทึกรายละเอียดการแก้ไข — ช่างเพิ่มได้ด้านล่าง</p>'}
+    <div class="fx-add"><textarea rows="2" aria-label="เพิ่มบันทึกการแก้ไข" placeholder="เพิ่มบันทึก: แก้ไขอะไร / เปลี่ยนอุปกรณ์อะไร / ผู้ดำเนินการ"></textarea>
+      <div class="row"><button class="btn small" data-fxadd="${esc(f.id)}">เพิ่มบันทึก</button>${off?'':`<button class="btn small ${st.fix===f.id?'on':''}" data-fxview="${esc(f.id)}">${st.fix===f.id?'แสดงทั้งหมด':'ดูรายการบันทึก'}</button><button class="btn small admin-only" data-fxreopen="${esc(f.id)}">เปิดเป็นผิดปกติอีกครั้ง</button>`}</div></div></article>`;
+  }).join('');
+}
+function drawExc(){
+  const host=$('#excPanel'); if(!host) return;
+  const st=excState(); host.hidden=!st.open; if(!st.open){ host.innerHTML=''; return; }
+  const f=S.settings.filter, hist=st.view==='history';
+  const pool = hist ? S.history : S.active;
+  const rows = pool.map(r=>({r, e:explainRecord(r,f)})).filter(x=>x.e.length);
+  const list=excFiltered(rows, st), shown=list.slice(0, st.limit);
+  const reasons=[...groupBy(rows,x=>x.e[0].reason)].sort((a,b)=>b[1].length-a[1].length);
+  const chs=[...new Set(rows.map(x=>x.r.ch))].sort(), ms=[...new Set(rows.map(x=>x.r.m))].sort();
+  const cell=(x,c)=>{ const [k,,d]=c, v=x.r[k], hit=x.e.find(y=>y.col===k); return `<td class="${hit?'bad':''}" ${hit?`title="${esc(failText(hit))}"`:''}>${hit&&hit.dir!=='na'?(hit.dir==='high'?'↑ ':'↓ '):''}${isNum(v)?nfx(v,d):'–'}</td>`; };
+  let top='';
+  if(!hist){
+    const byCh=[...groupBy(S.active,r=>r.ch)].sort((a,b)=>b[1].length-a[1].length);
+    top = byCh.length ? `<div class="tscroll"><table class="data"><thead><tr><th>ชุดที่ยังผิดปกติ</th><th>บันทึก</th><th>ช่วงวันที่</th><th>เหตุผลที่พบ</th><th></th></tr></thead><tbody>
+      ${byCh.map(([c,a])=>{ const ds=a.map(r=>String(r.d)).sort(); const rs=[...groupBy(a,r=>r.why)].sort((x,y)=>y[1].length-x[1].length).map(([k,x])=>`${esc(shortWhy(k))} ${x.length}`).join(' · '); return `<tr><th scope="row">${esc(c)}</th><td>${a.length}</td><td class="nowrap">${fmtDateSheet(ds[0])} – ${fmtDateSheet(ds[ds.length-1])}</td><td class="wrap">${rs}</td><td><button class="btn small" data-fixch="${esc(c)}">บันทึกว่าแก้ไขแล้ว</button></td></tr>`; }).join('')}</tbody></table></div>
+      <div class="row" style="margin:10px 0 4px"><button class="btn primary small" id="fixOpen">บันทึกว่าแก้ไขแล้ว → ย้ายไป History (เลือกได้หลายชุด)</button></div>
+      <p class="legend-note">เมื่อช่างแก้ไขอุปกรณ์/เซนเซอร์แล้ว ให้ย้ายบันทึกที่ผิดปกติไปเก็บเป็นประวัติ คำเตือนในหน้าวิเคราะห์จะหายไป ส่วนข้อมูลใหม่หลังวันที่เลือก ถ้ายังผิดปกติจะแจ้งเตือนอีกครั้ง · ช่างเพิ่มรายละเอียดว่าแก้ไขอะไรได้ในแท็บประวัติ</p>`
+      : '<p class="okline">✓ ไม่มีความผิดปกติที่ยังไม่แก้ไข</p>';
+  } else {
+    top = `<div class="fixlist">${fixCardsHTML()}</div>`;
+  }
+  const fixSel = st.fix ? S.fixes.find(x=>x.id===st.fix) : null;
+  host.innerHTML = `<div class="exc-head"><h3>ความผิดปกติของข้อมูล</h3><div class="row"><button class="btn small" id="excXlsx" ${list.length?'':'disabled'}>ดาวน์โหลด Excel (${list.length.toLocaleString()} แถว)</button><button class="btn small" id="excClose">ปิดรายการ</button></div></div>
+  <div class="seg" role="tablist" aria-label="มุมมอง"><button role="tab" aria-selected="${!hist}" data-view="active">ยังผิดปกติ (${S.active.length.toLocaleString()})</button><button role="tab" aria-selected="${hist}" data-view="history">ประวัติการแก้ไข (${S.history.length.toLocaleString()})</button></div>
+  ${top}
+  <h4 class="exc-sub">${hist?'บันทึกที่ย้ายไป History':'รายการวันที่-เวลา ที่ยังผิดปกติ'} · ${list.length.toLocaleString()} จาก ${rows.length.toLocaleString()} บันทึก${fixSel?` · เฉพาะรายการแก้ไขของ ${(fixSel.chs||[]).map(esc).join(', ')}`:''}</h4>
+  <div class="chips" role="radiogroup" aria-label="กรองตามเหตุผล"><button role="radio" aria-checked="${!st.reason}" data-r="">ทั้งหมด (${rows.length})</button>${reasons.map(([k,a])=>`<button role="radio" aria-checked="${st.reason===k}" data-r="${esc(k)}">${esc(k)} (${a.length})</button>`).join('')}</div>
+  <div class="form exc-form">
+    <label>ชุด <select id="excCh"><option value="">ทั้งหมด</option>${chs.map(c=>`<option ${st.ch===c?'selected':''}>${esc(c)}</option>`).join('')}</select></label>
+    <label>เดือน <select id="excM"><option value="">ทั้งหมด</option>${ms.map(m=>`<option value="${m}" ${st.m===m?'selected':''}>${mLabel(m,true)}</option>`).join('')}</select></label>
+    <label>เรียง <select id="excSort"><option value="new" ${st.sort==='new'?'selected':''}>ล่าสุดก่อน</option><option value="old" ${st.sort==='old'?'selected':''}>เก่าสุดก่อน</option></select></label>
+  </div>
+  <div class="tscroll"><table class="data exc"><thead><tr><th>วันที่</th><th>เวลา</th><th>ชุด</th><th>เหตุผลที่นับ (ข้อแรก)</th><th>ผิดเกณฑ์ข้ออื่นด้วย</th>${EXC_COLS.map(c=>`<th>${c[1]}</th>`).join('')}</tr></thead><tbody>
+  ${shown.map(x=>{ const f0=x.e[0]; return `<tr><td class="nowrap">${fmtDateSheet(x.r.d)}</td><td class="nowrap">${fmtTimeSheet(x.r.t)}</td><th scope="row" class="nowrap">${esc(x.r.ch)}</th>
+    <td class="wrap"><b class="dir-${f0.dir}">${esc(f0.label)} ${DIR_TH[f0.dir]}</b><br><small>${f0.dir==='na'?'ไม่มีค่า / คำนวณไม่ได้':`เกณฑ์ ${nfx(f0.lo,EXC_DEC[f0.col]??2)}–${nfx(f0.hi,EXC_DEC[f0.col]??2)} · ${f0.dir==='high'?'เกิน':'ขาด'} ${nfx(f0.dir==='high'?f0.val-f0.hi:f0.lo-f0.val,EXC_DEC[f0.col]??2)}`}</small></td>
+    <td class="wrap">${x.e.length>1?x.e.slice(1).map(y=>`<span class="fail" title="${esc(failText(y))}">${esc(y.label)} ${y.dir==='high'?'↑':y.dir==='low'?'↓':'?'}</span>`).join(' '):'<span class="na">–</span>'}</td>
+    ${EXC_COLS.map(c=>cell(x,c)).join('')}</tr>`; }).join('')||`<tr><td colspan="${5+EXC_COLS.length}">ไม่มีรายการตามตัวกรองนี้</td></tr>`}</tbody></table></div>
+  ${list.length>shown.length?`<div class="row" style="margin-top:10px"><button class="btn small" id="excMore">แสดงเพิ่ม (เหลืออีก ${(list.length-shown.length).toLocaleString()} แถว)</button></div>`:''}
+  <p class="legend-note">ช่องสีแดง = ค่าที่ไม่ผ่านเกณฑ์ (↑ สูงกว่าช่วง · ↓ ต่ำกว่าช่วง) เอาเมาส์ชี้เพื่อดูเกณฑ์ · วันที่-เวลาแสดงรูปแบบเดียวกับในชีต ใช้ Ctrl+F ค้นหาในชีตได้ · ΔT = CHR − CHS และ TR = GPM × ΔT ÷ 24 ดังนั้นถ้า TR หรือ ΔT ผิดปกติ ให้ตรวจ CHS / CHR / GPM ก่อน · เหตุผลหนึ่งอาจทำให้เกณฑ์อื่นผิดตามไปด้วย · ถ้าปรับเกณฑ์ที่ด้านล่างแล้วบันทึก รายการนี้จะคำนวณใหม่</p>`;
+  $$('[data-view]',host).forEach(b=>b.onclick=()=>{ st.view=b.dataset.view; st.reason=''; st.ch=''; st.m=''; st.fix=''; st.limit=300; drawExc(); });
+  $$('[data-r]',host).forEach(b=>b.onclick=()=>{ st.reason=b.dataset.r; st.limit=300; drawExc(); });
+  $('#excCh').onchange=e=>{ st.ch=e.target.value; st.limit=300; drawExc(); };
+  $('#excM').onchange=e=>{ st.m=e.target.value; st.limit=300; drawExc(); };
+  $('#excSort').onchange=e=>{ st.sort=e.target.value; drawExc(); };
+  $('#excClose').onclick=()=>{ st.open=false; drawExc(); };
+  const more=$('#excMore'); if(more) more.onclick=()=>{ st.limit+=300; drawExc(); };
+  $('#excXlsx').onclick=()=>exportExcluded(list, hist);
+  const fo=$('#fixOpen'); if(fo) fo.onclick=()=>openFixDialog([]);
+  $$('[data-fixch]',host).forEach(b=>b.onclick=()=>openFixDialog([b.dataset.fixch]));
+  $$('[data-fxadd]',host).forEach(b=>b.onclick=()=>addFixLog(b.dataset.fxadd, b.closest('.fixcard').querySelector('textarea')));
+  $$('[data-fxview]',host).forEach(b=>b.onclick=()=>{ st.fix = st.fix===b.dataset.fxview ? '' : b.dataset.fxview; st.limit=300; drawExc(); });
+  $$('[data-fxreopen]',host).forEach(b=>b.onclick=()=>reopenFix(b.dataset.fxreopen));
+}
+function fixErr(e){ toast('บันทึกไม่สำเร็จ: '+(e.code||e.message||e)+' (ต้องมีสิทธิ์เขียนข้อมูลในหน้านี้)'); }
+async function saveFixDoc(doc){ try{ await Fixes.put(doc); }catch(e){ fixErr(e); return false; } await loadFixes(); classify(); return true; }
+async function addFixLog(id, ta){
+  const text=(ta.value||'').trim(); if(!text){ toast('พิมพ์รายละเอียดการแก้ไขก่อน'); return; }
+  const f=S.fixes.find(x=>x.id===id); if(!f) return;
+  const doc={...f, log:[...(f.log||[]), {at:new Date().toISOString(), by:S.user.username, byName:S.user.name||S.user.username, text}]};
+  if(await saveFixDoc(doc)){ toast('เพิ่มบันทึกการแก้ไขแล้ว'); render(); }
+}
+async function reopenFix(id){
+  if(!S.user||S.user.role!=='admin'){ toast('เฉพาะผู้ดูแลระบบที่เปิดกลับเป็นผิดปกติได้'); return; }
+  const f=S.fixes.find(x=>x.id===id); if(!f||!confirm('เปิดรายการนี้กลับเป็น “ยังผิดปกติ” ? คำเตือนจะแสดงอีกครั้ง (ประวัติยังเก็บไว้)')) return;
+  const doc={...f, reopened:true, reopenedAt:new Date().toISOString(), reopenedBy:S.user.username, reopenedByName:S.user.name||S.user.username};
+  if(await saveFixDoc(doc)){ const st=excState(); st.view='active'; st.fix=''; toast('เปิดกลับเป็นผิดปกติแล้ว'); render(); }
+}
+function openFixDialog(pre){
+  if(!S.active.length){ toast('ไม่มีรายการที่ยังผิดปกติ'); return; }
+  const byCh=[...groupBy(S.active,r=>r.ch)].sort((a,b)=>a[0].localeCompare(b[0]));
+  const body=$('#fixBody');
+  body.innerHTML = `<fieldset class="opt"><legend>ชุดที่แก้ไขแล้ว</legend>${byCh.map(([c,a])=>{ const ds=a.map(r=>String(r.d)).sort(); return `<label><input type="checkbox" class="fxch" value="${esc(c)}" ${(!pre.length||pre.includes(c))?'checked':''}><span>${esc(c)}<small>${a.length} บันทึก · ${fmtDateSheet(ds[0])} – ${fmtDateSheet(ds[ds.length-1])}</small></span></label>`; }).join('')}</fieldset>
+  <label class="fld">ย้ายบันทึกที่ผิดปกติ “ถึงวันที่” (บันทึกหลังวันนี้ ถ้ายังผิดปกติ จะเตือนใหม่)<select id="fxUpTo"></select></label>
+  <p class="legend-note" id="fxSum"></p>
+  <label class="fld">วันที่ช่างแก้ไขจริง (ไม่บังคับ)<input id="fxOn" placeholder="เช่น 12/9/2569"></label>
+  <label class="fld">รายละเอียดการแก้ไข (ไม่บังคับ — ช่างเพิ่มทีหลังได้)<textarea id="fxNote" rows="3" class="fxta" placeholder="เช่น เปลี่ยน sensor อุณหภูมิน้ำเย็นกลับ (CHR) โดย supplier"></textarea></label>`;
+  const checked=()=>$$('.fxch',body).filter(i=>i.checked).map(i=>i.value);
+  const sel=$('#fxUpTo');
+  const fill=()=>{ const cs=checked(), recs=S.active.filter(r=>cs.includes(r.ch)), ds=[...new Set(recs.map(r=>String(r.d)))].sort(), keep=sel.value;
+    sel.innerHTML=ds.map(d=>`<option value="${d}">${fmtDateSheet(d)}</option>`).join(''); sel.value = ds.includes(keep)?keep:(ds[ds.length-1]||''); sum(); };
+  const sum=()=>{ const cs=checked(), n=S.active.filter(r=>cs.includes(r.ch)&&String(r.d)<=sel.value).length; $('#fxSum').innerHTML = cs.length ? `จะย้าย <b>${n.toLocaleString()}</b> บันทึกของ ${cs.map(esc).join(', ')} ไป History` : 'เลือกอย่างน้อย 1 ชุด'; $('#fxOk').disabled=!n; };
+  $$('.fxch',body).forEach(i=>i.onchange=fill); sel.onchange=sum; fill();
+  $('#fxOk').onclick=async()=>{
+    const cs=checked(), upTo=sel.value, recs=S.active.filter(r=>cs.includes(r.ch)&&String(r.d)<=upTo); if(!recs.length) return;
+    const note=($('#fxNote').value||'').trim(), at=new Date().toISOString();
+    const doc={ id:'fx_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,6), chs:cs, upTo, fixedOn:($('#fxOn').value||'').trim(), n0:recs.length, createdAt:at, by:S.user.username, byName:S.user.name||S.user.username, reopened:false,
+      log: note ? [{at, by:S.user.username, byName:S.user.name||S.user.username, text:note}] : [] };
+    $('#fxOk').disabled=true;
+    if(!await saveFixDoc(doc)){ $('#fxOk').disabled=false; return; }
+    $('#dlgFix').close(); const st=excState(); st.open=true; st.view='history'; st.fix=doc.id; st.reason=''; st.ch=''; st.m='';
+    toast(`ย้าย ${recs.length.toLocaleString()} บันทึกไป History แล้ว`); render();
+  };
+  $('#dlgFix').showModal();
+}
+async function exportExcluded(list, hist){
+  if(!window.XLSX){ toast('ตัวสร้างไฟล์ Excel ยังโหลดไม่เสร็จ'); return; }
+  const f=S.settings.filter, r4=v=>isNum(v)?Math.round(v*10000)/10000:null;
+  const head=['วันที่','เวลา','ชุด','สถานะ','เหตุผลที่นับ (ข้อแรก)','ทิศทาง','ค่าที่วัดได้','เกณฑ์ต่ำสุด','เกณฑ์สูงสุด','ขาด/เกิน','ผิดเกณฑ์ทั้งหมด',...EXC_COLS.map(c=>c[1])];
+  const aoa=[head, ...list.map(x=>{ const f0=x.e[0]; return [fmtDateSheet(x.r.d), fmtTimeSheet(x.r.t), x.r.ch, x.r.fix?'แก้ไขแล้ว (History)':'ยังผิดปกติ', f0.reason, DIR_TH[f0.dir], r4(f0.val), r4(f0.lo), r4(f0.hi), f0.dir==='high'?r4(f0.val-f0.hi):f0.dir==='low'?r4(f0.val-f0.lo):null, x.e.map(failText).join(' | '), ...EXC_COLS.map(c=>r4(x.r[c[0]]))]; })];
+  const ws=XLSX.utils.aoa_to_sheet(aoa); ws['!cols']=head.map((h,i)=>({wch:[11,10,10,18,22,12,12,11,11,11,60][i]||10}));
+  const crit=XLSX.utils.aoa_to_sheet([['ตัวแปร','ต่ำสุด','สูงสุด'],['kW/TR',f.kwtrMin,f.kwtrMax],['kW/TRp',f.kwtrpMin,f.kwtrpMax],['TR',f.trMin,f.trMax],['ΔT CHW (°F)',f.dTMin,f.dTMax],['%Load',f.loadMin,f.loadMax],['Twb (°F)',f.twbMin,f.twbMax],[],['ลำดับตรวจ','TR → kW/TR → kW/TRp → ΔT → %Load → Twb · นับเฉพาะเหตุผลแรกที่พบ']]);
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, hist?'ประวัติ-แก้ไขแล้ว':'ยังผิดปกติ'); XLSX.utils.book_append_sheet(wb, crit, 'เกณฑ์ที่ใช้');
+  if(hist && S.fixes.length){ const fa=[['ชุด','ผิดปกติถึงวันที่','วันที่ช่างแก้ไข','ย้ายโดย','ย้ายเมื่อ','สถานะ','บันทึกการแก้ไข'], ...S.fixes.map(x=>[(x.chs||[]).join(', '), fmtDateSheet(x.upTo), x.fixedOn||'', x.byName||x.by||'', fmtStamp(x.createdAt), x.reopened?'ยกเลิกแล้ว':'แก้ไขแล้ว', (x.log||[]).map(l=>`[${fmtStamp(l.at)} ${l.byName||l.by||''}] ${l.text}`).join('\n')])]; const w2=XLSX.utils.aoa_to_sheet(fa); w2['!cols']=[{wch:22},{wch:14},{wch:16},{wch:16},{wch:16},{wch:12},{wch:80}]; XLSX.utils.book_append_sheet(wb, w2, 'บันทึกการแก้ไข'); }
+  const out=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+  const ok=await saveFile(hist?'PSD_eNGINNo_Anomaly_History.xlsx':'PSD_eNGINNo_Excluded_Records.xlsx', new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+  if(ok!==false) toast('ส่งออกรายการแล้ว');
+}
 
 /* ---------------- users admin ---------------- */
 const ST_TH = { pending:'รออนุมัติ', approved:'อนุมัติแล้ว', rejected:'ปฏิเสธ/ระงับ' };
@@ -1492,7 +1777,8 @@ async function enterApp(user){
   $('#auth').hidden=true; $('#app').hidden=false; authMsg('');
   if(!appBound){ bindApp(); appBound=true; }
   rebuild(); setTab('overview');
-  const chunks = await Store.loadAll(); if(chunks.length){ S.imported=chunksToImported(chunks); rebuild(); render(); }
+  const chunks = await Store.loadAll(); if(chunks.length){ S.imported=chunksToImported(chunks); rebuild(); }
+  await loadFixes(); classify(); render();
   clearInterval(pendTimer);
   if(user.role==='admin'){ refreshPending(); pendTimer=setInterval(refreshPending, 30000); }
 }
