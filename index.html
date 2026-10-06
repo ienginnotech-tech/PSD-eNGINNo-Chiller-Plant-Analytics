@@ -102,6 +102,8 @@ h3 small{ font-weight:400; color:var(--muted); margin-left:6px; font-size:13px; 
 .schem .unit.core .u-val, .schem .unit.core .u-big{ fill:var(--bar-txt); }
 .schem .u-val{ font:700 calc(22px*var(--ns)) var(--cond); fill:var(--ink); } .schem .u-val.s{ font-size:15px; }
 .schem .u-big{ font:700 calc(52px*var(--ns)) var(--cond); }
+.schem .te-val{ font:700 calc(21px*var(--ns)) var(--cond); }
+.schem .te-good{ fill:var(--good); } .schem .te-mid{ fill:var(--warn); } .schem .te-bad{ fill:var(--bad); } .schem .te-na{ fill:var(--muted); }
 .share{ display:flex; height:30px; border-radius:2px; overflow:hidden; margin-top:6px; font-size:12px; }
 .share span{ display:flex; align-items:center; gap:4px; padding:0 8px; color:#fff; white-space:nowrap; overflow:hidden; min-width:0; }
 .share span.tiny{ padding:0; }
@@ -965,9 +967,11 @@ function ovModeChip(){
 function periodNote(){ const ms=rangeMonths(); return `${mLabel(ms[0],true)} – ${mLabel(ms[ms.length-1],true)} · ${inRange().length.toLocaleString()} บันทึกที่ผ่านเกณฑ์`; }
 
 /* ---------------- Overview ---------------- */
+/* Cooling thermal efficiency: แดง < 50.0% · ส้ม 50.0–59.9% · เขียว ≥ 60.0% (เทียบจากค่าที่ปัดเป็นทศนิยม 1 ตำแหน่ง) */
+function thEffClass(v){ if(!isNum(v)) return 'te-na'; const p=Math.round(v*1000)/10; return p<50 ? 'te-bad' : p<60 ? 'te-mid' : 'te-good'; }
 function schematicSVG(st, std){
   const f=(v,d=3)=>fmt(v,d), tot=st.kwtrp, over=tot>std.kwtrp;
-  return `<svg class="schem" viewBox="0 0 960 330" role="img" aria-label="แผนผัง chiller plant พร้อม kW/TR ของแต่ละอุปกรณ์">
+  return `<svg class="schem" viewBox="0 0 960 352" role="img" aria-label="แผนผัง chiller plant พร้อม kW/TR ของแต่ละอุปกรณ์">
   <g class="total"><text x="0" y="30" class="t-lbl">kW/TRp · Chiller + CHP + CDP + Cooling</text>
     <text x="0" y="96" class="t-val">${f(tot)}</text>
     <text x="250" y="68" class="t-lbl ${over?'over':'under'}">${over?'สูงกว่า':'ต่ำกว่า'}มาตรฐาน ${f(std.kwtrp,2)}</text><text x="250" y="92" class="t-lbl ${over?'over':'under'}">${pct((tot/std.kwtrp-1)*100)}</text></g>
@@ -978,6 +982,7 @@ function schematicSVG(st, std){
   <text x="655" y="140" text-anchor="middle">CHS ${f(st.chs,1)} °F</text><text x="700" y="276" text-anchor="middle">CHR ${f(st.chr,1)} °F</text></g>
   <g class="unit cdw"><rect x="20" y="130" width="130" height="140" rx="3"/><path d="M36 150 H134 M44 164 H126 M52 178 H118" class="fins"/>
     <text x="85" y="222" class="u-name">Cooling</text><text x="85" y="250" class="u-val">${f(st.ctkwtr)}</text></g>
+  <g class="theff"><title>Cooling Thermal Efficiency = Range ÷ (Range + Approach) · เขียว ≥ 60.0% · ส้ม 50.0–59.9% · แดง &lt; 50.0%</title><text x="85" y="294" class="u-name s">Thermal Efficiency</text><text x="85" y="319" class="te-val ${thEffClass(st.theff)}">${isNum(st.theff)?fmt(st.theff*100,1)+'%':'–'}</text></g>
   <g class="unit cdw pump"><circle cx="290" cy="250" r="30"/><text x="290" y="246" class="u-name s">CDP</text><text x="290" y="264" class="u-val s">${f(st.cdpkwtr)}</text></g>
   <g class="unit core"><rect x="330" y="120" width="210" height="160" rx="4"/><text x="435" y="156" class="u-name">Chiller kW/TR</text>
     <text x="435" y="206" class="u-big">${f(st.kwtr)}</text><text x="435" y="232" class="u-name s">มาตรฐาน ${f(std.kwtr)}</text><text x="435" y="258" class="u-name s">${fmt(st.tr,0)} TR · ${fmt(st.loadPct,0)}% load</text></g>
