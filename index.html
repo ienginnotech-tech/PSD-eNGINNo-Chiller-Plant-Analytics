@@ -15,15 +15,15 @@
   --paper:#eef2f4; --surface:#ffffff; --sunk:#e5ebee; --line:#d6dee2; --bar:#15252f; --bar-txt:#eef2f4;
   --ink:#15252f; --muted:color-mix(in srgb, var(--ink) 86%, var(--surface));
   --chw:#1d6a8d; --chw-2:#7fb3cc; --cdw:#b86f22; --cdw-2:#e0ae78; --slate:#7d8a92; --good:#2f7a52; --bad:#b4432f;
-  --s-plant:#1a47b8; --s-chiller:#1fa259; --warn:#9a5200;
+  --s-plant:#1a47b8; --s-chiller:#1fa259; --warn:#9a5200; --navh-bg:#a8560c; --navh-txt:#ffffff;
   --cond:'IBM Plex Sans Condensed','IBM Plex Sans Thai','Arial Narrow',sans-serif;
   --body:'IBM Plex Sans Thai','Leelawadee UI',Tahoma,system-ui,sans-serif;
   box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
 :root[data-theme="dark"]{ --paper:#0e181e; --surface:#15222a; --sunk:#1b2b34; --line:#2a3b44; --bar:#060d11; --bar-txt:#e3ebee; --ink:#e3ebee;
-  --chw:#56a8cc; --chw-2:#2f6f8c; --cdw:#dd9442; --cdw-2:#8f5a22; --slate:#6c7a83; --good:#63c08c; --bad:#e3765f; --s-plant:#5b9bff; --s-chiller:#5be3a0; --warn:#ffbf5e; }
+  --chw:#56a8cc; --chw-2:#2f6f8c; --cdw:#dd9442; --cdw-2:#8f5a22; --slate:#6c7a83; --good:#63c08c; --bad:#e3765f; --s-plant:#5b9bff; --s-chiller:#5be3a0; --warn:#ffbf5e; --navh-bg:#e0963f; --navh-txt:#1a1006; }
 :root[data-theme="sea"]{ --paper:#bfe0ee; --surface:#e8f5fa; --sunk:#d0e9f3; --line:#93c1d4; --bar:#0a4361; --bar-txt:#e8f5fa; --ink:#0d1f2a;
-  --chw:#0b5f86; --chw-2:#5aa5c6; --cdw:#a4570c; --cdw-2:#e2b073; --slate:#587480; --good:#1f6b45; --bad:#a63a26; --s-plant:#123fa6; --s-chiller:#1a9a54; --warn:#8c4a00; }
+  --chw:#0b5f86; --chw-2:#5aa5c6; --cdw:#a4570c; --cdw-2:#e2b073; --slate:#587480; --good:#1f6b45; --bad:#a63a26; --s-plant:#123fa6; --s-chiller:#1a9a54; --warn:#8c4a00; --navh-bg:#9a4f08; --navh-txt:#ffffff; }
 :root{ --fs:1; --ns:1; }
 :root[data-font="orbitron"]{ --body:'Orbitron','IBM Plex Sans Thai','Leelawadee UI',Tahoma,sans-serif; --cond:'Orbitron','IBM Plex Sans Thai','Leelawadee UI',Tahoma,sans-serif; --fs:.88; --ns:.74; }
 :root[data-font="courier"]{ --body:'Courier New',Courier,'IBM Plex Sans Thai','Leelawadee UI',Tahoma,monospace; --cond:'Courier New',Courier,'IBM Plex Sans Thai','Leelawadee UI',Tahoma,monospace; --fs:.92; --ns:.9; }
@@ -55,11 +55,11 @@ button,select,input{ font:inherit; color:inherit; }
 .btn:hover{ filter:brightness(1.06); } .btn.primary{ background:var(--chw); border-color:var(--chw); color:#fff; } .btn.small{ padding:2px 8px; font-size:13px; }
 
 /* shell */
-.shell{ display:grid; grid-template-columns:clamp(190px,14vw,250px) minmax(0,1fr); min-height:calc(100vh - 52px); }
-.nav{ border-right:1px solid var(--line); padding:18px 10px 0; position:sticky; top:var(--topH,52px); align-self:start; height:calc(100vh - var(--topH,52px)); overflow:auto; display:flex; flex-direction:column; }
-.nav p{ margin:18px 10px 4px; font-size:12px; color:var(--muted); }
+.shell{ display:grid; grid-template-columns:clamp(215px,15vw,270px) minmax(0,1fr); min-height:calc(100vh - 52px); }
+.nav{ border-right:1px solid var(--line); padding:12px 10px 0; position:sticky; top:var(--topH,52px); align-self:start; height:calc(100vh - var(--topH,52px)); overflow:auto; display:flex; flex-direction:column; }
+.nav p{ margin:10px 0 3px; padding:5px 10px; border-radius:4px; background:var(--navh-bg); color:var(--navh-txt); font:700 calc(16px*var(--fs))/1.3 var(--body); box-shadow:inset 3px 0 0 rgba(0,0,0,.18); }
 .nav p:first-child{ margin-top:0; }
-.nav button{ display:block; width:100%; text-align:left; border:0; background:none; padding:7px 10px; border-radius:3px; cursor:pointer; color:var(--ink); }
+.nav button{ display:block; width:100%; text-align:left; border:0; background:none; padding:5px 10px; border-radius:3px; cursor:pointer; color:var(--ink); }
 .nav button:hover{ background:var(--sunk); }
 .nav button[aria-current="page"]{ background:var(--surface); box-shadow:inset 3px 0 0 var(--chw); font-weight:600; }
 .nav .foot{ margin-top:24px; font-size:12px; color:var(--muted); padding:0 10px; }
@@ -279,9 +279,9 @@ table.exc td.bad{ background:color-mix(in srgb, var(--bad) 15%, transparent); co
 /* user box: bottom-left of sidebar (moves into the header on narrow screens) */
 .userbox{ display:flex; font-size:13px; }
 .userbox .who b{ font-weight:600; } .userbox .who small{ opacity:.8; }
-.nav .userbox{ flex-direction:column; gap:8px; margin-top:auto; position:sticky; bottom:0; padding:12px 6px 14px; border-top:1px solid var(--line); background:var(--paper); }
-.nav .userbox .who{ display:block; line-height:1.35; overflow-wrap:anywhere; } .nav .userbox .who small{ display:block; }
-.nav .userbox .btn{ border:1px solid var(--line); background:var(--surface); text-align:center; padding:7px 10px; width:100%; }
+.nav .userbox{ flex-direction:column; gap:6px; margin-top:auto; position:sticky; bottom:0; padding:8px 6px 10px; border-top:1px solid var(--line); background:var(--paper); }
+.nav .userbox .who{ display:block; line-height:1.35; overflow-wrap:anywhere; } .nav .userbox .who small{ display:inline; margin-left:6px; }
+.nav .userbox .btn{ border:1px solid var(--line); background:var(--surface); text-align:center; padding:5px 10px; width:100%; }
 .nav .userbox .btn:hover{ background:var(--sunk); }
 .top .userbox{ flex-direction:row; align-items:center; gap:10px; }
 .top .userbox .who small{ display:inline; margin-left:6px; }
@@ -376,20 +376,20 @@ dialog footer{ display:flex; justify-content:flex-end; gap:8px; padding:12px 20p
 </header>
 <div class="shell">
   <nav class="nav" aria-label="เมนูหลัก">
-    <p>ภาพรวม</p>
+    <p>บทสรุปภาพรวมระบบ</p>
     <button data-tab="overview">Chiller plant</button>
-    <p>อุปกรณ์รายตัว</p>
+    <p>ประสิทธิภาพแต่ละระบบ</p>
     <button data-tab="chiller">Chiller</button>
     <button data-tab="chp">CHP</button>
     <button data-tab="cdp">CDP</button>
     <button data-tab="ct">Cooling tower</button>
-    <p>การวิเคราะห์</p>
+    <p>การวิเคราะห์ผล<wbr><span style="white-space:nowrap">และแนวโน้มระบบ</span></p>
     <button data-tab="ba">ก่อน – หลังปรับปรุง</button>
     <button data-tab="best">ดีที่สุดรายเดือน</button>
     <button data-tab="group">ชุดอุปกรณ์ kW/TRp ต่ำสุด</button>
     <button data-tab="reg">สมการ regression</button>
     <button data-tab="anom">ความผิดปกติของข้อมูล <span class="badge-n warn" id="anomN" hidden></span></button>
-    <p>ระบบ</p>
+    <p>การตั้งค่าข้อมูลระบบ</p>
     <button data-tab="data">ข้อมูลและการตั้งค่า</button>
     <button data-tab="users" class="admin-only">จัดการผู้ใช้ <span class="badge-n" id="pendN" hidden></span></button>
     <div class="userbox" id="userbox"><span class="who"><b id="uName"></b><small id="uRole"></small></span><button class="btn" id="btnLogout">ออกจากระบบ</button></div>
