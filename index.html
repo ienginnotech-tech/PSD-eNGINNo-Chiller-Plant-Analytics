@@ -307,6 +307,9 @@ table.exc td.bad{ background:color-mix(in srgb, var(--bad) 15%, transparent); co
 .calcmode .cmv{ display:block; font-size:13px; font-variant-numeric:tabular-nums; }
 .en-ex{ margin:6px 0 0; font-size:12.5px; color:var(--muted); }
 
+.chartbox.pareto{ height:clamp(280px,40vh,420px); }
+.pareto-sum{ margin:-4px 0 10px; font-size:14px; }
+
 /* dialogs */
 dialog{ border:1px solid var(--line); border-radius:6px; padding:0; background:var(--surface); color:var(--ink); width:min(560px, calc(100vw - 32px)); }
 dialog::backdrop{ background:rgba(10,20,26,.5); }
@@ -561,8 +564,11 @@ function matrix(recs, months, unitFn){
 function ctMatrix(recs, months){
   const cells = {};
   const block = rs => {
-    const vals = rs.map(r=>r['ct_'+cur]).filter(v=>isNum(v)&&v>0);
-    return { n: vals.length, kw: mean(vals), kwMax: maxOf(vals), kwMin: minOf(vals), share: rs.length? vals.length/rs.length*100 : null };
+    const run = rs.filter(r=>isNum(r['ct_'+cur]) && r['ct_'+cur]>0), vals = run.map(r=>r['ct_'+cur]);
+    // ไม่มีเซนเซอร์อุณหภูมิรายตัว: ใช้ thermal efficiency ของ loop ฝั่งเดียวกัน (P1 / H) ในช่วงที่ CT นี้เดิน
+    const side = run.filter(r => cur.startsWith('P1') ? String(r.ch).startsWith('P1') : !String(r.ch).startsWith('P1'));
+    const te = mean(side.map(r=>r.theff));
+    return { n: vals.length, kw: mean(vals), kwMax: maxOf(vals), kwMin: minOf(vals), share: rs.length? vals.length/rs.length*100 : null, theffPct: isNum(te) ? te*100 : null };
   };
   let cur;
   for(const c of CT_NAMES){ cur=c; cells[c] = { all: block(recs) }; for(const m of months) cells[c][m] = block(recs.filter(r=>r.m===m)); }
@@ -932,6 +938,7 @@ function chartDefaults(){
 function mkChart(canvas, cfg){ if(!window.Chart||!canvas) return null; const c = new Chart(canvas, cfg); S.charts.push(c); return c; }
 
 function heat(v, lo, hi, dir){
+  if(dir==='te'){ if(!isNum(v)) return ''; const pz=Math.round(v*10)/10, hz=pz<50?8:pz<60?38:140, dz=isDark(); return `background:hsl(${hz} ${dz?32:55}% ${dz?22:88}%);`; }
   if(!isNum(v) || dir==='none' || !isNum(lo) || hi===lo) return '';
   let t = (v-lo)/(hi-lo); if(dir==='high') t=1-t; t=Math.max(0,Math.min(1,t));
   const hue = 150 - t*140; const d=isDark();
@@ -1158,9 +1165,12 @@ function viewUnits(kind){
   if(!S.sel[kind] || !mx.units.includes(S.sel[kind])) S.sel[kind]=mx.units[0];
   v.innerHTML = `<header class="vh"><h2>${esc(def.title)}</h2><p>${esc(periodNote())}</p></header>
   <section class="panel">${metricChips(kind, def.metrics)}${matrixTable(mx, ms, metric, kind, def.name, chBadge)}</section>
+  ${paretoHTML('cPareto')}
   <section class="panel" id="detail"></section>`;
   $$('.chips button', v).forEach(b=>b.onclick=()=>{ S.sel[kind+'M']=b.dataset.m; render(); });
   bindRows(v, kind);
+  drawPareto('cPareto', { units:mx.units, val:x=>mx.cells[x].all[metric[0]], n:x=>mx.cells[x].all.n, name:x=>x, metric, selKey:kind,
+    std: kind==='chiller' ? (metric[0]==='kwtrp' ? S.settings.stdKwtrp : ['kwtr','kwtrc'].includes(metric[0]) ? S.settings.stdKwtr : null) : null });
   const u=S.sel[kind], p=PAL();
   $('#detail').innerHTML = `<h3>${esc(def.name(u))}</h3><div class="grid2 flush"><div class="chartbox"><canvas id="cUnit"></canvas></div>
     <div class="tscroll"><table class="data"><thead><tr><th>ตัวชี้วัด</th>${ms.map(m=>`<th>${mLabel(m)}</th>`).join('')}</tr></thead><tbody>
@@ -1169,22 +1179,55 @@ function viewUnits(kind){
     options:{ maintainAspectRatio:false, plugins:{legend:{display:false}, title:{display:true, text:metric[1]+' รายเดือน'}}, scales:{ y:{ beginAtZero: metric[0]==='n' } } } });
 }
 
+/* ---------------- Pareto: จัดอันดับดีที่สุด → แย่สุด ---------------- */
+const paretoHTML = id => `<section class="panel"><h3 id="${id}T"></h3><p class="pareto-sum" id="${id}S"></p><div class="chartbox pareto"><canvas id="${id}"></canvas></div><p class="legend-note" id="${id}N"></p></section>`;
+function drawPareto(id, o){
+  const [key,label,d,dir]=o.metric, p=PAL(), minN=S.settings.minN||10;
+  const rows=o.units.map(u=>({u, v:o.val(u), n:o.n(u)||0})).filter(x=>isNum(x.v));
+  const asc = dir==='low';
+  rows.sort((a,b)=> asc ? a.v-b.v : b.v-a.v);
+  const totN=rows.reduce((s,x)=>s+x.n,0)||1; let cum=0; const cumPct=rows.map(x=>(cum+=x.n)/totN*100);
+  const ms=rangeMonths(), rl=`${mLabel(ms[0])} – ${mLabel(ms[ms.length-1])}`, rank = dir==='none' ? 'มาก → น้อย' : 'ดีที่สุด → แย่สุด';
+  const std = dir==='te' ? 60 : (isNum(o.std) ? o.std : null), dk=isDark();
+  const hueOf=(x,i)=>{ if(dir==='te'){ const pz=Math.round(x.v*10)/10; return pz<50?8:pz<60?36:140; } if(isNum(std)) return (asc ? x.v<=std : x.v>=std) ? 140 : 8; if(dir==='none') return 205; const t=rows.length>1?i/(rows.length-1):0; return 150-t*140; };
+  const ref = isNum(std) ? std : mean(rows.map(x=>x.v)), refLabel = dir==='te' ? 'เกณฑ์ 60%' : isNum(std) ? `มาตรฐาน ${fmt(std,3)}` : `ค่าเฉลี่ย ${fmt(ref,d)}`;
+  $('#'+id+'T').textContent = `พาเรโต · จัดอันดับ ${label} (${rank}) · ${rl}`;
+  if(!rows.length){ $('#'+id+'S').textContent='ไม่มีข้อมูลในช่วงที่เลือก'; return; }
+  const f=v=>fmt(v,d), ok=rows.filter(x=>x.n>=minN), k=Math.min(3,ok.length);
+  const topK=ok.slice(0,k).reduce((s,x)=>s+x.n,0)/totN*100, fair=k/rows.length*100;
+  const bestR=ok[0]||rows[0], worstR=ok[ok.length-1]||rows[rows.length-1], lowNote=rows[0].n<minN?` (ไม่นับ ${esc(o.name(rows[0].u))} * ที่บันทึกน้อย)`:'';
+  $('#'+id+'S').innerHTML = dir==='none'
+    ? `สูงสุด <b>${esc(o.name(rows[0].u))}</b> ${f(rows[0].v)} · ต่ำสุด <b>${esc(o.name(rows[rows.length-1].u))}</b> ${f(rows[rows.length-1].v)}`
+    : `ดีที่สุด <b>${esc(o.name(bestR.u))}</b> ${f(bestR.v)}${lowNote} · แย่สุด <b>${esc(o.name(worstR.u))}</b> ${f(worstR.v)}${k?` · ${k} อันดับแรกเดินรวม <b>${fmt(topK,0)}%</b> ของการเดินทั้งหมด (ถ้าเดินเท่ากันทุกเครื่อง ≈ ${fmt(fair,0)}%)${topK<fair*0.8?' — เครื่องที่ดีถูกใช้งานน้อยกว่าสัดส่วน ควรพิจารณาเดินเครื่องที่ดีก่อน':''}`:''}`;
+  mkChart($('#'+id), { type:'bar', data:{ labels: rows.map(x=>o.name(x.u)+(x.n<minN?' *':'')), datasets:[
+      { label, data: rows.map(x=>x.v), backgroundColor: rows.map((x,i)=>`hsl(${hueOf(x,i)} ${dk?50:55}% ${dk?55:42}%${x.n<minN?' / .45':''})`), borderRadius:2, order:2 },
+      { type:'line', label:refLabel, data: rows.map(()=>ref), borderColor:p.bad, borderDash:[5,5], pointRadius:0, borderWidth:1.5, order:1 },
+      { type:'line', label:'สะสม % ของจำนวนครั้งที่เดิน', data: cumPct, borderColor:p.ink, backgroundColor:p.ink, yAxisID:'y2', order:0, tension:.2, pointRadius:3 } ]},
+    options:{ maintainAspectRatio:false,
+      onClick:(e,els)=>{ const el=els.find(x=>x.datasetIndex===0)||els[0]; if(el){ S.sel[o.selKey]=rows[el.index].u; render(); } },
+      plugins:{ legend:{position:'bottom'}, tooltip:{ callbacks:{ afterBody:it=>{ const x=rows[it[0].dataIndex]; return `อันดับ ${it[0].dataIndex+1}/${rows.length} · เดิน ${x.n} ครั้ง`; } } } },
+      scales:{ y:{ beginAtZero:true, title:{display:true,text:label} }, y2:{ position:'right', min:0, max:100, grid:{drawOnChartArea:false}, title:{display:true,text:'สะสม %'} } } } });
+  $('#'+id+'N').textContent = `แท่ง = ค่าเฉลี่ยทั้งช่วงที่เลือกของแต่ละเครื่อง เรียง${rank}จากซ้ายไปขวา${isNum(std)?' · เขียว = ผ่านเกณฑ์ แดง = ไม่ผ่าน':dir==='none'?'':' · เขียว = ดีกว่า แดง = แย่กว่า'}${dir==='te'?' (ส้ม = 50.0–59.9%)':''} · เส้นทึบ = สัดส่วนสะสมของจำนวนครั้งที่เดิน · * = บันทึกน้อยกว่า ${minN} ครั้ง ผลอาจไม่น่าเชื่อถือ · คลิกแท่งเพื่อดูรายละเอียด`;
+}
+
 /* ---------------- Cooling towers ---------------- */
 function viewCT(v){
   const rs=inRange(), ms=rangeMonths(); const mx=ctMatrix(rs, ms);
-  const mets=[['kw','kW เฉลี่ยขณะเดิน',1,'low'],['n','จำนวนครั้งที่เดิน',0,'none'],['share','% ของบันทึกที่เดิน',1,'none'],['kwMax','kW สูงสุด',1,'none']];
+  const mets=[['kw','kW เฉลี่ยขณะเดิน',1,'low'],['theffPct','Thermal Efficiency (%)',1,'te'],['n','จำนวนครั้งที่เดิน',0,'none'],['share','% ของบันทึกที่เดิน',1,'none'],['kwMax','kW สูงสุด',1,'none']];
   const metric = mets.find(m=>m[0]===(S.sel.ctM||'kw'));
   if(!S.sel.ctU || !mx.units.includes(S.sel.ctU)) S.sel.ctU=mx.units[0];
   v.innerHTML = `<header class="vh"><h2>Cooling tower รายตัว รายเดือน</h2><p>${esc(periodNote())}</p></header>
-  <section class="panel">${metricChips('ct', mets)}${matrixTable(mx, ms, metric, 'ctU', u=>u)}</section>
-  <section class="grid2"><div class="panel" id="detail"><h3>${esc(S.sel.ctU)} — kW เฉลี่ยรายเดือน</h3><div class="chartbox"><canvas id="cCT"></canvas></div></div>
+  <section class="panel">${metricChips('ct', mets)}${matrixTable(mx, ms, metric, 'ctU', u=>u)}${metric[0]==='theffPct'?'<p class="legend-note">Thermal Efficiency: เขียว ≥ 60.0% · ส้ม 50.0–59.9% · แดง &lt; 50.0% · บันทึกไม่มีเซนเซอร์อุณหภูมิของ CT แต่ละตัว ค่ารายตัวจึงเป็นค่าเฉลี่ยของ loop น้ำระบายความร้อนฝั่งเดียวกัน (P1 หรือ H) ในช่วงที่ CT นั้นเดิน สะท้อนชุดที่เดินร่วมกัน ไม่ใช่การวัดเฉพาะตัว</p>':''}</section>
+  ${paretoHTML('cPareto')}
+  <section class="grid2"><div class="panel" id="detail"><h3>${esc(S.sel.ctU)} — kW เฉลี่ย และ Thermal Efficiency รายเดือน</h3><div class="chartbox"><canvas id="cCT"></canvas></div></div>
   <div class="panel"><h3>ประสิทธิภาพ cooling รวม</h3><div class="tscroll"><table class="data"><thead><tr><th>เดือน</th><th>CT kW/TR</th><th>Range °F</th><th>Approach °F</th><th>Effectiveness %</th><th>Twb °F</th></tr></thead><tbody>
   ${ms.map(m=>{ const s=statBlock(rs.filter(r=>r.m===m)); return `<tr><th scope="row">${mLabel(m,true)}</th><td>${fmt(s.ctkwtr,4)}</td><td>${fmt(s.range,2)}</td><td>${fmt(s.ctapp,2)}</td><td class="${s.theff>=0.6?'good':'bad'}">${fmt(s.theff*100,1)}</td><td>${fmt(s.twb,1)}</td></tr>`; }).join('')}
   </tbody></table></div><p class="legend-note">Approach = CDR − Twb · Effectiveness = Range ÷ (Range + Approach) · เกณฑ์ในแบบฟอร์ม > 60%</p></div></section>`;
   $$('.chips button', v).forEach(b=>b.onclick=()=>{ S.sel.ctM=b.dataset.m; render(); });
   bindRows(v, 'ctU');
+  drawPareto('cPareto', { units:mx.units, val:x=>mx.cells[x].all[metric[0]], n:x=>mx.cells[x].all.n, name:x=>x, metric, selKey:'ctU', std:null });
   const p=PAL(), u=S.sel.ctU;
-  mkChart($('#cCT'), { type:'bar', data:{ labels: ms.map(m=>mLabel(m)), datasets:[{ label:'kW เฉลี่ย', data: ms.map(m=>mx.cells[u][m].kw), backgroundColor:p.cdw, borderRadius:2 },{ type:'line', label:'% ที่เดิน', data: ms.map(m=>mx.cells[u][m].share), borderColor:p.ink, backgroundColor:p.ink, yAxisID:'y2' }] },
+  mkChart($('#cCT'), { type:'bar', data:{ labels: ms.map(m=>mLabel(m)), datasets:[{ label:'kW เฉลี่ย', data: ms.map(m=>mx.cells[u][m].kw), backgroundColor:p.cdw, borderRadius:2 },{ type:'line', label:'% ที่เดิน', data: ms.map(m=>mx.cells[u][m].share), borderColor:p.ink, backgroundColor:p.ink, yAxisID:'y2' },{ type:'line', label:'Thermal Eff. %', data: ms.map(m=>mx.cells[u][m].theffPct), borderColor:p.good, backgroundColor:p.good, borderDash:[4,3], yAxisID:'y2' }] },
     options:{ maintainAspectRatio:false, plugins:{legend:{position:'bottom'}}, scales:{ y:{ title:{display:true,text:'kW'} }, y2:{ position:'right', min:0, max:100, grid:{drawOnChartArea:false}, title:{display:true,text:'%'} } } } });
 }
 
