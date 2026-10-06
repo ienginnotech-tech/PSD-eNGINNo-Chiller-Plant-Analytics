@@ -979,7 +979,7 @@ function thEffClass(v){ if(!isNum(v)) return 'te-na'; const p=Math.round(v*1000)
 function schematicSVG(st, std){
   const f=(v,d=3)=>fmt(v,d), tot=st.kwtrp, over=tot>std.kwtrp;
   return `<svg class="schem" viewBox="0 0 960 352" role="img" aria-label="แผนผัง chiller plant พร้อม kW/TR ของแต่ละอุปกรณ์">
-  <g class="total"><text x="0" y="30" class="t-lbl">kW/TRp · Chiller + CHP + CDP + Cooling</text>
+  <g class="total"><text x="0" y="30" class="t-lbl">kW/TRp · Chiller + CHP + CDP + Cooling (ไม่รวม SCHP)</text>
     <text x="0" y="96" class="t-val">${f(tot)}</text>
     <text x="250" y="68" class="t-lbl ${over?'over':'under'}">${over?'สูงกว่า':'ต่ำกว่า'}มาตรฐาน ${f(std.kwtrp,2)}</text><text x="250" y="92" class="t-lbl ${over?'over':'under'}">${pct((tot/std.kwtrp-1)*100)}</text></g>
   <g transform="translate(0,20)">
@@ -1041,7 +1041,7 @@ function refPanel(st, ba){
   const note = dUp<=dLo
     ? `อยู่ใกล้ขอบบนของเกณฑ์ “${b[1]}” (${b[5].toFixed(2)}) — ถ้า kW/TRp สูงขึ้นอีก <b>${fmt(dUp,3)}</b> จะเลื่อนลงไปอยู่เกณฑ์ “${REF.bands[i+1][1]}”`
     : isFinite(dLo) ? `อยู่ใกล้ขอบล่างของเกณฑ์ “${b[1]}” (${b[4].toFixed(2)}) — ถ้า kW/TRp ลดลงอีก <b>${fmt(dLo,3)}</b> จะขึ้นไปอยู่เกณฑ์ “${REF.bands[i-1][1]}”` : '';
-  return `<h3>เกณฑ์ประสิทธิภาพ Chiller plant <small>kW/TRp = Chiller + CHP + CDP + Cooling</small></h3>
+  return `<h3>เกณฑ์ประสิทธิภาพ Chiller plant <small>kW/TRp = Chiller + CHP + CDP + Cooling (ไม่รวม SCHP)</small></h3>
   <div class="chips" role="radiogroup" aria-label="เลือกค่าที่ชี้บนกราฟ">${opts.map(o=>`<button role="radio" aria-checked="${o[0]===cur[0]}" data-ref="${o[0]}" ${isNum(o[2])?'':'disabled'}>${o[1]} <b>${fmt(o[2],3)}</b></button>`).join('')}</div>
   ${REF_IMG?`<div class="refwrap">${refSVG(v,i)}</div>`:''}
   <div class="refsum"><b class="v">${fmt(v,3)} kW/TRp</b><span class="tag b${i}">${b[0]} · ${b[1]}</span><small class="na">${esc(cur[1])} ${esc(cur[3])}</small></div>
@@ -1052,7 +1052,7 @@ function energyPanel(en, exE){
   const parts=[['Chiller',en.ch,'--chw'],['CHP',en.chp,'--chw-2'],['CDP',en.cdp,'--cdw-2'],['Cooling',en.ct,'--cdw']];
   const tot=parts.reduce((s,p)=>s+p[1],0)||1;
   return `<aside class="energy panel" aria-label="พลังงานไฟฟ้ารวมทั้ง plant">
-    <p class="kicker">พลังงานไฟฟ้าทั้ง Plant · Chiller + CHP + CDP + Cooling</p>
+    <p class="kicker">พลังงานไฟฟ้าทั้ง Plant · Chiller + CHP + CDP + Cooling (ไม่รวม SCHP)</p>
     <div class="kwh"><b>${fmtInt(en.kwh)}</b><span>kWh</span></div>
     <p class="sub">≈ ${fmt(en.kwh/1000,1)} MWh · ${en.n.toLocaleString()} บันทึก · ${en.days} วันที่มีข้อมูล · kW รวมเฉลี่ย ${fmt(en.avgKw,1)} kW ต่อบันทึก</p>
     <ul class="ebreak">${parts.map(p=>`<li><span>${p[0]}</span><span class="bar"><i style="width:${(p[1]/tot*100).toFixed(1)}%;background:var(${p[2]})"></i></span><span class="v">${fmtInt(p[1])} <small>${fmt(p[1]/tot*100,1)}%</small></span></li>`).join('')}</ul>
@@ -1141,7 +1141,7 @@ function monthlyPlantTable(rs, ms, ea){
 
 /* ---------------- Unit matrices (Chiller / CHP / CDP) ---------------- */
 const UNIT_DEF = {
-  chiller:{ title:'Chiller รายเครื่อง รายเดือน', unit:r=>r.ch, name:u=>u, metrics:[['kwtr','kW/TR',3,'low'],['kwtrp','kW/TRp',3,'low'],['kwtrc','kW/TR หลัง correction',3,'low'],['chkw','kW',1,'none'],['tr','TR',1,'none'],['loadPct','% Load',1,'none'],['dT','ΔT CHW °F',2,'high'],['eapp','Evap approach °F',2,'low'],['capp','Cond approach °F',2,'low'],['n','จำนวนบันทึก',0,'none']] },
+  chiller:{ title:'Chiller รายเครื่อง รายเดือน', unit:r=>r.ch, name:u=>u, metrics:[['kwtr','kW/TR',3,'low'],['kwtrp','kW/TRp (ไม่รวม SCHP)',3,'low'],['chkw','kW',1,'none'],['tr','TR',1,'none'],['loadPct','% Load',1,'none'],['dT','ΔT CHW °F',2,'high'],['eapp','Evap approach °F',2,'low'],['capp','Cond approach °F',2,'low'],['n','จำนวนบันทึก',0,'none']] },
   chp:{ title:'CHP (primary chilled water pump) รายเครื่อง รายเดือน', unit:r=>r.ch, name:u=>'CHP · '+u, metrics:[['chpkwtr','kW/TR',4,'low'],['chpeff','GPM/kW',1,'high'],['chp','kW',1,'none'],['n','จำนวนบันทึก',0,'none']] },
   cdp:{ title:'CDP (condenser water pump) รายเครื่อง รายเดือน', unit:r=>r.ch, name:u=>'CDP · '+u, metrics:[['cdpkwtr','kW/TR',4,'low'],['cdpeff','GPM/kW',1,'high'],['cdp','kW',1,'none'],['n','จำนวนบันทึก',0,'none']] },
 };
@@ -1170,7 +1170,7 @@ function viewUnits(kind){
   $$('.chips button', v).forEach(b=>b.onclick=()=>{ S.sel[kind+'M']=b.dataset.m; render(); });
   bindRows(v, kind);
   drawPareto('cPareto', { units:mx.units, val:x=>mx.cells[x].all[metric[0]], n:x=>mx.cells[x].all.n, name:x=>x, metric, selKey:kind,
-    std: kind==='chiller' ? (metric[0]==='kwtrp' ? S.settings.stdKwtrp : ['kwtr','kwtrc'].includes(metric[0]) ? S.settings.stdKwtr : null) : null });
+    std: kind==='chiller' ? (metric[0]==='kwtrp' ? S.settings.stdKwtrp : metric[0]==='kwtr' ? S.settings.stdKwtr : null) : null });
   const u=S.sel[kind], p=PAL();
   $('#detail').innerHTML = `<h3>${esc(def.name(u))}</h3><div class="grid2 flush"><div class="chartbox"><canvas id="cUnit"></canvas></div>
     <div class="tscroll"><table class="data"><thead><tr><th>ตัวชี้วัด</th>${ms.map(m=>`<th>${mLabel(m)}</th>`).join('')}</tr></thead><tbody>
@@ -1284,7 +1284,7 @@ function viewBest(v){
 function viewGroups(v){
   const rs=inRange(), g=bestGroups(rs, S.settings.groupMinN);
   const ctTxt = a => a.length ? a.map(x=>'<span class="nowrap">'+esc(x)+'</span>').join(', ') : '–';
-  v.innerHTML = `<header class="vh"><h2>ชุด Chiller + CHP + CDP + Cooling ที่ kW/TRp ต่ำที่สุด</h2><p>กลุ่ม = chiller ที่เดิน + CHP/CDP ประจำเครื่อง + cooling tower ฝั่งเดียวกันที่เดินขณะนั้น (อย่างน้อย ${S.settings.groupMinN} บันทึก) · ${esc(periodNote())}</p></header>
+  v.innerHTML = `<header class="vh"><h2>ชุด Chiller + CHP + CDP + Cooling (ไม่รวม SCHP) ที่ kW/TRp ต่ำที่สุด</h2><p>กลุ่ม = chiller ที่เดิน + CHP/CDP ประจำเครื่อง + cooling tower ฝั่งเดียวกันที่เดินขณะนั้น (อย่างน้อย ${S.settings.groupMinN} บันทึก) · ${esc(periodNote())}</p></header>
   <section class="panel"><h3>อันดับชุดอุปกรณ์ตาม kW/TRp เฉลี่ย</h3><div class="tscroll"><table class="data"><thead><tr><th>อันดับ</th><th>Chiller</th><th>CHP</th><th>CDP</th><th>Cooling tower</th><th>บันทึก</th><th>kW/TRp เฉลี่ย</th><th>Chiller · CHP · CDP · CT</th><th>ต่ำสุด</th><th>เกิดขึ้นเมื่อ</th><th>เดือนที่พบ</th></tr></thead><tbody>
   ${g.groups.slice(0,25).map((x,i)=>`<tr${i<3?' class="podium"':''}><td>${i+1}</td><th scope="row">${esc(x.ch)}</th><td class="nowrap">CHP-${esc(x.ch)}</td><td class="nowrap">CDP-${esc(x.ch)}</td><td class="wrap">${ctTxt(x.ctSet)}</td><td>${x.n}</td><td class="strong">${fmt(x.kwtrp)}</td><td class="nowrap">${fmt(x.kwtr)} · ${fmt(x.chpkwtr,3)} · ${fmt(x.cdpkwtr,3)} · ${fmt(x.ctkwtr,3)}</td><td>${fmt(x.min)}</td><td class="nowrap">${x.best.d} ${x.best.t}</td><td class="nowrap">${x.months.map(m=>mLabel(m)).join(', ')}</td></tr>`).join('') || '<tr><td colspan="11">ไม่มีกลุ่มที่มีข้อมูลพอ — ลดค่าขั้นต่ำที่หน้าตั้งค่า</td></tr>'}
   </tbody></table></div></section>
@@ -1329,7 +1329,7 @@ function viewReg(v){
     <button class="btn" id="rgReset">ใช้ค่าเริ่มต้น</button>
   </section>
   <section class="grid2">${regCard(mb,'ก่อนปรับปรุง',0)}${regCard(ma,'หลังปรับปรุง',1)}</section>
-  <section class="panel"><h3>สมการแยกรายชุด Chiller + CHP + CDP + Cooling</h3>${perChTable(mb,ma)}</section>`;
+  <section class="panel"><h3>สมการแยกรายชุด Chiller + CHP + CDP + Cooling (ไม่รวม SCHP)</h3>${perChTable(mb,ma)}</section>`;
   const upd = ()=>{ o.target=$('#rgT').value; o.vars=$$('fieldset input:checked',v).map(i=>i.value); if(!o.vars.length) o.vars=['tr']; o.dummies=$('#rgD').checked; saveSettings(); render(); };
   $('#rgT').onchange=upd; $('#rgD').onchange=upd; $$('fieldset input',v).forEach(i=>i.onchange=upd);
   $('#rgReset').onclick=()=>{ S.settings.reg={...DEFAULT_SETTINGS.reg, vars:[...DEFAULT_SETTINGS.reg.vars]}; saveSettings(); render(); };
@@ -1605,7 +1605,7 @@ ${imgTrend?`<img src="${imgTrend}" alt="แนวโน้มรายเดื�
 ${D.sv?`<p>เทียบ baseline ด้วยสมการช่วงก่อนปรับปรุง (ปรับผลของโหลดและสภาพอากาศแล้ว): คาดการณ์ ${fmt(D.sv.pred,1)} kW เทียบใช้จริง ${fmt(D.sv.act,1)} kW ต่อชุด → <b>${D.sv.sav>0?'ประหยัด':'ใช้เพิ่ม'} ${fmt(Math.abs(D.sv.sav),1)}%</b> (${D.sv.n} บันทึก)</p>`:''}
 <h2>3. Chiller ที่ kW/TR และ kW/TRp ดีที่สุดในแต่ละเดือน</h2>
 <table><thead><tr><th>เดือน</th><th>kW/TR เฉลี่ยต่ำสุด</th><th>kW/TRp เฉลี่ยต่ำสุด</th><th>kW/TR ต่ำสุด (บันทึกเดียว)</th><th>kW/TRp ต่ำสุด (บันทึกเดียว)</th></tr></thead><tbody>${D.bp.map(x=>`<tr><th>${mLabel(x.m,true)}</th><td>${x.rankKwtr.slice(0,3).map((r,i)=>`${i+1}. ${esc(r.ch)} · ${fmt(r.kwtr)}`).join('<br>')||'–'}</td><td>${x.rankKwtrp.slice(0,3).map((r,i)=>`${i+1}. ${esc(r.ch)} · ${fmt(r.kwtrp)}`).join('<br>')||'–'}</td><td>${x.recKwtr?esc(x.recKwtr.ch)+' · '+fmt(x.recKwtr.kwtr)+'<br><small>'+x.recKwtr.d+' '+x.recKwtr.t+'</small>':'–'}</td><td>${x.recKwtrp?esc(x.recKwtrp.ch)+' · '+fmt(x.recKwtrp.kwtrp)+'<br><small>'+x.recKwtrp.d+' '+x.recKwtrp.t+'</small>':'–'}</td></tr>`).join('')}</tbody></table>
-<h2>4. ชุด Chiller + CHP + CDP + Cooling ที่ kW/TRp ต่ำที่สุด</h2>
+<h2>4. ชุด Chiller + CHP + CDP + Cooling (ไม่รวม SCHP) ที่ kW/TRp ต่ำที่สุด</h2>
 <table><thead><tr><th>#</th><th>Chiller / CHP / CDP</th><th>Cooling tower</th><th>n</th><th>kW/TRp เฉลี่ย</th><th>ต่ำสุด</th><th>เกิดขึ้นเมื่อ</th></tr></thead><tbody>${D.g.groups.slice(0,15).map((x,i)=>`<tr><td>${i+1}</td><th>${esc(x.ch)} / CHP-${esc(x.ch)} / CDP-${esc(x.ch)}</th><td style="text-align:left">${x.ctSet.join(', ')||'–'}</td><td>${x.n}</td><td><b>${fmt(x.kwtrp)}</b></td><td>${fmt(x.min)}</td><td>${x.best.d} ${x.best.t}</td></tr>`).join('')||'<tr><td colspan="7">ไม่มีกลุ่มที่มีข้อมูลพอ</td></tr>'}</tbody></table>
 <h3>10 บันทึกที่ kW/TRp ต่ำที่สุด</h3><table><thead><tr><th>#</th><th>วันที่ เวลา</th><th>Chiller</th><th>Cooling tower</th><th>TR</th><th>kW/TR</th><th>kW/TRp</th></tr></thead><tbody>${D.g.lowest.slice(0,10).map((r,i)=>`<tr><td>${i+1}</td><td>${r.d} ${r.t}</td><th>${esc(r.ch)}</th><td style="text-align:left">${r.ctSet.join(', ')}</td><td>${fmt(r.tr,0)}</td><td>${fmt(r.kwtr)}</td><td><b>${fmt(r.kwtrp)}</b></td></tr>`).join('')}</tbody></table>
 <h2>5. สมการ Chiller Plant (Regression) ก่อน – หลังปรับปรุง</h2><p>ตัวแปรตาม: ${esc(REG_TARGETS[o.target])} · ตัวแปรต้นที่ทดสอบ: ${o.vars.map(k=>REG_VARS[k].label).join(', ')}${o.dummies?' + ค่าปรับเฉพาะชุด C(chiller)':''} · ตัดตัวแปรที่ P-value ≥ ${o.alpha} ออกทีละตัว (backward elimination) · เกณฑ์ R² ≥ ${fmt(o.r2min*100,0)}%</p>
