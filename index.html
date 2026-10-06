@@ -6,7 +6,7 @@
 <title>PSD_eNGINNo Chiller Plant Analytic System</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=Orbitron:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -24,6 +24,10 @@
   --chw:#56a8cc; --chw-2:#2f6f8c; --cdw:#dd9442; --cdw-2:#8f5a22; --slate:#6c7a83; --good:#63c08c; --bad:#e3765f; --s-plant:#5b9bff; --s-chiller:#5be3a0; --warn:#ffbf5e; }
 :root[data-theme="sea"]{ --paper:#bfe0ee; --surface:#e8f5fa; --sunk:#d0e9f3; --line:#93c1d4; --bar:#0a4361; --bar-txt:#e8f5fa; --ink:#0d1f2a;
   --chw:#0b5f86; --chw-2:#5aa5c6; --cdw:#a4570c; --cdw-2:#e2b073; --slate:#587480; --good:#1f6b45; --bad:#a63a26; --s-plant:#123fa6; --s-chiller:#1a9a54; --warn:#8c4a00; }
+:root{ --fs:1; --ns:1; }
+:root[data-font="orbitron"]{ --body:'Orbitron','IBM Plex Sans Thai','Leelawadee UI',Tahoma,sans-serif; --cond:'Orbitron','IBM Plex Sans Thai','Leelawadee UI',Tahoma,sans-serif; --fs:.88; --ns:.74; }
+:root[data-font="courier"]{ --body:'Courier New',Courier,'IBM Plex Sans Thai','Leelawadee UI',Tahoma,monospace; --cond:'Courier New',Courier,'IBM Plex Sans Thai','Leelawadee UI',Tahoma,monospace; --fs:.92; --ns:.9; }
+:root[data-font="sarabun"]{ --body:'Sarabun','IBM Plex Sans Thai','Leelawadee UI',Tahoma,sans-serif; --cond:'Sarabun','IBM Plex Sans Thai','Leelawadee UI',Tahoma,sans-serif; --fs:1.07; --ns:1.04; }
 :root[data-text="black"]{ --ink:#0f1a20; }
 :root[data-text="orange"]{ --ink:#8c4104; }
 :root[data-text="blue"]{ --ink:#0f2a85; }
@@ -32,14 +36,14 @@
 :root[data-theme="dark"][data-text="blue"]{ --ink:#9db9ff; }
 html{ scroll-padding-top:env(safe-area-inset-top,0px); }
 *,*::before,*::after{ box-sizing:inherit; }
-body{ margin:0; background:var(--paper); color:var(--ink); font:15px/1.6 var(--body); font-variant-numeric:tabular-nums; }
+body{ margin:0; background:var(--paper); color:var(--ink); font:calc(15px*var(--fs))/1.6 var(--body); font-variant-numeric:tabular-nums; }
 button,select,input{ font:inherit; color:inherit; }
 :focus-visible{ outline:2px solid var(--chw); outline-offset:2px; }
 
 /* top bar */
 .top{ position:sticky; top:env(safe-area-inset-top,0px); z-index:20; background:var(--bar); color:var(--bar-txt); display:flex; flex-wrap:wrap; align-items:center; gap:12px 20px; padding:10px 20px; }
 .brand{ display:flex; align-items:baseline; gap:10px; margin-right:auto; min-width:0; }
-.brand b{ font:700 22px/1 var(--cond); letter-spacing:-.01em; }
+.brand b{ font:700 calc(22px*var(--ns))/1 var(--cond); letter-spacing:-.01em; }
 .brand span{ font:500 14px/1.2 var(--cond); opacity:.75; }
 .brand::before{ content:""; width:10px; height:22px; align-self:center; background:linear-gradient(var(--chw-2) 0 50%, var(--cdw) 50% 100%); border-radius:1px; }
 .range{ display:flex; align-items:center; gap:6px; font-size:13px; }
@@ -62,7 +66,7 @@ button,select,input{ font:inherit; color:inherit; }
 main{ padding:22px clamp(14px,2vw,36px) 56px; width:100%; min-width:0; }
 
 /* view header */
-.vh h2{ font:700 26px/1.2 var(--cond); margin:0 0 4px; letter-spacing:-.01em; }
+.vh h2{ font:700 calc(26px*var(--ns))/1.2 var(--cond); margin:0 0 4px; letter-spacing:-.01em; }
 .vh p{ margin:0 0 18px; color:var(--muted); max-width:80ch; }
 h3{ font:600 16px/1.3 var(--body); margin:0 0 12px; }
 h3 small{ font-weight:400; color:var(--muted); margin-left:6px; font-size:13px; }
@@ -82,7 +86,7 @@ h3 small{ font-weight:400; color:var(--muted); margin-left:6px; font-size:13px; 
 .schem{ width:100%; height:auto; display:block; }
 .schem .t-lbl{ font:500 15px var(--body); fill:var(--muted); }
 .schem .t-lbl.over{ fill:var(--bad); } .schem .t-lbl.under{ fill:var(--good); }
-.schem .t-val{ font:700 78px/1 var(--cond); fill:var(--ink); letter-spacing:-.02em; }
+.schem .t-val{ font:700 calc(78px*var(--ns))/1 var(--cond); fill:var(--ink); letter-spacing:-.02em; }
 .schem .pipe path{ fill:none; stroke-width:7; stroke-linecap:round; }
 .schem .pipe.cdw path{ stroke:var(--cdw); } .schem .pipe.chw path{ stroke:var(--chw); }
 .schem .lbl text{ font:500 13px var(--body); fill:var(--muted); }
@@ -96,8 +100,8 @@ h3 small{ font-weight:400; color:var(--muted); margin-left:6px; font-size:13px; 
 .schem .u-name{ font:500 14px var(--body); fill:var(--muted); } .schem .u-name.s{ font-size:12px; }
 .schem .unit.core .u-name{ fill:color-mix(in srgb, var(--bar-txt) 75%, transparent); }
 .schem .unit.core .u-val, .schem .unit.core .u-big{ fill:var(--bar-txt); }
-.schem .u-val{ font:700 22px var(--cond); fill:var(--ink); } .schem .u-val.s{ font-size:15px; }
-.schem .u-big{ font:700 52px var(--cond); }
+.schem .u-val{ font:700 calc(22px*var(--ns)) var(--cond); fill:var(--ink); } .schem .u-val.s{ font-size:15px; }
+.schem .u-big{ font:700 calc(52px*var(--ns)) var(--cond); }
 .share{ display:flex; height:30px; border-radius:2px; overflow:hidden; margin-top:6px; font-size:12px; }
 .share span{ display:flex; align-items:center; gap:4px; padding:0 8px; color:#fff; white-space:nowrap; overflow:hidden; min-width:0; }
 .share span.tiny{ padding:0; }
@@ -147,7 +151,7 @@ table.best .lead{ font-weight:600; } table.best .sub{ color:var(--muted); font-s
 .controls legend{ float:left; margin-right:10px; color:var(--muted); font-size:13px; }
 .controls select{ margin-left:6px; border:1px solid var(--line); background:var(--paper); border-radius:3px; padding:4px 6px; }
 .ck{ display:inline-flex; gap:5px; align-items:center; cursor:pointer; } .ck small{ color:var(--muted); }
-.reg .eq{ font:600 17px/1.5 var(--cond); background:var(--sunk); border-left:4px solid var(--cdw); padding:10px 12px; margin:0 0 12px; overflow-wrap:anywhere; }
+.reg .eq{ font:600 calc(17px*var(--ns)) /1.5 var(--cond); background:var(--sunk); border-left:4px solid var(--cdw); padding:10px 12px; margin:0 0 12px; overflow-wrap:anywhere; }
 .badges{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
 .badge{ font-size:12.5px; border:1px solid var(--line); border-radius:3px; padding:2px 8px; }
 .badge.ok{ border-color:var(--good); color:var(--good); font-weight:600; } .badge.no{ border-color:var(--bad); color:var(--bad); font-weight:600; }
@@ -169,8 +173,8 @@ details{ margin:10px 0; } summary{ cursor:pointer; color:var(--chw); font-size:1
 .energy{ margin:0; }
 .energy .kicker{ margin-bottom:2px; }
 .kwh{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
-.kwh b{ font:700 clamp(38px,4.2vw,64px)/1.05 var(--cond); letter-spacing:-.02em; overflow-wrap:anywhere; }
-.kwh span{ font:600 22px var(--cond); color:var(--muted); }
+.kwh b{ font:700 calc(clamp(38px,4.2vw,64px)*var(--ns))/1.05 var(--cond); letter-spacing:-.02em; overflow-wrap:anywhere; }
+.kwh span{ font:600 calc(22px*var(--ns)) var(--cond); color:var(--muted); }
 .energy .sub{ margin:2px 0 14px; color:var(--muted); font-size:13.5px; }
 .ebreak{ list-style:none; margin:0 0 6px; padding:0; display:grid; gap:9px; }
 .ebreak li{ display:grid; grid-template-columns:76px minmax(0,1fr) auto; gap:10px; align-items:center; font-size:13.5px; }
@@ -182,7 +186,7 @@ details{ margin:10px 0; } summary{ cursor:pointer; color:var(--chw); font-size:1
 .refwrap{ background:#fff; border:1px solid var(--line); border-radius:4px; overflow:hidden; }
 .refsvg{ display:block; width:100%; height:auto; }
 .refsum{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; margin:12px 0 6px; }
-.refsum b.v{ font:700 26px var(--cond); }
+.refsum b.v{ font:700 calc(26px*var(--ns)) var(--cond); }
 .tag{ display:inline-block; padding:2px 10px; border-radius:12px; font-weight:600; font-size:13.5px; color:#111; }
 .tag.b0{ background:#7fa2ff; } .tag.b1{ background:#5fe05f; } .tag.b2{ background:#ffe94d; } .tag.b3{ background:#ff6b5e; }
 .refnote{ margin:4px 0 0; font-size:14px; max-width:90ch; }
@@ -281,10 +285,30 @@ table.exc td.bad{ background:color-mix(in srgb, var(--bad) 15%, transparent); co
 .top .userbox .who small{ display:inline; margin-left:6px; }
 @media (max-width:640px){ .top .userbox .who small{ display:none; } }
 
+.themes.fonts{ grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); }
+.tsw .fname{ display:block; font-weight:700; font-size:15px; }
+.opt .tsw.f{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:2px; padding:14px 8px 12px; }
+.opt .tsw.f .aa{ font-size:32px; margin:0 0 4px; white-space:nowrap; }
+.opt .tsw.f .fname{ font-size:15px; }
+.opt .tsw.f small{ display:block; }
+
+/* calculation mode */
+.modechip{ display:inline-block; margin-left:6px; padding:1px 10px; border-radius:12px; border:1px solid var(--line); background:var(--surface); color:var(--muted); font-size:12px; font-weight:600; cursor:pointer; vertical-align:1px; }
+.modechip.all{ border-color:color-mix(in srgb, var(--warn) 55%, var(--line)); background:color-mix(in srgb, var(--warn) 12%, var(--surface)); color:var(--warn); }
+.calcmode{ margin-top:18px; padding-top:14px; border-top:1px solid var(--line); }
+.calcmode h4{ margin:0 0 10px; font:600 15px var(--body); }
+.calcmode .cm{ display:block; width:100%; text-align:left; margin:0 0 10px; padding:10px 14px; border:2px solid var(--line); border-radius:6px; background:var(--surface); color:var(--ink); cursor:pointer; font:inherit; }
+.calcmode .cm:hover{ border-color:color-mix(in srgb, var(--chw) 50%, var(--line)); }
+.calcmode .cm.on{ border-color:var(--chw); box-shadow:0 0 0 2px color-mix(in srgb, var(--chw) 25%, transparent); }
+.calcmode .cm.on > b:first-child::before{ content:'● '; color:var(--chw); }
+.calcmode .cm > b:first-child{ display:block; font-size:15px; } .calcmode .cm small{ display:block; color:var(--muted); font-size:12.5px; margin:2px 0 4px; }
+.calcmode .cmv{ display:block; font-size:13px; font-variant-numeric:tabular-nums; }
+.en-ex{ margin:6px 0 0; font-size:12.5px; color:var(--muted); }
+
 /* dialogs */
 dialog{ border:1px solid var(--line); border-radius:6px; padding:0; background:var(--surface); color:var(--ink); width:min(560px, calc(100vw - 32px)); }
 dialog::backdrop{ background:rgba(10,20,26,.5); }
-dialog header{ padding:16px 20px 0; } dialog header h2{ font:700 21px var(--cond); margin:0; }
+dialog header{ padding:16px 20px 0; } dialog header h2{ font:700 calc(21px*var(--ns)) var(--cond); margin:0; }
 dialog .body{ padding:12px 20px; max-height:60vh; overflow:auto; }
 dialog footer{ display:flex; justify-content:flex-end; gap:8px; padding:12px 20px 18px; }
 .opt{ display:flex; flex-direction:column; gap:6px; margin:0 0 14px; border:0; padding:0; }
@@ -721,7 +745,7 @@ const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'
 
 const LS_KEY = 'psd_chiller_settings_v1';
 const DEFAULT_SETTINGS = { filter:{...DEFAULT_FILTER}, before:['2569-04','2569-05'], after:['2569-06','2569-08'], minN:10, groupMinN:5,
-  reg:{ target:'allkw', vars:['tr','twb','cdr','chs'], dummies:true, alpha:0.05, r2min:0.80, minN:20 }, stdKwtr:0.574, stdKwtrp:0.75, hours:2 };
+  reg:{ target:'allkw', vars:['tr','twb','cdr','chs'], dummies:true, alpha:0.05, r2min:0.80, minN:20 }, stdKwtr:0.574, stdKwtrp:0.75, hours:2, calcMode:'valid' };
 function loadSettings(){ try{ const s=JSON.parse(localStorage.getItem(LS_KEY)||'null'); if(s) return {...DEFAULT_SETTINGS, ...s, filter:{...DEFAULT_FILTER, ...(s.filter||{})}, reg:{...DEFAULT_SETTINGS.reg, ...(s.reg||{})}}; }catch(e){} return JSON.parse(JSON.stringify(DEFAULT_SETTINGS)); }
 function saveSettings(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(S.settings)); }catch(e){} }
 
@@ -880,16 +904,27 @@ const THEME_KEY='psd_theme_v1';
 const THEMES=[['gray','เทา-ขาว','ค่าเริ่มต้น','#eef2f4','#ffffff','#15252f'],['dark','มืด (Dark)','พื้นเข้ม ถนอมสายตา','#0e181e','#15222a','#e3ebee'],['sea','ฟ้าทะเล','พื้นฟ้าอ่อนโทนน้ำทะเล','#bfe0ee','#e8f5fa','#0a4361']];
 const TEXTS=[['black','ดำ'],['orange','ส้ม'],['blue','น้ำเงิน']];
 const TXT_COL={ light:{black:'#0f1a20',orange:'#8c4104',blue:'#0f2a85'}, dark:{black:'#e8eff2',orange:'#ffb26b',blue:'#9db9ff'} };
-function loadTheme(){ try{ const t=JSON.parse(localStorage.getItem(THEME_KEY)||'null'); if(t && THEMES.some(x=>x[0]===t.bg) && TEXTS.some(x=>x[0]===t.text)) return t; }catch(e){} return {bg:'gray',text:'black'}; }
+const FONTS=[
+  {id:'orbitron', name:'Orbitron', sub:'Digital · Tech', stack:"'Orbitron','IBM Plex Sans Thai','Leelawadee UI',Tahoma,sans-serif"},
+  {id:'courier', name:'Courier New', sub:'Classic · Mono', stack:"'Courier New',Courier,'IBM Plex Sans Thai','Leelawadee UI',Tahoma,monospace"},
+  {id:'sarabun', name:'Sarabun', sub:'Thai · Clean', stack:"'Sarabun','IBM Plex Sans Thai','Leelawadee UI',Tahoma,sans-serif"},
+  {id:'plex', name:'IBM Plex Sans Thai', sub:'ค่าเริ่มต้น · Clean', stack:"'IBM Plex Sans Thai','Leelawadee UI',Tahoma,sans-serif"}];
+function loadTheme(){ try{ const t=JSON.parse(localStorage.getItem(THEME_KEY)||'null'); if(t && THEMES.some(x=>x[0]===t.bg) && TEXTS.some(x=>x[0]===t.text)) return {bg:t.bg, text:t.text, font:FONTS.some(f=>f.id===t.font)?t.font:'plex'}; }catch(e){} return {bg:'gray',text:'black',font:'plex'}; }
 function saveTheme(t){ try{ localStorage.setItem(THEME_KEY, JSON.stringify(t)); }catch(e){} }
-function applyTheme(t){ document.documentElement.dataset.theme=t.bg; document.documentElement.dataset.text=t.text; }
-function setThemePart(p){ const t={...loadTheme(),...p}; saveTheme(t); applyTheme(t); render(); }
+function applyTheme(t){ document.documentElement.dataset.theme=t.bg; document.documentElement.dataset.text=t.text; document.documentElement.dataset.font=t.font||'plex'; }
+function setThemePart(p){
+  const t={...loadTheme(),...p}; saveTheme(t); applyTheme(t); render();
+  if(p.font && window.FontFace!==undefined && document.fonts && document.fonts.load){
+    const f=FONTS.find(x=>x.id===t.font); if(f){ const fam=f.stack.split(',')[0];
+      Promise.all([document.fonts.load('400 14px '+fam), document.fonts.load('700 14px '+fam)]).then(()=>{ if(S.user) render(); }).catch(()=>{}); }
+  }
+}
 const PAL = () => ({ ink:cssVar('--ink'), muted:cssVar('--muted'), line:cssVar('--line'), chw:cssVar('--chw'), chw2:cssVar('--chw-2'), cdw:cssVar('--cdw'), cdw2:cssVar('--cdw-2'), slate:cssVar('--slate'), good:cssVar('--good'), bad:cssVar('--bad'), plant:cssVar('--s-plant'), chiller:cssVar('--s-chiller') });
 const SERIES = () => { const p=PAL(); return [p.chw, p.cdw, p.good, p.slate, '#7a5ea8', '#b0487a', '#3f8f9b', '#8a8a2e', '#5b6fd6', '#c45d3a', '#2f6d4a', '#9a6b3f']; };
 function killCharts(){ S.charts.forEach(c=>c.destroy()); S.charts=[]; }
 function chartDefaults(){
   if(!window.Chart) return;
-  const p=PAL(); Chart.defaults.font.family = "'IBM Plex Sans Thai', system-ui, sans-serif"; Chart.defaults.font.size=12;
+  const p=PAL(); Chart.defaults.font.family = cssVar('--body') || "'IBM Plex Sans Thai', system-ui, sans-serif"; Chart.defaults.font.size=12;
   Chart.defaults.color = p.muted; Chart.defaults.borderColor = p.line; Chart.defaults.plugins.legend.labels.boxWidth=12;
 }
 function mkChart(canvas, cfg){ if(!window.Chart||!canvas) return null; const c = new Chart(canvas, cfg); S.charts.push(c); return c; }
@@ -916,6 +951,16 @@ function render(){
   const fn = { overview:viewOverview, chiller:()=>viewUnits('chiller'), chp:()=>viewUnits('chp'), cdp:()=>viewUnits('cdp'), ct:viewCT, ba:viewBA, best:viewBest, group:viewGroups, reg:viewReg, anom:viewAnom, data:viewData, users:viewUsers }[S.tab];
   v.innerHTML = ''; fn(v);
   if(!['data','users','overview','anom'].includes(S.tab)) injectWarn(v);
+}
+/* โหมดคำนวณหน้าภาพรวม: 'valid' = เฉพาะค่าปกติ, 'all' = รวมทุกบันทึก (วิธีเดียวกับ dashboard) */
+const ovAll = () => S.settings.calcMode==='all';
+const ovRecs = () => ovAll() ? rangeAll() : inRange();
+const ovBase = () => ovAll() ? S.all : S.valid;
+function ovPeriodNote(){ const ms=rangeMonths(); return `${mLabel(ms[0],true)} – ${mLabel(ms[ms.length-1],true)} · ${ovRecs().length.toLocaleString()} ${ovAll()?'บันทึก (รวมทุกบันทึก)':'บันทึกที่ผ่านเกณฑ์'}`; }
+function ovModeChip(){
+  const n=S.excluded.filter(r=>r.m>=S.range.from&&r.m<=S.range.to).length;
+  return ovAll() ? `<button class="modechip all" data-gomode title="เปลี่ยนวิธีคำนวณที่หน้าข้อมูลและการตั้งค่า">โหมด: คำนวณรวมทั้งหมด${n?` (รวมค่าผิดปกติ ${n})`:''}</button>`
+                 : `<button class="modechip" data-gomode title="เปลี่ยนวิธีคำนวณที่หน้าข้อมูลและการตั้งค่า">โหมด: คำนวณเฉพาะค่าปกติ${n?` (ตัดออก ${n})`:''}</button>`;
 }
 function periodNote(){ const ms=rangeMonths(); return `${mLabel(ms[0],true)} – ${mLabel(ms[ms.length-1],true)} · ${inRange().length.toLocaleString()} บันทึกที่ผ่านเกณฑ์`; }
 
@@ -947,15 +992,15 @@ function shareBar(st){
   <p class="share-leg">${parts.map(p=>`<span><i style="background:var(${p[2]})"></i>${p[0]} <b>${fmt(p[1],4)}</b> kW/TR · ${fmt(pc(p),1)}%</span>`).join('')}</p>`;
 }
 function insightsList(){
-  const rs=inRange(), ms=rangeMonths(), out=[];
+  const rs=ovRecs(), ms=rangeMonths(), out=[];
   const byCh=[...groupBy(rs,r=>r.ch)].map(([ch,a])=>({ch,n:a.length,kwtrp:mean(a.map(r=>r.kwtrp))})).filter(x=>x.n>=S.settings.minN).sort((a,b)=>a.kwtrp-b.kwtrp);
   if(byCh.length>1) out.push(`ชุดที่ประหยัดที่สุดคือ <b>${esc(byCh[0].ch)}</b> เฉลี่ย ${fmt(byCh[0].kwtrp)} kW/TRp ส่วน <b>${esc(byCh[byCh.length-1].ch)}</b> สูงสุดที่ ${fmt(byCh[byCh.length-1].kwtrp)} — ต่างกัน ${pct((byCh[byCh.length-1].kwtrp/byCh[0].kwtrp-1)*100)} ควรเดินชุดประหยัดเป็นลำดับแรก`);
-  const ba = beforeAfter(S.valid, S.settings.before, S.settings.after), sv=savingsCalc();
+  const ba = beforeAfter(ovBase(), S.settings.before, S.settings.after), sv=savingsCalc();
   if(ba.nB && ba.nA) out.push(`ค่าเฉลี่ยก่อนปรับปรุง ${fmt(ba.plant.b.kwtrp)} → หลังปรับปรุง ${fmt(ba.plant.a.kwtrp)} kW/TRp (${pct((ba.plant.a.kwtrp/ba.plant.b.kwtrp-1)*100)})${sv?` · เมื่อปรับผลของสภาพอากาศและโหลดด้วยสมการ baseline ${sv.sav>0?'ประหยัด':'ใช้เพิ่ม'} ${fmt(Math.abs(sv.sav),1)}%`:''}`);
   const bestM = ms.map(m=>({m, v:mean(rs.filter(r=>r.m===m).map(r=>r.kwtrp))})).filter(x=>isNum(x.v)).sort((a,b)=>a.v-b.v);
   if(bestM.length>1) out.push(`เดือนที่ดีที่สุดคือ ${mLabel(bestM[0].m,true)} (${fmt(bestM[0].v)} kW/TRp) และแย่ที่สุด ${mLabel(bestM[bestM.length-1].m,true)} (${fmt(bestM[bestM.length-1].v)})`);
   const exc = S.excluded.filter(r=>r.m>=S.range.from && r.m<=S.range.to);
-  if(exc.length){ const top=[...groupBy(exc,r=>r.ch)].sort((a,b)=>b[1].length-a[1].length)[0]; out.push(`ตัดข้อมูลผิดปกติ ${exc.length} บันทึก มากที่สุดจาก ${esc(top[0])} (${top[1].length}) — ตรวจสอบเซนเซอร์อุณหภูมิ/อัตราการไหลของชุดนี้`); }
+  if(exc.length){ const top=[...groupBy(exc,r=>r.ch)].sort((a,b)=>b[1].length-a[1].length)[0]; out.push(ovAll() ? `โหมดคำนวณรวมทั้งหมด: รวมบันทึกผิดปกติ ${exc.length} บันทึกในการคำนวณ (มากที่สุดจาก ${esc(top[0])} ${top[1].length}) — ค่าจึงใกล้กับ dashboard ที่ไม่ตัดข้อมูล` : `ตัดข้อมูลผิดปกติ ${exc.length} บันทึก มากที่สุดจาก ${esc(top[0])} (${top[1].length}) — ตรวจสอบเซนเซอร์อุณหภูมิ/อัตราการไหลของชุดนี้`); }
   return out;
 }
 /* reference chart: ระดับประสิทธิภาพ chiller plant (ภาพอ้างอิงที่แนบ) */
@@ -991,7 +1036,7 @@ function refPanel(st, ba){
   <p class="refnote">${note}</p>
   <p class="legend-note">ขอบเกณฑ์อ่านจากภาพ: ดีเยี่ยม &lt; 0.70 · ดี 0.70–0.85 · พอใช้ 0.85–1.00 · ต้องปรับปรุง &gt; 1.00 kW/ton — ภาพเป็นค่าเฉลี่ยรายปีของ plant ที่ใช้ chiller ไฟฟ้าแบบ centrifugal ในเขตอเมริกาเหนือ (CHWS 42°F, EWT สูงสุด 85°F) และระบุ local climate adjustment ±0.05 kW/ton จึงใช้เป็นแนวเทียบ ไม่ใช่เกณฑ์ตัดสินเด็ดขาด</p>`;
 }
-function energyPanel(en){
+function energyPanel(en, exE){
   const parts=[['Chiller',en.ch,'--chw'],['CHP',en.chp,'--chw-2'],['CDP',en.cdp,'--cdw-2'],['Cooling',en.ct,'--cdw']];
   const tot=parts.reduce((s,p)=>s+p[1],0)||1;
   return `<aside class="energy panel" aria-label="พลังงานไฟฟ้ารวมทั้ง plant">
@@ -999,14 +1044,15 @@ function energyPanel(en){
     <div class="kwh"><b>${fmtInt(en.kwh)}</b><span>kWh</span></div>
     <p class="sub">≈ ${fmt(en.kwh/1000,1)} MWh · ${en.n.toLocaleString()} บันทึก · ${en.days} วันที่มีข้อมูล · kW รวมเฉลี่ย ${fmt(en.avgKw,1)} kW ต่อบันทึก</p>
     <ul class="ebreak">${parts.map(p=>`<li><span>${p[0]}</span><span class="bar"><i style="width:${(p[1]/tot*100).toFixed(1)}%;background:var(${p[2]})"></i></span><span class="v">${fmtInt(p[1])} <small>${fmt(p[1]/tot*100,1)}%</small></span></li>`).join('')}</ul>
+    ${exE&&exE.n?`<p class="en-ex">รวมบันทึกที่ถูกตัดออกจากการวิเคราะห์ประสิทธิภาพ ${exE.n.toLocaleString()} บันทึก = ${fmtInt(exE.kwh)} kWh · kWh นับทุกบันทึกในทั้งสองโหมดคำนวณ</p>`:''}
     <p class="legend-note">kWh = kW รวมของแต่ละบันทึก × ${en.hours} ชม. (ช่างจดค่าทุก ${en.hours} ชม.) แล้วรวมทุกบันทึกในช่วงที่เลือก · นับรวมบันทึกที่ถูกตัดออกจากการวิเคราะห์ kW/TR ด้วย · เป็นพลังงานจากบันทึกที่มีเท่านั้น ไม่ใช่ค่ามิเตอร์ทั้งเดือน (ดูจำนวนวันที่มีข้อมูล) · ส่วน Cooling ใช้ kW เฉลี่ยต่อ CT ตามสูตรในไฟล์บันทึก</p>
   </aside>`;
 }
 function viewOverview(v){
-  const rs=inRange(), st=statBlock(rs), ms=rangeMonths(), ea=rangeAll(), en=energyStats(ea);
-  const ba=beforeAfter(S.valid, S.settings.before, S.settings.after);
+  const rs=ovRecs(), st=statBlock(rs), ms=rangeMonths(), ea=rangeAll(), en=energyStats(ea), exE=energyStats(S.excluded.filter(r=>r.m>=S.range.from&&r.m<=S.range.to));
+  const ba=beforeAfter(ovBase(), S.settings.before, S.settings.after);
   v.innerHTML = `
-  <section class="hero ov-hero"><div class="ov-main"><p class="kicker">${esc(periodNote())}</p>${schematicSVG(st,{kwtr:S.settings.stdKwtr,kwtrp:S.settings.stdKwtrp})}${shareBar(st)}</div>${energyPanel(en)}</section>
+  <section class="hero ov-hero"><div class="ov-main"><p class="kicker">${esc(ovPeriodNote())} ${ovModeChip()}</p>${schematicSVG(st,{kwtr:S.settings.stdKwtr,kwtrp:S.settings.stdKwtrp})}${shareBar(st)}</div>${energyPanel(en, exE)}</section>
   <section class="ov-row2">
     <div class="panel refpanel">${refPanel(st,ba)}</div>
     <div class="panel"><h3>ข้อสังเกต</h3><ul class="insights">${insightsList().map(s=>`<li>${s}</li>`).join('')}</ul></div>
@@ -1017,6 +1063,7 @@ function viewOverview(v){
   </section>
   <section class="panel"><h3>สรุปทั้ง plant รายเดือน</h3>${monthlyPlantTable(rs, ms, ea)}</section>`;
   $$('[data-ref]',v).forEach(b=>b.onclick=()=>{ S.sel.refBasis=b.dataset.ref; render(); });
+  $$('[data-gomode]',v).forEach(b=>b.onclick=()=>{ setTab('data'); setTimeout(()=>{ const x=$('#calcModeBox'); if(x) x.scrollIntoView({block:'center'}); },80); });
   const p=PAL(), byM=ms.map(m=>energyStats(ea.filter(r=>r.m===m)));
   mkChart($('#cTrend'), { type:'line', data:{ labels: ms.map(m=>mLabel(m)), datasets:[
     { label:'kW/TRp plant', data: ms.map(m=>mean(rs.filter(r=>r.m===m).map(r=>r.kwtrp))), borderColor:p.plant, backgroundColor:p.plant, tension:.25, borderWidth:2.5, pointRadius:4, pointStyle:'circle' },
@@ -1077,7 +1124,7 @@ function monthlyPlantTable(rs, ms, ea){
   const row = (lbl, st, en, cls='', ex='<span class="na">–</span>') => `<tr class="${cls}"><th scope="row">${lbl}</th><td>${st.n}</td><td>${en.days}</td><td>${fmt(st.tr,0)}</td><td>${fmt(st.kwtr)}</td><td>${fmt(st.chpkwtr,4)}</td><td>${fmt(st.cdpkwtr,4)}</td><td>${fmt(st.ctkwtr,4)}</td><td class="strong">${fmt(st.kwtrp)}</td><td class="strong">${fmtInt(en.kwh)}</td><td>${fmt(st.twb,1)}</td><td>${fmt(st.theff*100,1)}</td><td>${ex}</td></tr>`;
   return `<div class="tscroll"><table class="data"><thead><tr><th>เดือน</th><th>บันทึก</th><th>วัน</th><th>TR เฉลี่ย</th><th>Chiller kW/TR</th><th>CHP kW/TR</th><th>CDP kW/TR</th><th>CT kW/TR</th><th>kW/TRp</th><th>kWh</th><th>Twb °F</th><th>CT eff. %</th><th>ความผิดปกติ</th></tr></thead><tbody>
   ${ms.map(m=>row(mLabel(m,true), statBlock(rs.filter(r=>r.m===m)), energyStats(ea.filter(r=>r.m===m)), '', monthAnom(m))).join('')}${row('ทั้งช่วง', statBlock(rs), energyStats(ea),'total', anomChip(S.active.filter(r=>ms.includes(r.m)).length, S.history.filter(r=>ms.includes(r.m)).length, 'ทั้งช่วง'))}</tbody></table></div>
-  <p class="legend-note">บันทึก/kW/TR/kW/TRp นับเฉพาะข้อมูลที่ผ่านเกณฑ์ · kWh และจำนวนวันนับทุกบันทึกที่มี kW รวม · ⚠ = จำนวนบันทึกผิดปกติที่ยังไม่แก้ไข (ถูกตัดออก) · ✓ = แก้ไขแล้ว อยู่ในประวัติ</p>`;
+  <p class="legend-note">${ovAll()?'บันทึก/kW/TR/kW/TRp นับทุกบันทึก รวมค่าผิดปกติ (โหมดคำนวณรวมทั้งหมด)':'บันทึก/kW/TR/kW/TRp นับเฉพาะข้อมูลที่ผ่านเกณฑ์ (โหมดคำนวณเฉพาะค่าปกติ)'} · kWh และจำนวนวันนับทุกบันทึกที่มี kW รวม · ⚠ = จำนวนบันทึกผิดปกติที่ยังไม่แก้ไข (ถูกตัดออก) · ✓ = แก้ไขแล้ว อยู่ในประวัติ</p>`;
 }
 
 /* ---------------- Unit matrices (Chiller / CHP / CDP) ---------------- */
@@ -1265,7 +1312,9 @@ function viewData(v){
   <fieldset class="opt"><legend>สีพื้นหลัง</legend><div class="themes">${THEMES.map(t=>`<label class="tsw"><input type="radio" name="thBg" value="${t[0]}" ${th.bg===t[0]?'checked':''}><div class="pv" style="background:${t[3]}"><i style="background:${t[5]}"></i><i style="background:${t[4]};border:1px solid ${t[5]}55"></i></div><span>${t[1]}</span><small>${t[2]}</small></label>`).join('')}</div></fieldset>
   <fieldset class="opt"><legend>สีตัวอักษร</legend><div class="themes">${TEXTS.map(t=>`<label class="tsw"><input type="radio" name="thTx" value="${t[0]}" ${th.text===t[0]?'checked':''}><div class="aa" style="color:${tcol[t[0]]};background:var(--paper);border-radius:4px;padding:4px 8px">Aa กขค 0.845</div><span>${t[1]}</span></label>`).join('')}</div>
   ${th.bg==='dark'?'<p class="legend-note">บนพื้นมืด ตัวอักษร “ดำ” จะแสดงเป็นสีขาวอ่อนเพื่อให้อ่านออก ส่วนสีส้มและน้ำเงินจะปรับเป็นโทนสว่าง</p>':''}</fieldset>
-  <button class="btn small" id="thReset">คืนค่าสีเริ่มต้น</button></section>
+  <fieldset class="opt"><legend>ฟอนต์ (Font) / ตัวอักษร</legend><div class="themes fonts">${FONTS.map(f=>`<label class="tsw f"><input type="radio" name="thFont" value="${f.id}" ${th.font===f.id?'checked':''}><div class="aa" style="font-family:${f.stack}">Aa ก</div><span class="fname" style="font-family:${f.stack}">${f.name}</span><small>${f.sub}</small></label>`).join('')}</div>
+  <p class="legend-note">Sarabun รองรับภาษาไทยดีที่สุด · Orbitron = Digital Style · Courier New = Classic Mono · Orbitron และ Courier New ไม่มีตัวอักษรไทย ข้อความไทยจะใช้ฟอนต์สำรอง (IBM Plex Sans Thai)</p></fieldset>
+  <button class="btn small" id="thReset">คืนค่าเริ่มต้น (สี + ฟอนต์)</button></section>
   ${isAdmin?`<section class="panel"><div class="drop" id="drop"><p><b>ลากไฟล์ .xlsx มาวางที่นี่</b> หรือ <button class="btn primary" id="pick2">เลือกไฟล์</button> <button class="btn" id="pastePick">วางข้อมูลจาก Google Sheet</button></p><p class="legend-note">ใช้แบบฟอร์มบันทึก chiller เดิม (DAY_record, Chiller running, Sum_…) · เดือนที่มีอยู่แล้วจะถูกแทนที่ด้วยข้อมูลใหม่</p></div></section>`:`<section class="panel"><p class="legend-note">การนำเข้าและลบข้อมูลทำได้เฉพาะผู้ดูแลระบบ</p></section>`}
   <section class="grid2"><div class="panel"><h3>ข้อมูลรายเดือน</h3><div class="tscroll"><table class="data"><thead><tr><th>เดือน</th><th>บันทึก</th><th>ผ่านเกณฑ์</th><th>แหล่งข้อมูล</th><th></th></tr></thead><tbody>
   ${byM.map(x=>`<tr><th scope="row">${mLabel(x.m,true)}</th><td>${x.n}</td><td>${x.ok}</td><td class="wrap">${x.imp?`นำเข้าจาก ${esc(x.imp.fileName||'')}<br><small>${esc((x.imp.importedAt||'').slice(0,16).replace('T',' '))}</small>`:'chiller_aug_26.xlsx (ตั้งต้น)'}</td><td>${x.imp&&isAdmin?`<button class="btn small" data-del="${x.m}">ลบข้อมูลที่นำเข้า</button>`:''}</td></tr>`).join('')}
@@ -1273,7 +1322,12 @@ function viewData(v){
   <div class="panel"><h3>ข้อมูลที่ถูกตัดออก ${S.excluded.length} บันทึก <small class="exc-split">· ยังผิดปกติ ${S.active.length} · แก้ไขแล้ว ${S.history.length}</small></h3><div class="tscroll"><table class="data"><thead><tr><th>เหตุผล</th><th>จำนวน</th><th>ต่ำกว่าช่วง</th><th>สูงกว่าช่วง</th><th>ชุดที่พบมากสุด</th><th></th></tr></thead><tbody>
   ${reasons.map(([k,a])=>{ const t=[...groupBy(a,r=>r.ch)].sort((x,y)=>y[1].length-x[1].length)[0]; const d=dirCount(a); return `<tr><th scope="row">${esc(k)}</th><td>${a.length}</td><td>${d.low||'–'}</td><td>${d.high||'–'}</td><td>${esc(t[0])} (${t[1].length})</td><td><button class="btn small" data-exc="${esc(k)}">ดูรายการ</button></td></tr>`; }).join('')||'<tr><td colspan="6">ไม่มี</td></tr>'}</tbody></table></div>
   <div class="row" style="margin-top:12px"><button class="btn primary" id="excOpen" ${S.excluded.length?'':'disabled'}>ดูรายการวันที่-เวลา ที่ถูกตัดออก (${S.excluded.length})</button></div>
-  <p class="legend-note">ตรวจตามลำดับ: TR → kW/TR → kW/TRp → ΔT → %Load → Twb · นับเฉพาะเหตุผลแรกที่พบ · “ต่ำกว่า/สูงกว่าช่วง” นับตามเหตุผลแรกนี้ (กรณีไม่มีค่า จะรวมในจำนวนแต่ไม่นับเป็นต่ำ/สูง)</p></div></section>
+  <p class="legend-note">ตรวจตามลำดับ: TR → kW/TR → kW/TRp → ΔT → %Load → Twb · นับเฉพาะเหตุผลแรกที่พบ · “ต่ำกว่า/สูงกว่าช่วง” นับตามเหตุผลแรกนี้ (กรณีไม่มีค่า จะรวมในจำนวนแต่ไม่นับเป็นต่ำ/สูง)</p>
+  ${(()=>{ const all=ovAll(), pv=statBlock(inRange()), pa=statBlock(rangeAll()), ms=rangeMonths(), rl=`${mLabel(ms[0])} – ${mLabel(ms[ms.length-1])}`;
+    return `<div class="calcmode" id="calcModeBox"><h4>วิธีคำนวณหน้าภาพรวม (Chiller plant)</h4>
+    <button class="cm ${all?'':'on'}" data-cm="valid" aria-pressed="${!all}"><b>คำนวณเฉพาะค่าปกติ</b><small>ตัดบันทึกที่ไม่ผ่านเกณฑ์ออก · ค่าเริ่มต้น เหมาะกับวิเคราะห์ประสิทธิภาพ</small><span class="cmv">${rl}: kW/TRp <b>${fmt(pv.kwtrp)}</b> · Chiller <b>${fmt(pv.kwtr)}</b> kW/TR · ${pv.n.toLocaleString()} บันทึก</span></button>
+    <button class="cm ${all?'on':''}" data-cm="all" aria-pressed="${all}"><b>คำนวณรวมทั้งหมด</b><small>รวมทุกบันทึก รวมค่าผิดปกติ · วิธีเดียวกับ dashboard ที่ไม่คัดกรองข้อมูล</small><span class="cmv">${rl}: kW/TRp <b>${fmt(pa.kwtrp)}</b> · Chiller <b>${fmt(pa.kwtr)}</b> kW/TR · ${pa.n.toLocaleString()} บันทึก</span></button>
+    <p class="legend-note">มีผลกับหน้าภาพรวมและสรุปผู้บริหารในรายงานที่ส่งออก · หน้าวิเคราะห์อื่น (Chiller รายตัว, ก่อน–หลัง, ดีที่สุด, ชุดอุปกรณ์, สมการ) ใช้เฉพาะค่าปกติเสมอ เพื่อไม่ให้ค่าผิดปกติบิดผล · <b>kWh นับทุกบันทึกในทั้งสองโหมด</b> (ค่าผิดปกติมาจากเซนเซอร์อุณหภูมิ ส่วนค่า kW ยังใช้ได้)</p></div>`; })()}</div></section>
   <section class="panel"><h3>เทียบค่าเฉลี่ยกับ dashboard</h3><div class="tscroll"><table class="data"><thead><tr><th rowspan="2">เดือน</th><th rowspan="2">บันทึก</th><th rowspan="2">ถูกตัดออก</th><th colspan="3">kW/TRp เฉลี่ย</th><th colspan="3">kW/TR chiller เฉลี่ย</th></tr><tr><th>ทุกบันทึก</th><th>ผ่านเกณฑ์</th><th>ต่างกัน</th><th>ทุกบันทึก</th><th>ผ่านเกณฑ์</th><th>ต่างกัน</th></tr></thead><tbody>
   ${S.months.map(m=>cmpRow(mLabel(m,true), S.all.filter(r=>r.m===m), S.valid.filter(r=>r.m===m))).join('')}${cmpRow('ทุกเดือน', S.all, S.valid)}</tbody></table></div>
   <p class="legend-note">“ทุกบันทึก” = เฉลี่ยทุกแถวที่มีค่า รวมแถวที่ถูกตัดออก (ค่านี้ควรใกล้กับ dashboard ที่ไม่คัดกรองข้อมูล) · “ผ่านเกณฑ์” = ค่าที่ webapp ใช้วิเคราะห์ · แถวที่ถูกตัดออกส่วนใหญ่มี kW/TR ต่ำผิดปกติ จึงดึงค่าเฉลี่ยทุกบันทึกให้ต่ำลง · kWh นับทุกบันทึก ไม่ตัดออก</p></section>
@@ -1302,9 +1356,11 @@ function viewData(v){
   <div class="row"><button class="btn primary" id="saveSet">บันทึกการตั้งค่า</button><button class="btn" id="resetSet">คืนค่าเริ่มต้น</button></div></section>`;
   $$('input[name=thBg]',v).forEach(i=>i.onchange=()=>setThemePart({bg:i.value}));
   $$('input[name=thTx]',v).forEach(i=>i.onchange=()=>setThemePart({text:i.value}));
-  $('#thReset').onclick=()=>setThemePart({bg:'gray',text:'black'});
+  $$('input[name=thFont]',v).forEach(i=>i.onchange=()=>setThemePart({font:i.value}));
+  $('#thReset').onclick=()=>setThemePart({bg:'gray',text:'black',font:'plex'});
   const openExc = reason => { const st=excState(); st.open=true; st.reason=reason||''; st.ch=''; st.m=''; st.fix=''; st.limit=300; st.view = reason ? ((S.active.some(r=>r.why===reason)||!S.history.some(r=>r.why===reason))?'active':'history') : (S.active.length?'active':'history'); drawExc(); const p=$('#excPanel'); if(p) p.scrollIntoView({block:'start'}); };
   $('#excOpen').onclick=()=>openExc('');
+  $$('[data-cm]',v).forEach(b=>b.onclick=()=>{ if(S.settings.calcMode===b.dataset.cm) return; S.settings.calcMode=b.dataset.cm; saveSettings(); render(); toast(b.dataset.cm==='all'?'หน้าภาพรวมคำนวณรวมทุกบันทึกแล้ว':'หน้าภาพรวมคำนวณเฉพาะค่าปกติแล้ว'); setTimeout(()=>{ const x=$('#calcModeBox'); if(x) x.scrollIntoView({block:'center'}); },30); });
   $$('[data-exc]',v).forEach(b=>b.onclick=()=>openExc(b.dataset.exc));
   drawExc();
   if(isAdmin){
@@ -1449,7 +1505,8 @@ async function chartImage(cfg, w=960, h=360){
 function reportData(a,b){
   const ms = monthsBetween(S.months,a,b); const rs = S.valid.filter(r=>r.m>=a&&r.m<=b); const ra = S.all.filter(r=>r.m>=a&&r.m<=b);
   const exA=S.active.filter(r=>r.m>=a&&r.m<=b), exH=S.history.filter(r=>r.m>=a&&r.m<=b), exCh=[...groupBy(exA,r=>r.ch)].sort((x,y)=>y[1].length-x[1].length).map(([c,x])=>c+' '+x.length);
-  return { ms, rs, ra, ex:{act:exA.length, hist:exH.length, chs:exCh}, en:energyStats(ra), enBy:new Map(ms.map(m=>[m,energyStats(ra.filter(r=>r.m===m))])), st:statBlock(rs), mxCh:matrix(rs,ms,r=>r.ch), mxCT:ctMatrix(rs,ms), bp:bestPerMonth(rs,ms,S.settings.minN), g:bestGroups(rs,S.settings.groupMinN),
+  const modeAll=S.settings.calcMode==='all', rsS=modeAll?ra:rs;
+  return { ms, rs, ra, rsS, stS:statBlock(rsS), modeAll, ex:{act:exA.length, hist:exH.length, chs:exCh}, en:energyStats(ra), enBy:new Map(ms.map(m=>[m,energyStats(ra.filter(r=>r.m===m))])), st:statBlock(rs), mxCh:matrix(rs,ms,r=>r.ch), mxCT:ctMatrix(rs,ms), bp:bestPerMonth(rs,ms,S.settings.minN), g:bestGroups(rs,S.settings.groupMinN),
     ba:beforeAfter(S.valid,S.settings.before,S.settings.after), mb:regressionModel(S.valid,S.settings.before,S.settings.reg), ma:regressionModel(S.valid,S.settings.after,S.settings.reg), sv:savingsCalc() };
 }
 async function buildReportHTML(a,b){
@@ -1457,8 +1514,8 @@ async function buildReportHTML(a,b){
   const title = a===b ? `ประจำเดือน ${mLabel(a,true)}` : `ช่วง ${mLabel(a,true)} – ${mLabel(b,true)}`;
   const mtab = (mx, key, d, nameFn=u=>u) => `<table><thead><tr><th>อุปกรณ์</th>${D.ms.map(m=>`<th>${mLabel(m)}</th>`).join('')}${D.ms.length>1?'<th>ทั้งช่วง</th>':''}</tr></thead><tbody>${mx.units.map(u=>`<tr><th>${esc(nameFn(u))}</th>${D.ms.map(m=>`<td>${mx.cells[u][m].n?fmt(mx.cells[u][m][key],d):'–'}</td>`).join('')}${D.ms.length>1?`<td><b>${fmt(mx.cells[u].all[key],d)}</b></td>`:''}</tr>`).join('')}</tbody></table>`;
   const imgTrend = D.ms.length>1 ? await chartImage({ type:'line', data:{ labels:D.ms.map(m=>mLabel(m)), datasets:[
-    {label:'kW/TRp plant', data:D.ms.map(m=>mean(D.rs.filter(r=>r.m===m).map(r=>r.kwtrp))), borderColor:RP.plant, backgroundColor:RP.plant},
-    {label:'kW/TR chiller', data:D.ms.map(m=>mean(D.rs.filter(r=>r.m===m).map(r=>r.kwtr))), borderColor:RP.chiller, backgroundColor:RP.chiller},
+    {label:'kW/TRp plant', data:D.ms.map(m=>mean(D.rsS.filter(r=>r.m===m).map(r=>r.kwtrp))), borderColor:RP.plant, backgroundColor:RP.plant},
+    {label:'kW/TR chiller', data:D.ms.map(m=>mean(D.rsS.filter(r=>r.m===m).map(r=>r.kwtr))), borderColor:RP.chiller, backgroundColor:RP.chiller},
     {label:'มาตรฐาน kW/TRp', data:D.ms.map(()=>s.stdKwtrp), borderColor:RP.bad, borderDash:[5,5], pointRadius:0}]}, options:{plugins:{legend:{position:'bottom'}}} }) : '';
   const imgChBar = await chartImage({ type:'bar', data:{ labels:D.mxCh.units, datasets:[['Chiller','kwtr',RP.chw],['CHP','chpkwtr',RP.chw2],['CDP','cdpkwtr',RP.cdw2],['Cooling','ctkwtr',RP.cdw]].map(([l,k,c])=>({label:l, data:D.mxCh.units.map(u=>D.mxCh.cells[u].all[k]), backgroundColor:c})) }, options:{plugins:{legend:{position:'bottom'}, title:{display:true,text:'องค์ประกอบ kW/TRp รายชุด'}}, scales:{x:{stacked:true}, y:{stacked:true}}} });
   const rowsBA = D.ba.rows.filter(r=>r.b.n||r.a.n);
@@ -1481,12 +1538,12 @@ img{width:100%;height:auto;margin:6px 0} .eq{font-weight:600;background:#eef3f5;
 ul.ins{padding-left:18px} ul.ins li{margin:4px 0}
 .pbtn{position:fixed;right:16px;top:16px;background:#1d6a8d;color:#fff;border:0;padding:8px 14px;border-radius:4px;font:inherit;cursor:pointer} @media print{.pbtn{display:none} table,img,.kpi{break-inside:avoid} h2,h3{break-after:avoid}}
 </style></head><body><button class="pbtn" onclick="window.print()">พิมพ์ / บันทึกเป็น PDF</button><div class="wrap">
-<header><h1>PSD_eNGINNo Chiller Plant Analysis</h1><p>รายงาน${title}</p><p>ข้อมูลผ่านเกณฑ์ ${D.rs.length.toLocaleString()} บันทึก · เกณฑ์ kW/TR ${s.filter.kwtrMin}–${s.filter.kwtrMax}, kW/TRp ${s.filter.kwtrpMin}–${s.filter.kwtrpMax}, ΔT ${s.filter.dTMin}–${s.filter.dTMax} °F · สร้างเมื่อ ${new Date().toLocaleString('th-TH')}</p></header>
-<h2>สรุปผู้บริหาร</h2><div class="kpi"><div><b>${fmt(D.st.kwtrp)}</b><span>kW/TRp plant (มาตรฐาน ${s.stdKwtrp})</span></div><div><b>${fmt(D.st.kwtr)}</b><span>Chiller kW/TR (มาตรฐาน ${s.stdKwtr})</span></div><div><b>${fmt(D.st.chpkwtr,4)}</b><span>CHP kW/TR</span></div><div><b>${fmt(D.st.cdpkwtr,4)}</b><span>CDP kW/TR</span></div><div><b>${fmt(D.st.ctkwtr,4)}</b><span>Cooling kW/TR</span></div><div style="border-top-color:#2f7a52"><b>${fmtInt(D.en.kwh)}</b><span>kWh ทั้ง plant (${D.en.n.toLocaleString()} บันทึก × ${D.en.hours} ชม. · ${D.en.days} วัน)</span></div></div>
+<header><h1>PSD_eNGINNo Chiller Plant Analysis</h1><p>รายงาน${title}</p><p>โหมดคำนวณสรุป: <b>${D.modeAll?'รวมทุกบันทึก (รวมค่าผิดปกติ)':'เฉพาะค่าปกติ'}</b> · ข้อมูลผ่านเกณฑ์ ${D.rs.length.toLocaleString()} บันทึก · เกณฑ์ kW/TR ${s.filter.kwtrMin}–${s.filter.kwtrMax}, kW/TRp ${s.filter.kwtrpMin}–${s.filter.kwtrpMax}, ΔT ${s.filter.dTMin}–${s.filter.dTMax} °F · สร้างเมื่อ ${new Date().toLocaleString('th-TH')}</p></header>
+<h2>สรุปผู้บริหาร</h2><div class="kpi"><div><b>${fmt(D.stS.kwtrp)}</b><span>kW/TRp plant (มาตรฐาน ${s.stdKwtrp})</span></div><div><b>${fmt(D.stS.kwtr)}</b><span>Chiller kW/TR (มาตรฐาน ${s.stdKwtr})</span></div><div><b>${fmt(D.stS.chpkwtr,4)}</b><span>CHP kW/TR</span></div><div><b>${fmt(D.stS.cdpkwtr,4)}</b><span>CDP kW/TR</span></div><div><b>${fmt(D.stS.ctkwtr,4)}</b><span>Cooling kW/TR</span></div><div style="border-top-color:#2f7a52"><b>${fmtInt(D.en.kwh)}</b><span>kWh ทั้ง plant (${D.en.n.toLocaleString()} บันทึก × ${D.en.hours} ชม. · ${D.en.days} วัน)</span></div></div>
 <p class="note"><b>ข้อมูลที่ถูกตัดออกจากการคำนวณในช่วงนี้ ${D.ex.act+D.ex.hist} บันทึก</b> — ยังผิดปกติ ${D.ex.act}${D.ex.chs.length?' ('+D.ex.chs.map(esc).join(', ')+')':''} · แก้ไขแล้ว (History) ${D.ex.hist} · kWh นับรวมทุกบันทึก</p>
 <ul class="ins">${ins.map(x=>`<li>${x}</li>`).join('')}</ul>
 ${imgTrend?`<img src="${imgTrend}" alt="แนวโน้มรายเดือน">`:''}
-<table><thead><tr><th>เดือน</th><th>บันทึก</th><th>TR</th><th>Chiller kW/TR</th><th>CHP</th><th>CDP</th><th>CT</th><th>kW/TRp</th><th>kWh</th><th>วัน</th><th>Twb °F</th><th>CT eff. %</th></tr></thead><tbody>${D.ms.map(m=>{const t=statBlock(D.rs.filter(r=>r.m===m)), e=D.enBy.get(m); return `<tr><th>${mLabel(m,true)}</th><td>${t.n}</td><td>${fmt(t.tr,0)}</td><td>${fmt(t.kwtr)}</td><td>${fmt(t.chpkwtr,4)}</td><td>${fmt(t.cdpkwtr,4)}</td><td>${fmt(t.ctkwtr,4)}</td><td><b>${fmt(t.kwtrp)}</b></td><td><b>${fmtInt(e.kwh)}</b></td><td>${e.days}</td><td>${fmt(t.twb,1)}</td><td>${fmt(t.theff*100,1)}</td></tr>`;}).join('')}</tbody></table>
+<table><thead><tr><th>เดือน</th><th>บันทึก</th><th>TR</th><th>Chiller kW/TR</th><th>CHP</th><th>CDP</th><th>CT</th><th>kW/TRp</th><th>kWh</th><th>วัน</th><th>Twb °F</th><th>CT eff. %</th></tr></thead><tbody>${D.ms.map(m=>{const t=statBlock(D.rsS.filter(r=>r.m===m)), e=D.enBy.get(m); return `<tr><th>${mLabel(m,true)}</th><td>${t.n}</td><td>${fmt(t.tr,0)}</td><td>${fmt(t.kwtr)}</td><td>${fmt(t.chpkwtr,4)}</td><td>${fmt(t.cdpkwtr,4)}</td><td>${fmt(t.ctkwtr,4)}</td><td><b>${fmt(t.kwtrp)}</b></td><td><b>${fmtInt(e.kwh)}</b></td><td>${e.days}</td><td>${fmt(t.twb,1)}</td><td>${fmt(t.theff*100,1)}</td></tr>`;}).join('')}</tbody></table>
 <p class="note">kWh = kW รวมต่อบันทึก × ${D.en.hours} ชม. นับทุกบันทึกที่มี kW รวม (รวมบันทึกที่ถูกตัดออกจากการวิเคราะห์ kW/TR) · เป็นพลังงานจากบันทึกเท่านั้น ไม่ใช่ค่ามิเตอร์ทั้งเดือน</p>
 <h2>1. วิเคราะห์ Chiller, CHP, CDP และ Cooling รายตัว</h2>
 <h3>1.1 Chiller — kW/TR</h3>${mtab(D.mxCh,'kwtr',3)}<h3>Chiller — kW/TRp (Chiller + CHP + CDP + CT)</h3>${mtab(D.mxCh,'kwtrp',3)}<h3>Chiller — % Load</h3>${mtab(D.mxCh,'loadPct',1)}<h3>Chiller — จำนวนบันทึก</h3>${mtab(D.mxCh,'n',0)}
@@ -1522,10 +1579,10 @@ function buildWorkbook(a,b){
   const D=reportData(a,b), wb=XLSX.utils.book_new(), o=S.settings.reg;
   const r4 = v => isNum(v) ? Math.round(v*10000)/10000 : null;
   const add=(name,aoa)=>{ const ws=XLSX.utils.aoa_to_sheet(aoa); ws['!cols']=(aoa.find(r=>r.length>3)||aoa[0]).map(()=>({wch:14})); XLSX.utils.book_append_sheet(wb, ws, name); };
-  add('Summary', [['PSD_eNGINNo Chiller Plant Analysis'],['ช่วง', mLabel(a,true)+' – '+mLabel(b,true)],['บันทึกผ่านเกณฑ์', D.rs.length],[],
+  add('Summary', [['PSD_eNGINNo Chiller Plant Analysis'],['ช่วง', mLabel(a,true)+' – '+mLabel(b,true)],['บันทึกผ่านเกณฑ์', D.rs.length],['โหมดคำนวณสรุป', D.modeAll?'รวมทุกบันทึก (รวมค่าผิดปกติ)':'เฉพาะค่าปกติ'],[],
     ['เดือน','บันทึก','TR','Chiller kW/TR','CHP kW/TR','CDP kW/TR','CT kW/TR','kW/TRp','Twb F','CT eff','kWh ทั้ง plant','วันที่มีข้อมูล','kWh Chiller','kWh CHP','kWh CDP','kWh Cooling'],
-    ...D.ms.map(m=>{const t=statBlock(D.rs.filter(r=>r.m===m)), e=D.enBy.get(m); return [m,t.n,r4(t.tr),r4(t.kwtr),r4(t.chpkwtr),r4(t.cdpkwtr),r4(t.ctkwtr),r4(t.kwtrp),r4(t.twb),r4(t.theff),Math.round(e.kwh),e.days,Math.round(e.ch),Math.round(e.chp),Math.round(e.cdp),Math.round(e.ct)];}),
-    ['รวม',D.rs.length,null,null,null,null,null,r4(D.st.kwtrp),null,null,Math.round(D.en.kwh),D.en.days,Math.round(D.en.ch),Math.round(D.en.chp),Math.round(D.en.cdp),Math.round(D.en.ct)],
+    ...D.ms.map(m=>{const t=statBlock(D.rsS.filter(r=>r.m===m)), e=D.enBy.get(m); return [m,t.n,r4(t.tr),r4(t.kwtr),r4(t.chpkwtr),r4(t.cdpkwtr),r4(t.ctkwtr),r4(t.kwtrp),r4(t.twb),r4(t.theff),Math.round(e.kwh),e.days,Math.round(e.ch),Math.round(e.chp),Math.round(e.cdp),Math.round(e.ct)];}),
+    ['รวม',D.rsS.length,null,null,null,null,null,r4(D.stS.kwtrp),null,null,Math.round(D.en.kwh),D.en.days,Math.round(D.en.ch),Math.round(D.en.chp),Math.round(D.en.cdp),Math.round(D.en.ct)],
     [],['หมายเหตุ','kWh = kW รวมต่อบันทึก × '+D.en.hours+' ชม. นับทุกบันทึกที่มี kW รวม'],
     ['ข้อมูลที่ถูกตัดออก','ยังผิดปกติ '+D.ex.act+' · แก้ไขแล้ว (History) '+D.ex.hist+(D.ex.chs.length?' · ชุดที่ยังผิดปกติ: '+D.ex.chs.join(', '):'')]]);
   const H=['เดือน','Chiller','n','kW/TR','kW/TRp','kW','TR','%Load','dT F','Evap app F','Cond app F','CHP kW','CHP GPM/kW','CHP kW/TR','CDP kW','CDP GPM/kW','CDP kW/TR','CT kW','CT kW/TR'];
@@ -1828,6 +1885,7 @@ function logout(){ clearSession(); clearInterval(pendTimer); S.user=null; killCh
 
 function boot(){
   applyTheme(loadTheme());
+  try{ if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>{ if(S.user) render(); }); }catch(e){}
   const seed = JSON.parse(document.getElementById('seed').textContent);
   for(const [m,rows] of groupBy(seed.rows, r=>String(r[0]).slice(0,7))) S.seed.set(m,{fields:seed.fields, rows});
   bindAuth();
