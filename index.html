@@ -380,6 +380,25 @@ dialog footer{ display:flex; justify-content:flex-end; gap:8px; padding:12px 20p
   .nav .userbox{ padding:6px 6px 8px; gap:4px; } .nav .userbox .btn{ padding:4px 10px; }
 }
 .panel.sync input[type=checkbox]{ width:auto; flex:none; margin:0; } .panel.sync input[type=number]{ width:5em; flex:none; }
+
+.ph{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 12px; margin-bottom:8px; }
+.ph h3{ margin:0; }
+.mtabs{ display:inline-flex; border:1px solid var(--line); border-radius:4px; overflow:hidden; flex:none; }
+.mtabs button{ font:600 12.5px/1 var(--body); padding:6px 10px; border:0; border-left:1px solid var(--line); background:var(--surface); color:var(--ink); cursor:pointer; }
+.mtabs button:first-child{ border-left:0; }
+.mtabs button[aria-pressed="true"]{ background:var(--chw); color:#fff; }
+.mtabs button:focus-visible{ outline:2px solid var(--chw); outline-offset:-2px; }
+.ins-panel h4{ margin:0 0 6px; font-size:14.5px; } .ins-panel h4 small{ font-weight:400; color:var(--muted); margin-left:6px; }
+.ins-blk{ border-left:4px solid var(--line); padding:8px 12px; margin:0 0 12px; background:color-mix(in srgb, var(--sunk) 55%, transparent); border-radius:0 4px 4px 0; }
+.ins-blk.good{ border-left-color:var(--good); } .ins-blk.bad{ border-left-color:var(--bad); }
+.ins-blk p{ margin:4px 0; } .ins-best{ line-height:1.55; } .ins-v{ font:700 20px/1.2 var(--cond); color:var(--good); }
+.ins-alt, .ins-sum{ font-size:13px; color:var(--muted); }
+.ins-weak{ margin:0; padding-left:0; list-style:none; } .ins-weak li{ padding:3px 0; border-bottom:1px dashed var(--line); font-size:14px; }
+.ins-weak li:last-child{ border-bottom:0; }
+.ins-sys{ display:inline-block; min-width:92px; font-size:12px; color:var(--muted); }
+.ins-dev{ font-weight:700; color:#b26a00; } .ins-weak li.sev .ins-dev{ color:var(--bad); }
+:root[data-theme="dark"] .ins-dev{ color:#ffb26b; }
+.ins-weak small{ color:var(--muted); }
 </style>
 </head>
 <body data-role="user">
@@ -1027,7 +1046,7 @@ function heat(v, lo, hi, dir){
 
 /* ---------------- top bar ---------------- */
 function renderRangeControls(){
-  const L=S.buckets[gran()]||[], opts = L.map(m=>`<option value="${m}">${mLabel(m,true)}</option>`).join('');
+  const L=S.buckets[gran()]||[], opts = [...L].reverse().map(m=>`<option value="${m}">${mLabel(m,true)}</option>`).join('');
   const f=$('#rangeFrom'), t=$('#rangeTo'); f.innerHTML=opts; t.innerHTML=opts; f.value=S.range.from; t.value=S.range.to;
   $$('#granSeg button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.gran===gran()));
   const lt=$('#latestNote'); if(lt){ const last=L[L.length-1]; lt.textContent = last ? (S.range.to===last ? 'ล่าสุด' : 'ล่าสุด: '+mLabel(last)) : ''; lt.classList.toggle('lag', !!last && S.range.to!==last); }
@@ -1085,17 +1104,53 @@ function shareBar(st){
   return `<div class="share" role="img" aria-label="สัดส่วน kW/TRp ของแต่ละอุปกรณ์">${parts.map(p=>{ const x=pc(p); return `<span class="${x<12?'tiny':''}" style="flex:${x};background:var(${p[2]})" title="${p[0]} ${fmt(p[1])} kW/TR (${fmt(x,1)}%)">${x>=12?`<b>${p[0]}</b> ${fmt(x,0)}%`:''}</span>`; }).join('')}</div>
   <p class="share-leg">${parts.map(p=>`<span><i style="background:var(${p[2]})"></i>${p[0]} <b>${fmt(p[1],4)}</b> kW/TR · ${fmt(pc(p),1)}%</span>`).join('')}</p>`;
 }
-function insightsList(){
-  const rs=ovRecs(), ms=rangeMonths(), out=[];
-  const byCh=[...groupBy(rs,r=>r.ch)].map(([ch,a])=>({ch,n:a.length,kwtrp:mean(a.map(r=>r.kwtrp))})).filter(x=>x.n>=S.settings.minN).sort((a,b)=>a.kwtrp-b.kwtrp);
-  if(byCh.length>1) out.push(`ชุดที่ประหยัดที่สุดคือ <b>${esc(byCh[0].ch)}</b> เฉลี่ย ${fmt(byCh[0].kwtrp)} kW/TRp ส่วน <b>${esc(byCh[byCh.length-1].ch)}</b> สูงสุดที่ ${fmt(byCh[byCh.length-1].kwtrp)} — ต่างกัน ${pct((byCh[byCh.length-1].kwtrp/byCh[0].kwtrp-1)*100)} ควรเดินชุดประหยัดเป็นลำดับแรก`);
+const miniTabs=(key,opts,cur)=>`<div class="mtabs" role="group">${opts.map(([v,l])=>`<button type="button" data-mt="${key}" data-val="${v}" aria-pressed="${v===cur}">${l}</button>`).join('')}</div>`;
+/* ---- ข้อสังเกต: วิเคราะห์ในช่วงที่เลือก ---- */
+const medianOf = a => { const s=a.filter(isNum).sort((x,y)=>x-y); if(!s.length) return null; const h=s.length>>1; return s.length%2 ? s[h] : (s[h-1]+s[h])/2; };
+const groupMinEff = () => { const n=S.settings.groupMinN||5, g=gran(); return g==='month' ? n : g==='week' ? Math.max(3,Math.ceil(n/2)) : 2; };
+/* เครื่องที่ค่าเฉลี่ยสูงกว่าค่ากลางของเครื่องในระบบเดียวกัน ≥ 10% (≥ 20% = แดง) */
+function weakUnits(rs){
+  const minU=effMinN(), out=[];
+  const sys=[['Chiller','kwtr','kW/TR',3,u=>u],['CHP','chpkwtr','kW/TR',4,u=>'CHP-'+u],['CDP','cdpkwtr','kW/TR',4,u=>'CDP-'+u]];
+  for(const [name,key,unit,d,label] of sys){
+    const rows=[...groupBy(rs,r=>r.ch)].map(([u,a])=>({u, n:a.length, v:mean(a.map(r=>r[key]))})).filter(x=>x.n>=minU && isNum(x.v));
+    if(rows.length<3) continue; const md=medianOf(rows.map(x=>x.v));
+    for(const x of rows){ const dev=(x.v/md-1)*100; if(dev>=10) out.push({sys:name, unit:label(x.u), v:x.v, md, dev, n:x.n, unitTxt:unit, d}); }
+  }
+  /* Cooling tower: kW เฉลี่ยขณะเดิน เทียบค่ากลางของ CT ทั้งหมด */
+  const mx=ctMatrix(rs, []); const ct=mx.units.map(u=>({u, n:mx.cells[u].all.n, v:mx.cells[u].all.kw})).filter(x=>x.n>=minU && isNum(x.v));
+  /* เทียบเฉพาะ CT ฝั่งเดียวกัน (P1 / H) เพราะขนาดพัดลมต่างกัน */
+  for(const [, side] of groupBy(ct, x=>String(x.u).startsWith('P1')?'P1':'H')){
+    if(side.length<3) continue; const md=medianOf(side.map(x=>x.v));
+    for(const x of side){ const dev=(x.v/md-1)*100; if(dev>=15) out.push({sys:'Cooling tower', unit:x.u, v:x.v, md, dev, n:x.n, unitTxt:'kW', d:1}); } }
+  return out.sort((a,b)=>b.dev-a.dev);
+}
+function insightsHTML(){
+  const rs=ovRecs(), ms=rangeMonths(), notes=[];
+  const per = rangeMonths().length ? `${mLabel(ms[0])}${ms.length>1?' – '+mLabel(ms[ms.length-1]):''}` : '';
+  /* ชุดที่เข้าคู่กันดีที่สุด */
+  const gs=bestGroups(rs, groupMinEff()).groups;
+  let best='';
+  if(gs.length){
+    const ctTxt = a => { if(!a||!a.length) return 'CT n/a'; const m=String(a[0]).match(/^(.*-CT-)/); const pre=m?m[1]:''; return a.every(x=>String(x).startsWith(pre)) ? pre+a.map(x=>String(x).slice(pre.length)).join(', ') : a.join(', '); };
+    const fmtG = g => `<b>${esc(g.ch)}</b> + CHP/CDP-${esc(g.ch)} + ${esc(ctTxt(g.ctSet))}`;
+    const g0=gs[0], last=gs[gs.length-1];
+    best = `<div class="ins-blk good"><h4>ชุดที่เข้าคู่กันแล้วประสิทธิภาพดีที่สุด <small>${esc(per)}</small></h4>
+      <p class="ins-best">${fmtG(g0)}<br><span class="ins-v">${fmt(g0.kwtrp)} kW/TRp</span> <small>Chiller ${fmt(g0.kwtr)} · CHP ${fmt(g0.chpkwtr,4)} · CDP ${fmt(g0.cdpkwtr,4)} · CT ${fmt(g0.ctkwtr,4)} · ${g0.n} บันทึก</small></p>
+      ${gs.length>1?`<p class="ins-alt">ทางเลือกถัดไป: ${gs.slice(1,3).map(g=>`${fmtG(g)} (${fmt(g.kwtrp)})`).join(' · ')}</p>`:''}
+      ${gs.length>1&&last.kwtrp>g0.kwtrp?`<p class="ins-sum">แนะนำเดินชุดนี้เป็นลำดับแรก — ดีกว่าชุดที่แย่ที่สุด (${esc(last.ch)} ${fmt(last.kwtrp)}) <b>${pct((1-g0.kwtrp/last.kwtrp)*100).replace('+','')}</b></p>`:''}</div>`;
+  } else best = `<div class="ins-blk"><h4>ชุดที่เข้าคู่กันดีที่สุด</h4><p class="na">ข้อมูลในช่วงนี้น้อยเกินไป (ต้องมีอย่างน้อย ${groupMinEff()} บันทึกต่อชุด)</p></div>`;
+  /* เครื่องที่ควรเข้าตรวจสอบ */
+  const weak=weakUnits(rs);
+  const warn = `<div class="ins-blk ${weak.length?'bad':''}"><h4>${weak.length?'⚠ เครื่องที่ควรเข้าตรวจสอบ':'เครื่องที่ควรเข้าตรวจสอบ'}</h4>${weak.length?`<ul class="ins-weak">${weak.slice(0,8).map(w=>`<li class="${w.dev>=20?'sev':''}"><span class="ins-sys">${esc(w.sys)}</span> <b>${esc(w.unit)}</b> ${fmt(w.v,w.d)} ${w.unitTxt} <span class="ins-dev">+${w.dev.toFixed(0)}%</span> <small>จากค่ากลาง ${fmt(w.md,w.d)} · ${w.n} บันทึก</small></li>`).join('')}</ul>${weak.length>8?`<p class="na">และอีก ${weak.length-8} รายการ</p>`:''}<p class="ins-sum">เกณฑ์: ค่าเฉลี่ยสูงกว่าค่ากลางของเครื่องในระบบเดียวกัน ≥ 10% (Cooling tower ≥ 15% เทียบเฉพาะฝั่ง P1 / H เดียวกัน) · สีแดง ≥ 20% — ตรวจ strainer/ความสะอาด tube, valve, VFD และเซนเซอร์</p>`:'<p class="good">ไม่มีเครื่องที่สูงกว่าค่ากลางเกิน 10% ในช่วงนี้</p>'}</div>`;
+  /* ข้อสังเกตอื่น */
   const ba = beforeAfter(ovBase(), S.settings.before, S.settings.after), sv=savingsCalc();
-  if(ba.nB && ba.nA) out.push(`ค่าเฉลี่ยก่อนปรับปรุง ${fmt(ba.plant.b.kwtrp)} → หลังปรับปรุง ${fmt(ba.plant.a.kwtrp)} kW/TRp (${pct((ba.plant.a.kwtrp/ba.plant.b.kwtrp-1)*100)})${sv?` · เมื่อปรับผลของสภาพอากาศและโหลดด้วยสมการ baseline ${sv.sav>0?'ประหยัด':'ใช้เพิ่ม'} ${fmt(Math.abs(sv.sav),1)}%`:''}`);
+  if(ba.nB && ba.nA) notes.push(`ค่าเฉลี่ยก่อนปรับปรุง ${fmt(ba.plant.b.kwtrp)} → หลังปรับปรุง ${fmt(ba.plant.a.kwtrp)} kW/TRp (${pct((ba.plant.a.kwtrp/ba.plant.b.kwtrp-1)*100)})${sv&&isNum(sv.pct)?` · เมื่อปรับผลของสภาพอากาศและโหลดด้วยสมการ baseline ประหยัด ${fmt(sv.pct,1)}%`:''}`);
   const bestM = ms.map(m=>({m, v:mean(rs.filter(r=>r.m===m).map(r=>r.kwtrp))})).filter(x=>isNum(x.v)).sort((a,b)=>a.v-b.v);
-  if(bestM.length>1) out.push(`${GU()}ที่ดีที่สุดคือ ${mLabel(bestM[0].m,true)} (${fmt(bestM[0].v)} kW/TRp) และแย่ที่สุด ${mLabel(bestM[bestM.length-1].m,true)} (${fmt(bestM[bestM.length-1].v)})`);
+  if(bestM.length>1) notes.push(`${GU()}ที่ดีที่สุดคือ ${mLabel(bestM[0].m,true)} (${fmt(bestM[0].v)} kW/TRp) และแย่ที่สุด ${mLabel(bestM[bestM.length-1].m,true)} (${fmt(bestM[bestM.length-1].v)})`);
   const exc = S.excluded.filter(inR);
-  if(exc.length){ const top=[...groupBy(exc,r=>r.ch)].sort((a,b)=>b[1].length-a[1].length)[0]; out.push(ovAll() ? `โหมดคำนวณรวมทั้งหมด: รวมบันทึกผิดปกติ ${exc.length} บันทึกในการคำนวณ (มากที่สุดจาก ${esc(top[0])} ${top[1].length}) — ค่าจึงใกล้กับ dashboard ที่ไม่ตัดข้อมูล` : `ตัดข้อมูลผิดปกติ ${exc.length} บันทึก มากที่สุดจาก ${esc(top[0])} (${top[1].length}) — ตรวจสอบเซนเซอร์อุณหภูมิ/อัตราการไหลของชุดนี้`); }
-  return out;
+  if(exc.length){ const top=[...groupBy(exc,r=>r.ch)].sort((a,b)=>b[1].length-a[1].length)[0]; notes.push(`มีบันทึกผิดปกติ ${exc.length} บันทึกในช่วงนี้ (มากที่สุดจาก ${esc(top[0])} ${top[1].length}) — ตรวจสอบเซนเซอร์อุณหภูมิ/อัตราการไหล`); }
+  return best + warn + (notes.length?`<ul class="insights">${notes.map(s=>`<li>${s}</li>`).join('')}</ul>`:'');
 }
 /* reference chart: ระดับประสิทธิภาพ chiller plant (ภาพอ้างอิงที่แนบ) */
 const REF_IMG = (document.getElementById('refimg')||{}).textContent ? document.getElementById('refimg').textContent.trim() : '';
@@ -1144,28 +1199,54 @@ function energyPanel(en, exE){
 }
 function viewOverview(v){
   const rs=ovRecs(), st=statBlock(rs), ms=rangeMonths(), ea=rangeAll(), en=energyStats(ea), exE=energyStats(S.excluded.filter(inR));
+  const tv=S.sel.ovTrend||'rank', kv=S.sel.ovKwh||'sys', per2=ms.length?mLabel(ms[0])+(ms.length>1?' – '+mLabel(ms[ms.length-1]):''):'';
   const ba=beforeAfter(ovBase(), S.settings.before, S.settings.after);
   v.innerHTML = `
   <section class="hero ov-hero"><div class="ov-main"><p class="kicker">${esc(ovPeriodNote())} ${ovModeChip()}</p>${schematicSVG(st,{kwtr:S.settings.stdKwtr,kwtrp:S.settings.stdKwtrp})}${shareBar(st)}</div>${energyPanel(en, exE)}</section>
   <section class="ov-row2">
     <div class="panel refpanel">${refPanel(st,ba)}</div>
-    <div class="panel"><h3>ข้อสังเกต</h3><ul class="insights">${insightsList().map(s=>`<li>${s}</li>`).join('')}</ul></div>
+    <div class="panel ins-panel"><h3>ข้อสังเกตและข้อเสนอแนะ</h3>${insightsHTML()}</div>
   </section>
   <section class="grid2">
-    <div class="panel"><h3>แนวโน้ม${GW()}</h3><div class="chartbox"><canvas id="cTrend"></canvas></div></div>
-    <div class="panel"><h3>พลังงานไฟฟ้า${GW()} (kWh)</h3><div class="chartbox"><canvas id="cKwh"></canvas></div></div>
+    <div class="panel"><div class="ph"><h3>${tv==='trend'?'แนวโน้ม'+GW():'kW/TR Chiller รายเครื่อง — ดีที่สุด → แย่ที่สุด'}</h3>${miniTabs('ovTrend',[['rank','อันดับ Chiller'],['trend','แนวโน้ม']],tv)}</div><div class="chartbox"><canvas id="cTrend"></canvas></div><p class="legend-note" id="cTrendN"></p></div>
+    <div class="panel"><div class="ph"><h3>พลังงานไฟฟ้า (kWh) ${kv==='sys'?'แยกระบบ — มาก → น้อย':kv==='unit'?'แยกชุด Chiller — มาก → น้อย':GW()}</h3>${miniTabs('ovKwh',[['sys','แยกระบบ'],['unit','แยกชุด'],['trend','แนวโน้ม']],kv)}</div><div class="chartbox"><canvas id="cKwh"></canvas></div><p class="legend-note" id="cKwhN"></p></div>
   </section>
   <section class="panel"><h3>สรุปทั้ง plant ${GW()}</h3>${monthlyPlantTable(rs, ms, ea)}</section>`;
   $$('[data-ref]',v).forEach(b=>b.onclick=()=>{ S.sel.refBasis=b.dataset.ref; render(); });
+  $$('[data-mt]',v).forEach(b=>b.onclick=()=>{ S.sel[b.dataset.mt]=b.dataset.val; render(); });
   $$('[data-gomode]',v).forEach(b=>b.onclick=()=>{ setTab('data'); setTimeout(()=>{ const x=$('#calcModeBox'); if(x) x.scrollIntoView({block:'center'}); },80); });
   const p=PAL(), byM=ms.map(m=>energyStats(ea.filter(r=>r.m===m)));
+  if(tv==='trend'){
   mkChart($('#cTrend'), { type:'line', data:{ labels: ms.map(m=>mLabel(m)), datasets:[
     { label:'kW/TRp plant', data: ms.map(m=>mean(rs.filter(r=>r.m===m).map(r=>r.kwtrp))), borderColor:p.plant, backgroundColor:p.plant, tension:.25, borderWidth:2.5, pointRadius:4, pointStyle:'circle' },
     { label:'kW/TR chiller', data: ms.map(m=>mean(rs.filter(r=>r.m===m).map(r=>r.kwtr))), borderColor:p.chiller, backgroundColor:p.chiller, tension:.25, borderWidth:2.5, pointRadius:5, pointStyle:'rectRot' },
     { label:'มาตรฐาน kW/TRp', data: ms.map(()=>S.settings.stdKwtrp), borderColor:p.bad, borderDash:[5,5], pointRadius:0 },
   ]}, options:{ maintainAspectRatio:false, plugins:{legend:{position:'bottom'}}, scales:{y:{title:{display:true,text:'kW/TR'}}} } });
+  } else {
+    /* อันดับ Chiller: kW/TR เฉลี่ยรายเครื่อง เรียงจากดีที่สุด (ต่ำ) ไปแย่ที่สุด (สูง) */
+    const minU=effMinN(), rows=[...groupBy(rs,r=>r.ch)].map(([u,a])=>({u,n:a.length,v:mean(a.map(r=>r.kwtr)),p:mean(a.map(r=>r.kwtrp))})).filter(x=>isNum(x.v)).sort((a,b)=>(b.n>=minU)-(a.n>=minU) || a.v-b.v);
+    const ok=rows.filter(x=>x.n>=minU), lo=ok.length?ok[0].v:0, hi=ok.length?ok[ok.length-1].v:1, dk=isDark();
+    const col=x=>{ const t=hi>lo?(x.v-lo)/(hi-lo):0; return `hsl(${(140-t*132).toFixed(0)} ${dk?50:58}% ${dk?52:40}%${x.n<minU?' / .4':''})`; };
+    mkChart($('#cTrend'), { type:'bar', data:{ labels: rows.map(x=>x.u+(x.n<minU?' *':'')), datasets:[
+      { label:'kW/TR chiller', data: rows.map(x=>x.v), backgroundColor: rows.map(col), borderRadius:2, order:2 },
+      { type:'line', label:'มาตรฐาน '+fmt(S.settings.stdKwtr), data: rows.map(()=>S.settings.stdKwtr), borderColor:p.bad, borderDash:[5,5], pointRadius:0, borderWidth:1.5, order:1 } ]},
+      options:{ maintainAspectRatio:false, plugins:{ legend:{position:'bottom'}, tooltip:{callbacks:{ afterLabel:it=>it.datasetIndex===0?`kW/TRp ${fmt(rows[it.dataIndex].p)} · ${rows[it.dataIndex].n} บันทึก`:'' }} },
+        scales:{ x:{ ticks:{ autoSkip:false, maxRotation:60, minRotation:0 } }, y:{ title:{display:true,text:'kW/TR'}, suggestedMin:Math.max(0,Math.floor((lo-0.05)*20)/20) } } } });
+    $('#cTrendN').textContent = ok.length ? `ดีที่สุด ${ok[0].u} ${fmt(ok[0].v)} · แย่ที่สุด ${ok[ok.length-1].u} ${fmt(ok[ok.length-1].v)} kW/TR`+(rows.length>ok.length?` · * บันทึกน้อยกว่า ${minU} ไม่นำมาจัดอันดับ`:'') : '';
+  }
+  if(kv==='trend'){
   mkChart($('#cKwh'), { type:'bar', data:{ labels: ms.map((m,i)=>[mLabel(m), byM[i].days+' วัน']), datasets:[['Chiller','ch',p.chw],['CHP','chp',p.chw2],['CDP','cdp',p.cdw2],['Cooling','ct',p.cdw]].map(([l,k,c])=>({label:l, data:byM.map(e=>Math.round(e[k])), backgroundColor:c})) },
     options:{ maintainAspectRatio:false, plugins:{legend:{position:'bottom'}, tooltip:{callbacks:{footer:it=>'รวม '+fmtInt(it.reduce((a,x)=>a+x.parsed.y,0))+' kWh'}}}, scales:{x:{stacked:true}, y:{stacked:true,title:{display:true,text:'kWh'}}} } });
+  } else {
+    let rows;
+    if(kv==='sys') rows=[['Chiller','ch',p.chw],['CHP','chp',p.chw2],['CDP','cdp',p.cdw2],['Cooling tower','ct',p.cdw]].map(([l,k,c])=>({l, v:en[k], c}));
+    else { const H=en.hours; rows=[...groupBy(ea.filter(r=>isNum(r.allkw)),r=>r.ch)].map(([u,a])=>({l:u, v:a.reduce((s,r)=>s+r.allkw,0)*H, n:a.length, c:p.chw})); }
+    rows.sort((a,b)=>b.v-a.v); const tot=rows.reduce((s,x)=>s+x.v,0);
+    mkChart($('#cKwh'), { type:'bar', data:{ labels: rows.map(x=>x.l), datasets:[{ label:'kWh', data: rows.map(x=>Math.round(x.v)), backgroundColor: rows.map(x=>x.c), borderRadius:2 }] },
+      options:{ maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{callbacks:{ label:it=>`${fmtInt(it.parsed.y)} kWh · ${tot?(it.parsed.y/tot*100).toFixed(1):0}%`+(rows[it.dataIndex].n?` · ${rows[it.dataIndex].n} บันทึก`:'') }} },
+        scales:{ x:{ ticks:{ autoSkip:false, maxRotation:60, minRotation:0 } }, y:{ beginAtZero:true, title:{display:true,text:'kWh'} } } } });
+    $('#cKwhN').textContent = `รวม ${fmtInt(tot)} kWh · ${esc(per2)}` + (kv==='unit'?' · kWh ของชุด = kW รวม (Chiller+CHP+CDP+CT) ของบันทึกที่ชุดนั้นเดิน × '+en.hours+' ชม.':'');
+  }
 }
 /* ---------------- คำเตือนความผิดปกติของข้อมูล ---------------- */
 function warnScope(){
