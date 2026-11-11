@@ -399,6 +399,55 @@ dialog footer{ display:flex; justify-content:flex-end; gap:8px; padding:12px 20p
 .ins-dev{ font-weight:700; color:#b26a00; } .ins-weak li.sev .ins-dev{ color:var(--bad); }
 :root[data-theme="dark"] .ins-dev{ color:#ffb26b; }
 .ins-weak small{ color:var(--muted); }
+
+/* ---- Ai-eNGINNo ---- */
+.nav button.nav-ai small{ font-size:11px; opacity:.7; margin-left:4px; }
+.ai-head{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px 16px; margin-bottom:14px; }
+.ai-head h2{ margin:0; display:flex; align-items:center; gap:10px; }
+.ai-mark{ display:inline-grid; place-items:center; width:34px; height:34px; border-radius:8px; background:linear-gradient(135deg,var(--chw),var(--cdw)); color:#fff; font-size:18px; }
+.ai-head p{ margin:2px 0 0; color:var(--muted); font-size:13px; }
+.ai-acts{ display:flex; gap:8px; flex-wrap:wrap; }
+.ai-kpis{ display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr)); gap:12px; margin-bottom:12px; }
+.ai-kpi{ border:1px solid var(--line); border-left:4px solid var(--chw); border-radius:6px; padding:10px 12px; background:var(--surface); min-width:0; }
+.ai-kpi.bad{ border-left-color:var(--bad); } .ai-kpi.warn{ border-left-color:#d08a12; } .ai-kpi.good{ border-left-color:var(--good); }
+.ai-kpi h4{ margin:0 0 4px; font-size:13px; color:var(--muted); font-weight:600; }
+.ai-kpi b{ font:700 22px/1.15 var(--cond); display:block; overflow-wrap:anywhere; } .ai-kpi small{ color:var(--muted); font-size:12px; }
+.ai-tasks{ display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)); gap:12px; margin-bottom:14px; }
+.ai-task{ text-align:left; border:1px solid var(--line); border-radius:6px; padding:12px 14px; background:var(--surface); color:var(--ink); cursor:pointer; font:inherit; display:flex; flex-direction:column; gap:4px; min-width:0; }
+.ai-task b{ font-size:15px; } .ai-task span{ font-size:13px; color:var(--muted); }
+.ai-task:hover:not(:disabled){ border-color:var(--chw); box-shadow:0 0 0 1px var(--chw) inset; }
+.ai-task:focus-visible{ outline:2px solid var(--chw); outline-offset:2px; }
+.ai-task:disabled{ opacity:.5; cursor:not-allowed; }
+.ai-task.t1{ border-top:3px solid var(--chw); } .ai-task.t2{ border-top:3px solid #d08a12; } .ai-task.t3{ border-top:3px solid var(--bad); } .ai-task.t4{ border-top:3px solid var(--good); }
+.ai-chat{ border:1px solid var(--line); border-radius:8px; background:var(--surface); display:flex; flex-direction:column; min-height:420px; }
+.ai-chat-h{ display:flex; align-items:center; gap:10px; padding:10px 14px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+.ai-chat-h .ai-mark{ width:28px; height:28px; font-size:15px; }
+.ai-chat-h b{ font-size:14px; } .ai-chat-h small{ color:var(--muted); font-size:12px; display:block; }
+.ai-chat-h .sp{ flex:1; }
+.ai-log{ flex:1; padding:14px; overflow:auto; max-height:min(70vh,900px); display:flex; flex-direction:column; gap:12px; }
+.ai-empty{ margin:auto; text-align:center; color:var(--muted); padding:30px 10px; }
+.ai-msg{ max-width:100%; border-radius:8px; padding:10px 14px; overflow-wrap:anywhere; }
+.ai-msg.user{ align-self:flex-end; background:color-mix(in srgb, var(--chw) 14%, transparent); max-width:min(80%,720px); }
+.ai-msg.bot{ align-self:stretch; background:color-mix(in srgb, var(--sunk) 70%, transparent); border:1px solid var(--line); }
+.ai-msg.err{ border-color:var(--bad); color:var(--bad); }
+.ai-msg .meta{ font-size:11.5px; color:var(--muted); margin-top:8px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.ai-msg .meta button{ font:inherit; font-size:11.5px; background:none; border:1px solid var(--line); border-radius:3px; padding:2px 8px; color:inherit; cursor:pointer; }
+.ai-md h1,.ai-md h2,.ai-md h3,.ai-md h4{ margin:12px 0 6px; font-size:15.5px; } .ai-md h1{ font-size:17px; } .ai-md > :first-child{ margin-top:0; }
+.ai-md p{ margin:6px 0; } .ai-md ul,.ai-md ol{ margin:4px 0 8px; padding-left:22px; } .ai-md li{ margin:2px 0; }
+.ai-md table{ border-collapse:collapse; margin:8px 0; font-size:13px; display:block; overflow-x:auto; max-width:100%; }
+.ai-md th,.ai-md td{ border:1px solid var(--line); padding:4px 8px; text-align:left; white-space:nowrap; } .ai-md th{ background:color-mix(in srgb, var(--sunk) 80%, transparent); }
+.ai-md code{ font-size:12.5px; background:color-mix(in srgb, var(--sunk) 90%, transparent); padding:0 4px; border-radius:3px; }
+.ai-md hr{ border:0; border-top:1px solid var(--line); margin:10px 0; }
+.ai-typing{ display:inline-flex; gap:4px; } .ai-typing i{ width:7px; height:7px; border-radius:50%; background:var(--muted); animation:aidot 1.2s infinite ease-in-out; }
+.ai-typing i:nth-child(2){ animation-delay:.15s; } .ai-typing i:nth-child(3){ animation-delay:.3s; }
+@keyframes aidot{ 0%,80%,100%{ opacity:.25; transform:translateY(0);} 40%{ opacity:1; transform:translateY(-3px);} }
+@media (prefers-reduced-motion:reduce){ .ai-typing i{ animation:none; } }
+.ai-form{ display:flex; gap:8px; padding:10px 14px; border-top:1px solid var(--line); }
+.ai-form textarea{ flex:1; min-width:0; resize:vertical; min-height:42px; max-height:200px; padding:8px 10px; border:1px solid var(--line); border-radius:4px; background:var(--paper); color:var(--ink); font:inherit; }
+.ai-lock{ max-width:520px; margin:10px auto 18px; text-align:center; }
+.ai-lock .row{ justify-content:center; } .ai-lock input{ font:600 18px/1 var(--cond); letter-spacing:.18em; text-align:center; width:min(100%,260px); padding:9px 10px; border:1px solid var(--line); border-radius:4px; background:var(--paper); color:var(--ink); }
+.ai-lock .msg{ min-height:1.4em; font-size:13px; }
+.ai-ctx summary{ cursor:pointer; color:var(--muted); font-size:13px; } .ai-ctx pre{ max-height:320px; overflow:auto; font-size:11.5px; background:color-mix(in srgb, var(--sunk) 80%, transparent); padding:10px; border-radius:4px; white-space:pre-wrap; overflow-wrap:anywhere; }
 </style>
 </head>
 <body data-role="user">
@@ -458,6 +507,7 @@ dialog footer{ display:flex; justify-content:flex-end; gap:8px; padding:12px 20p
     <p>การตั้งค่าข้อมูลระบบ</p>
     <button data-tab="data">ข้อมูลและการตั้งค่า</button>
     <button data-tab="users" class="admin-only">จัดการผู้ใช้ <span class="badge-n" id="pendN" hidden></span></button>
+    <button data-tab="ai" class="admin-only nav-ai">✦ Ai-eNGINNo <small>AI Analytics</small></button>
     <div class="userbox" id="userbox"><span class="who"><b id="uName"></b><small id="uRole"></small></span><button class="btn" id="btnLogout">ออกจากระบบ</button></div>
   </nav>
   <main id="main"><div id="view"></div></main>
@@ -1058,9 +1108,9 @@ function render(){
   killCharts(); chartDefaults();
   const v = $('#view');
   if(!S.all.length){ v.innerHTML = `<div class="empty"><h2>ยังไม่มีข้อมูล</h2><p>นำเข้าไฟล์บันทึก Chiller (.xlsx) เพื่อเริ่มวิเคราะห์</p><button class="btn primary" onclick="openImport()">นำเข้าข้อมูล</button></div>`; return; }
-  const fn = { overview:viewOverview, chiller:()=>viewUnits('chiller'), chp:()=>viewUnits('chp'), cdp:()=>viewUnits('cdp'), ct:viewCT, ba:viewBA, best:viewBest, group:viewGroups, reg:viewReg, anom:viewAnom, data:viewData, users:viewUsers }[S.tab];
+  const fn = { overview:viewOverview, chiller:()=>viewUnits('chiller'), chp:()=>viewUnits('chp'), cdp:()=>viewUnits('cdp'), ct:viewCT, ba:viewBA, best:viewBest, group:viewGroups, reg:viewReg, anom:viewAnom, data:viewData, users:viewUsers, ai:viewAi }[S.tab];
   v.innerHTML = ''; fn(v);
-  if(!['data','users','overview','anom'].includes(S.tab)) injectWarn(v);
+  if(!['data','users','overview','anom','ai'].includes(S.tab)) injectWarn(v);
 }
 /* โหมดคำนวณหน้าภาพรวม: 'valid' = เฉพาะค่าปกติ, 'all' = รวมทุกบันทึก (วิธีเดียวกับ dashboard) */
 const ovAll = () => S.settings.calcMode==='all';
@@ -1668,6 +1718,176 @@ function bindSyncPanel(){
   $('#syClear').onclick=()=>{ S.settings.sync={...DEFAULT_SETTINGS.sync}; saveSettings(); SY.err=''; startSync(); render(); toast('ล้างค่าการเชื่อมต่อในเบราว์เซอร์นี้แล้ว'); };
 }
 
+/* ======================= Ai-eNGINNo : วิเคราะห์ด้วย Claude AI (ผ่าน Apps Script) ======================= */
+/* API key อยู่ใน Script properties ของ Apps Script เท่านั้น · หน้าเว็บส่งเฉพาะ "ข้อมูลสรุป" + รหัสผ่าน AI 12 ตัวอักษร */
+const AI_PASS_KEY='psd_ai_pass_v1';
+const AI = { msgs:[], busy:false, model:'', ctxCache:null };
+const aiPass = () => { try{ return sessionStorage.getItem(AI_PASS_KEY)||''; }catch(e){ return AI._p||''; } };
+function aiSetPass(p){ AI._p=p; try{ p ? sessionStorage.setItem(AI_PASS_KEY,p) : sessionStorage.removeItem(AI_PASS_KEY); }catch(e){} }
+function aiForget(){ aiSetPass(''); AI.msgs=[]; AI.model=''; }
+const AI_TASKS = [
+  ['t1','perf','📊 วิเคราะห์ประสิทธิภาพ','ประสิทธิภาพและพารามิเตอร์สำคัญ',
+   'วิเคราะห์ประสิทธิภาพของ Chiller plant ในช่วงนี้: kW/TRp ของ plant เทียบมาตรฐานและเกณฑ์ ASHRAE, สัดส่วน Chiller/CHP/CDP/CT, จัดอันดับ Chiller แต่ละเครื่อง และพารามิเตอร์สำคัญ (load %, ΔT, CHS/CHR, CDS/CDR, approach, Twb, thermal efficiency, pump efficiency) ว่าตัวไหนอยู่นอกช่วงที่ควรเป็น สรุปเป็นตาราง'],
+  ['t2','cause','🔍 สาเหตุ kW/TRp สูง','หาต้นเหตุที่ทำให้ kW/TRp สูง',
+   'วิเคราะห์สาเหตุที่ทำให้ kW/TRp สูง: แยกว่ามาจาก Chiller เอง หรือ CHP/CDP/Cooling tower, เชื่อมกับพารามิเตอร์ (load ต่ำ/เดินหลายเครื่อง, low ΔT, CDR/approach สูง, setpoint, สภาพอากาศ Twb) ระบุเครื่องและช่วงเวลาที่เป็นตัวการหลัก เรียงตามผลกระทบ พร้อมระดับความมั่นใจ'],
+  ['t3','urgent','🚨 ปัญหาที่ต้องแก้ด่วน','จุดที่ต้องเข้าตรวจสอบ/แก้ไขทันที',
+   'ระบุปัญหาหรือจุดที่ต้องดำเนินการแก้ไขด่วน: เครื่องที่ประสิทธิภาพแย่ผิดปกติ, ค่าที่บ่งชี้ความผิดปกติของอุปกรณ์ (approach สูง, ΔT ต่ำ, pump efficiency ต่ำ, CT thermal efficiency ต่ำ), ข้อมูล/เซนเซอร์ที่น่าสงสัย จัดเป็นรายการตรวจสอบ (เครื่อง · อาการ · สิ่งที่ต้องตรวจ · ความเร่งด่วน)'],
+  ['t4','summary','💡 คำแนะนำและสรุป','สรุปภาพรวมสำหรับผู้บริหาร',
+   'สรุปภาพรวมสำหรับผู้บริหารไม่เกิน 1 หน้า: สถานะ plant, ตัวเลขสำคัญ, ชุดเครื่องที่ควรเดินเป็นลำดับแรก, ข้อเสนอแนะจัดลำดับ 🔴 ด่วน / 🟠 ภายในสัปดาห์ / 🟢 ระยะยาว พร้อมผลประหยัด kWh โดยประมาณเมื่อคำนวณได้'],
+];
+const AI_AUTO = 'ทำรายงานวิเคราะห์ฉบับเต็ม 4 หัวข้อ: (1) ประสิทธิภาพและพารามิเตอร์สำคัญ (2) สาเหตุที่ kW/TRp สูง (3) ปัญหาหรือจุดที่ต้องแก้ไขด่วน (4) คำแนะนำและสรุปภาพรวม — ใช้หัวข้อ ## ตามลำดับนี้';
+const rd = (v,d=3) => isNum(v) ? +v.toFixed(d) : null;
+function aiParams(a){
+  const g=k=>rd(mean(a.map(r=>r[k])), k==='kwtr'||k==='kwtrp'?3:k.endsWith('kwtr')?4:1);
+  return { n:a.length, kwtrp:g('kwtrp'), kwtr:g('kwtr'), chp_kwtr:g('chpkwtr'), cdp_kwtr:g('cdpkwtr'), ct_kwtr:g('ctkwtr'),
+    tr:g('tr'), load_pct:g('loadPct'), chiller_kw:g('chkw'), chs_F:g('chs'), chr_F:g('chr'), dT_F:g('dT'), setpoint_F:g('sp'), evap_approach_F:g('eapp'),
+    cds_F:g('cds'), cdr_F:g('cdr'), ct_range_F:g('range'), ct_approach_F:g('ctapp'), cond_approach_F:g('capp'), thermal_eff_pct: isNum(mean(a.map(r=>r.theff)))?rd(mean(a.map(r=>r.theff))*100,1):null,
+    chw_gpm:g('gpm'), cdw_gpm:g('cgpm'), chp_gpm_per_kw:g('chpeff'), cdp_gpm_per_kw:g('cdpeff'), twb_F:g('twb'), oat_C:g('oat'), rh_pct:g('rh') };
+}
+function buildAiContext(){
+  const rs=ovRecs(), ea=rangeAll(), ms=rangeMonths(), en=energyStats(ea), st=statBlock(rs), minU=effMinN();
+  const chillers=[...groupBy(rs,r=>r.ch)].map(([u,a])=>({unit:u, ...aiParams(a), enough_data:a.length>=minU})).sort((a,b)=>(a.kwtr??9)-(b.kwtr??9));
+  const gs=bestGroups(rs, groupMinEff()).groups;
+  const gRow=g=>({ chiller:g.ch, chp:'CHP-'+g.ch, cdp:'CDP-'+g.ch, cooling_towers:g.ctSet, n:g.n, kwtrp:rd(g.kwtrp), kwtr:rd(g.kwtr), chp_kwtr:rd(g.chpkwtr,4), cdp_kwtr:rd(g.cdpkwtr,4), ct_kwtr:rd(g.ctkwtr,4) });
+  const mx=ctMatrix(rs, []);
+  const cts=mx.units.map(u=>({ tower:u, side:u.startsWith('P1')?'P1':'H', running_records:mx.cells[u].all.n, avg_kw:rd(mx.cells[u].all.kw,1), max_kw:rd(mx.cells[u].all.kwMax,1), run_share_pct:rd(mx.cells[u].all.share,1), side_thermal_eff_pct:rd(mx.cells[u].all.theffPct,1) }));
+  const trend=ms.slice(-31).map(m=>{ const a=rs.filter(r=>r.m===m); const e=energyStats(ea.filter(r=>r.m===m)); return { period:mLabel(m,true), n:a.length, kwtrp:rd(mean(a.map(r=>r.kwtrp))), kwtr:rd(mean(a.map(r=>r.kwtr))), tr:rd(mean(a.map(r=>r.tr)),0), twb_F:rd(mean(a.map(r=>r.twb)),1), kwh:Math.round(e.kwh) }; });
+  const ba=beforeAfter(ovBase(), S.settings.before, S.settings.after), sv=savingsCalc();
+  const act=S.active.filter(inR), exc=S.excluded.filter(inR);
+  const why={}; for(const r of exc){ let rs2=[]; try{ rs2=(explainRecord(r,S.settings.filter)||[]).map(x=>typeof x==='string'?x:(x.label||x.k||x.key||'')); }catch(e){} for(const k of rs2.slice(0,3)) if(k) why[k]=(why[k]||0)+1; }
+  return {
+    plant:'PSD Chiller plant (ฝั่ง P1 และ H)', generated_at:new Date().toISOString(),
+    period:{ granularity:GU(), from:mLabel(S.range.from,true), to:mLabel(S.range.to,true), buckets:ms.length },
+    calc_mode: ovAll()?'รวมทุกบันทึก':'เฉพาะบันทึกที่ผ่านเกณฑ์', record_interval_hours:en.hours,
+    standards:{ chiller_kwtr:S.settings.stdKwtr, plant_kwtrp:S.settings.stdKwtrp, valid_filter:S.settings.filter },
+    plant_summary:{ ...aiParams(rs), kwtrp_min:rd(st.kwtrpMin), kwtrp_max:rd(st.kwtrpMax), kwtr_sd:rd(st.kwtrSd) },
+    energy_kwh:{ total:Math.round(en.kwh), chiller:Math.round(en.ch), chp:Math.round(en.chp), cdp:Math.round(en.cdp), cooling_tower:Math.round(en.ct), days_with_data:en.days, avg_plant_kw:rd(en.avgKw,1) },
+    chillers_ranked_best_to_worst:chillers,
+    best_equipment_sets: gs.slice(0,5).map(gRow), worst_equipment_sets: gs.length>5 ? gs.slice(-3).reverse().map(gRow) : [],
+    units_above_peer_median: weakUnits(rs).slice(0,15).map(w=>({ system:w.sys, unit:w.unit, value:rd(w.v,4), unit_of_measure:w.unitTxt, peer_median:rd(w.md,4), above_pct:rd(w.dev,1), n:w.n })),
+    cooling_towers:cts, trend_by_period:trend,
+    before_after_improvement: (ba.nB&&ba.nA) ? { before_period:S.settings.before, after_period:S.settings.after, before_kwtrp:rd(ba.plant.b.kwtrp), after_kwtrp:rd(ba.plant.a.kwtrp), weather_load_adjusted_saving_pct: sv&&isNum(sv.pct)?rd(sv.pct,1):null } : null,
+    data_quality:{ records_in_range:ea.length, excluded_abnormal:exc.length, unresolved_warnings:act.length, excluded_by_unit:Object.fromEntries([...groupBy(exc,r=>r.ch)].map(([k,a])=>[k,a.length])), top_reasons:why }
+  };
+}
+/* Markdown → HTML (ข้อความถูก escape ก่อนเสมอ) */
+function mdToHtml(src){
+  const inl = t => esc(t).replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/(^|[^*])\*([^*\s][^*]*)\*/g,'$1<i>$2</i>');
+  const L=String(src||'').replace(/\r/g,'').split('\n'); let h='', i=0;
+  while(i<L.length){
+    const l=L[i];
+    if(/^\s*$/.test(l)){ i++; continue; }
+    let m;
+    if((m=l.match(/^(#{1,4})\s+(.*)$/))){ const n=Math.min(4,m[1].length+1); h+=`<h${n}>${inl(m[2])}</h${n}>`; i++; continue; }
+    if(/^\s*(-{3,}|\*{3,})\s*$/.test(l)){ h+='<hr>'; i++; continue; }
+    if(/^\s*\|.*\|\s*$/.test(l)){
+      const rows=[]; while(i<L.length && /^\s*\|.*\|\s*$/.test(L[i])){ rows.push(L[i].trim().slice(1,-1).split('|').map(x=>x.trim())); i++; }
+      const body=rows.filter(r=>!r.every(x=>/^:?-{2,}:?$/.test(x)));
+      h+='<table>'+body.map((r,ri)=>'<tr>'+r.map(x=>ri===0&&rows.length>1&&rows[1].every(y=>/^:?-{2,}:?$/.test(y))?`<th>${inl(x)}</th>`:`<td>${inl(x)}</td>`).join('')+'</tr>').join('')+'</table>'; continue;
+    }
+    if(/^\s*([-*•]|\d+[.)])\s+/.test(l)){
+      const ord=/^\s*\d+[.)]/.test(l); let items='';
+      while(i<L.length && /^\s*([-*•]|\d+[.)])\s+/.test(L[i])){ const ind=/^\s{2,}/.test(L[i]); items+=`<li${ind?' style="margin-left:16px"':''}>${inl(L[i].replace(/^\s*([-*•]|\d+[.)])\s+/,''))}</li>`; i++; }
+      h+= ord?`<ol>${items}</ol>`:`<ul>${items}</ul>`; continue;
+    }
+    let p=[]; while(i<L.length && !/^\s*$/.test(L[i]) && !/^(#{1,4})\s|^\s*\||^\s*([-*•]|\d+[.)])\s+/.test(L[i])){ p.push(inl(L[i])); i++; }
+    h+=`<p>${p.join('<br>')}</p>`;
+  }
+  return h;
+}
+async function aiCall(payload){
+  const cfg=syncCfg();
+  if(!cfg.url) throw new Error('ยังไม่ได้ตั้งค่า Web App URL ของ Apps Script (หน้า "ข้อมูลและการตั้งค่า" หรือ PSD_SYNC ใน index.html)');
+  let res; try{ res=await fetch(cfg.url,{ method:'POST', redirect:'follow', body:JSON.stringify({ key:cfg.key, pass:aiPass(), ...payload }), headers:{'Content-Type':'text/plain;charset=utf-8'} }); }
+  catch(e){ throw new Error(/claude\.ai|claudeusercontent/.test(location.hostname) ? 'หน้านี้ (claude.ai) ไม่อนุญาตให้เชื่อมต่อภายนอก — ใช้ Ai-eNGINNo บนเว็บ GitHub Pages' : 'เชื่อมต่อ Apps Script ไม่ได้ — ตรวจว่า Deploy เวอร์ชันใหม่ที่มี doPost แล้ว'); }
+  let js; try{ js=await res.json(); }catch(e){ throw new Error('Apps Script ไม่ได้ตอบเป็น JSON — ตรวจว่าวางโค้ดเวอร์ชันใหม่และ Deploy เป็นเวอร์ชันใหม่แล้ว'); }
+  if(!js.ok){
+    const M={ unauthorized:'KEY ของ Apps Script ไม่ถูกต้อง', bad_password:`รหัสผ่าน AI ไม่ถูกต้อง${isNum(js.left)?` (เหลือ ${js.left} ครั้งก่อนล็อก 15 นาที)`:''}`, locked:'ใส่รหัสผิดหลายครั้ง — AI ถูกล็อก 15 นาที', not_configured:'Apps Script ยังไม่ได้ตั้ง CLAUDE_API_KEY / AI_PASSWORD (12 ตัวอักษร)', rate_limited:js.detail||'ใช้งานเกินโควตาต่อชั่วโมง', unknown_action:'Apps Script ยังเป็นเวอร์ชันเก่า — วางโค้ดใหม่แล้ว Deploy เวอร์ชันใหม่' };
+    const e=new Error(M[js.error] || ('Claude API: '+(js.detail||js.error))); e.code=js.error; throw e;
+  }
+  return js;
+}
+function aiKpiHTML(){
+  const rs=ovRecs(), st=statBlock(rs), weak=weakUnits(rs), gs=bestGroups(rs, groupMinEff()).groups, exc=S.excluded.filter(inR).length, std=S.settings.stdKwtrp;
+  const k=st.kwtrp, cls=!isNum(k)?'':k<=std?'good':k<=std*1.1?'warn':'bad';
+  return `<div class="ai-kpis">
+    <div class="ai-kpi ${cls}"><h4>kW/TRp plant</h4><b>${isNum(k)?fmt(k):'–'}</b><small>มาตรฐาน ${fmt(std)} · ${rs.length.toLocaleString()} บันทึก</small></div>
+    <div class="ai-kpi ${weak.length?'bad':'good'}"><h4>🔴 เครื่องที่ควรตรวจสอบ</h4><b>${weak.length} รายการ</b><small>${weak.length?esc(weak.slice(0,3).map(w=>w.unit).join(', ')):'ไม่มีเครื่องสูงกว่าค่ากลาง ≥10%'}</small></div>
+    <div class="ai-kpi ${exc?'warn':'good'}"><h4>⏰ บันทึกผิดปกติ</h4><b>${exc} บันทึก</b><small>ในช่วงที่เลือก</small></div>
+    <div class="ai-kpi good"><h4>⭐ ชุดที่ดีที่สุด</h4><b>${gs.length?esc(gs[0].ch):'–'}</b><small>${gs.length?fmt(gs[0].kwtrp)+' kW/TRp · '+gs[0].n+' บันทึก':'ข้อมูลไม่พอ'}</small></div>
+  </div>`;
+}
+function aiMsgHTML(m,i){
+  if(m.role==='user') return `<div class="ai-msg user">${esc(m.label||m.content)}</div>`;
+  if(m.pending) return `<div class="ai-msg bot" aria-live="polite"><span class="ai-typing" aria-label="กำลังวิเคราะห์"><i></i><i></i><i></i></span> <small>Ai-eNGINNo กำลังวิเคราะห์ข้อมูล… (อาจใช้ 20–60 วินาที)</small></div>`;
+  if(m.error) return `<div class="ai-msg bot err">⚠ ${esc(m.content)}</div>`;
+  return `<div class="ai-msg bot"><div class="ai-md">${mdToHtml(m.content)}</div><div class="meta"><span>${esc(m.period||'')}</span>${m.model?`<span>${esc(m.model)}</span>`:''}${m.usage?`<span>${(m.usage.input_tokens||0).toLocaleString()} in · ${(m.usage.output_tokens||0).toLocaleString()} out tokens</span>`:''}<button type="button" data-aicopy="${i}">คัดลอก</button><button type="button" data-aidl="${i}">ดาวน์โหลด .md</button></div></div>`;
+}
+function aiRenderLog(){
+  const log=$('#aiLog'); if(!log) return;
+  log.innerHTML = AI.msgs.length ? AI.msgs.map(aiMsgHTML).join('') : `<div class="ai-empty"><div class="ai-mark" style="margin:0 auto 10px">✦</div>สวัสดีครับ ผมคือ <b>Ai-eNGINNo</b><br>กดหัวข้อวิเคราะห์ด้านบน หรือพิมพ์คำถามได้เลยครับ<br><small>วิเคราะห์จากข้อมูลช่วงที่เลือกที่แถบด้านบน</small></div>`;
+  log.scrollTop=log.scrollHeight;
+  $$('[data-aicopy]',log).forEach(b=>b.onclick=async()=>{ try{ await navigator.clipboard.writeText(AI.msgs[+b.dataset.aicopy].content); toast('คัดลอกแล้ว'); }catch(e){ toast('คัดลอกไม่ได้ในเบราว์เซอร์นี้'); } });
+  $$('[data-aidl]',log).forEach(b=>b.onclick=()=>{ const m=AI.msgs[+b.dataset.aidl]; const blob=new Blob(['# Ai-eNGINNo · '+(m.period||'')+'\n\n'+m.content],{type:'text/markdown'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='Ai-eNGINNo_'+(S.range.from||'')+'_'+(S.range.to||'')+'.md'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },500); });
+  aiSetBusyUI();
+}
+function aiSetBusyUI(){ $$('.ai-task, #aiAuto, #aiSend').forEach(b=>b.disabled=AI.busy); }
+async function aiAsk(prompt, label){
+  if(AI.busy || !prompt.trim()) return;
+  const period = `${GW()} · ${mLabel(S.range.from,true)} – ${mLabel(S.range.to,true)}`;
+  const history = AI.msgs.filter(m=>!m.pending && !m.error).map(m=>({ role:m.role, content:m.content })).slice(-6);
+  AI.msgs.push({ role:'user', content:prompt, label:label||prompt }); AI.msgs.push({ role:'assistant', pending:true });
+  AI.busy=true; aiRenderLog();
+  try{
+    const js=await aiCall({ action:'ai', prompt, history, context: JSON.stringify(buildAiContext()) });
+    AI.msgs[AI.msgs.length-1]={ role:'assistant', content:js.text||'(ไม่มีคำตอบ)', model:js.model, usage:js.usage, period };
+    AI.model=js.model||AI.model;
+  }catch(e){
+    AI.msgs[AI.msgs.length-1]={ role:'assistant', error:true, content:e.message };
+    if(e.code==='bad_password'||e.code==='locked'){ aiSetPass(''); AI.busy=false; render(); return; }
+  }
+  AI.busy=false; aiRenderLog();
+}
+function viewAi(v){
+  const isAdmin = S.user && S.user.role==='admin';
+  if(!isAdmin){ v.innerHTML='<section class="panel"><h2>Ai-eNGINNo</h2><p>หน้านี้สำหรับผู้ดูแลระบบ (admin) เท่านั้น</p></section>'; return; }
+  const cfg=syncCfg(), unlocked=!!aiPass(), per=`${mLabel(S.range.from,true)} – ${mLabel(S.range.to,true)}`;
+  v.innerHTML = `
+  <div class="ai-head"><div><h2><span class="ai-mark" aria-hidden="true">✦</span>Ai-eNGINNo <small style="font-weight:400;font-size:14px;color:var(--muted)">AI Analytics</small></h2>
+    <p>Claude AI · วิเคราะห์ประสิทธิภาพ · หาสาเหตุ · แจ้งเตือน · คำแนะนำ — ช่วง ${esc(GW())} ${esc(per)}</p></div>
+    <div class="ai-acts">${unlocked?`<button class="btn primary" id="aiAuto">⚡ Auto Analyze</button><button class="btn" id="aiClear">ล้างแชต</button><button class="btn" id="aiLockBtn">🔒 ล็อก AI</button>`:''}</div></div>
+  ${!cfg.url?`<section class="panel"><p><b class="bad">ยังไม่ได้เชื่อม Apps Script</b> — Ai-eNGINNo ใช้ Web App URL เดียวกับการซิงก์ Google Sheet ตั้งค่าที่หน้า “ข้อมูลและการตั้งค่า” → เชื่อมต่อ Google Sheet หรือใส่ใน <code>window.PSD_SYNC</code> ของ index.html</p></section>`:''}
+  ${aiKpiHTML()}
+  ${unlocked ? `
+  <div class="ai-tasks">${AI_TASKS.map(([c,k,t,d])=>`<button type="button" class="ai-task ${c}" data-aitask="${k}"><b>${t}</b><span>${d}</span></button>`).join('')}</div>
+  <section class="ai-chat"><div class="ai-chat-h"><span class="ai-mark" aria-hidden="true">✦</span><div><b>Claude AI Assistant</b><small>Ai-eNGINNo · PSD_eNGINNo Chiller Plant Analytic System${AI.model?' · '+esc(AI.model):''}</small></div><span class="sp"></span></div>
+    <div class="ai-log" id="aiLog" aria-live="polite"></div>
+    <form class="ai-form" id="aiForm"><label class="sr" for="aiIn" style="position:absolute;left:-9999px">คำถาม</label><textarea id="aiIn" rows="1" placeholder="พิมพ์คำถาม เช่น ทำไม H1-CH-03 กินไฟมากกว่าเครื่องอื่น? (Enter ส่ง · Shift+Enter ขึ้นบรรทัด)"></textarea><button class="btn primary" id="aiSend" type="submit">ส่ง ➤</button></form>
+  </section>
+  <details class="ai-ctx panel" style="margin-top:12px"><summary>ข้อมูลที่ส่งให้ AI (ข้อมูลสรุปเท่านั้น ไม่ส่งบันทึกดิบ)</summary><pre id="aiCtx"></pre></details>`
+  : `<section class="panel ai-lock"><div class="ai-mark" style="margin:0 auto 10px" aria-hidden="true">🔒</div><h3>ยืนยันรหัสผ่าน AI</h3>
+     <p class="legend-note">ชั้นความปลอดภัยสุดท้ายก่อนใช้ Claude AI — รหัส 12 ตัวอักษรที่ตั้งไว้ใน Apps Script (AI_PASSWORD) · จำไว้เฉพาะแท็บนี้ ปิดแท็บหรือออกจากระบบแล้วต้องกรอกใหม่</p>
+     <form id="aiUnlock"><div class="row"><input id="aiPw" type="password" maxlength="12" minlength="12" autocomplete="off" aria-label="รหัสผ่าน AI 12 ตัวอักษร" placeholder="••••••••••••"><button class="btn primary" type="submit">ปลดล็อก</button></div><p class="msg" id="aiPwMsg"></p></form></section>`}`;
+  if(!unlocked){
+    $('#aiPw').focus();
+    $('#aiUnlock').onsubmit=async ev=>{ ev.preventDefault(); const p=$('#aiPw').value, msg=$('#aiPwMsg');
+      if(p.length!==12){ msg.innerHTML='<span class="bad">รหัสต้องมี 12 ตัวอักษร</span>'; return; }
+      msg.textContent='กำลังตรวจสอบ…'; aiSetPass(p);
+      try{ const js=await aiCall({ action:'ai_check' }); AI.model=js.model||''; toast('ปลดล็อก Ai-eNGINNo แล้ว'); render(); }
+      catch(e){ aiSetPass(''); msg.innerHTML=`<span class="bad">${esc(e.message)}</span>`; } };
+    return;
+  }
+  aiRenderLog();
+  try{ $('#aiCtx').textContent=JSON.stringify(buildAiContext(),null,1); }catch(e){ $('#aiCtx').textContent='สร้างข้อมูลสรุปไม่ได้: '+e.message; }
+  $$('[data-aitask]',v).forEach(b=>b.onclick=()=>{ const t=AI_TASKS.find(x=>x[1]===b.dataset.aitask); aiAsk(t[4], t[2]); });
+  $('#aiAuto').onclick=()=>aiAsk(AI_AUTO,'⚡ Auto Analyze — รายงานวิเคราะห์ฉบับเต็ม');
+  $('#aiClear').onclick=()=>{ AI.msgs=[]; aiRenderLog(); };
+  $('#aiLockBtn').onclick=()=>{ aiForget(); render(); };
+  const ta=$('#aiIn');
+  $('#aiForm').onsubmit=ev=>{ ev.preventDefault(); const q=ta.value.trim(); if(!q) return; ta.value=''; aiAsk(q); };
+  ta.onkeydown=ev=>{ if(ev.key==='Enter' && !ev.shiftKey && !ev.isComposing){ ev.preventDefault(); $('#aiForm').requestSubmit(); } };
+}
+
 /* ---------------- Import ---------------- */
 let pendingImport=null;
 const isAdminUser = () => S.user && S.user.role==='admin';
@@ -2173,7 +2393,7 @@ async function enterApp(user){
   clearInterval(pendTimer);
   if(user.role==='admin'){ refreshPending(); pendTimer=setInterval(refreshPending, 30000); }
 }
-function logout(){ clearSession(); clearInterval(pendTimer); clearInterval(SY.timer); SY.timer=null; S.user=null; killCharts(); $('#view').innerHTML=''; $('#lgUser').value=''; $('#lgPass').value=''; showAuth(); }
+function logout(){ aiForget(); clearSession(); clearInterval(pendTimer); clearInterval(SY.timer); SY.timer=null; S.user=null; killCharts(); $('#view').innerHTML=''; $('#lgUser').value=''; $('#lgPass').value=''; showAuth(); }
 
 function boot(){
   applyTheme(loadTheme());
