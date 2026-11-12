@@ -617,6 +617,27 @@ body.mode3d .p3d-bottom{ align-items:stretch; }
 .p3d-best .p3d-bestscroll{ flex:1; max-height:none; min-height:0; }
 @media (max-width:1500px){ .p3d-left, .p3d-right{ height:auto; max-height:none; overflow:visible; } }
 @media (max-width:760px){ .p3d-nav{ bottom:10px; gap:6px; } .p3d-nav button{ width:32px; height:32px; } }
+
+/* ---- Hover: การ์ดเด้งขึ้น + ขอบสี (หลังบ้าน + 3D) ---- */
+.panel, .p3d-card, .p3d-kpi, .ins-blk, .p3d-te2, .refpanel, .energy, .ba-strip > *, .stat, .kpis > *, .ov-hero .ov-main{
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+#view .panel:hover, .p3d-left .p3d-card:hover, .p3d-right .p3d-card:hover, .p3d-bottom .panel:hover, .p3d-kpi:hover, .ins-blk:hover, .p3d-te2:hover{
+  transform:translateY(-3px); border-color:var(--chw); box-shadow:0 10px 24px -8px color-mix(in srgb, var(--chw) 55%, transparent), 0 0 0 1px var(--chw); }
+.p3d-kpi.good:hover{ border-color:var(--good); box-shadow:0 10px 24px -8px color-mix(in srgb, var(--good) 55%, transparent), 0 0 0 1px var(--good); }
+.p3d-kpi.bad:hover{ border-color:var(--bad); box-shadow:0 10px 24px -8px color-mix(in srgb, var(--bad) 55%, transparent), 0 0 0 1px var(--bad); }
+.ins-blk.good:hover{ box-shadow:0 8px 20px -8px color-mix(in srgb, var(--good) 60%, transparent), 0 0 0 1px var(--good); }
+.ins-blk.bad:hover{ box-shadow:0 8px 20px -8px color-mix(in srgb, var(--bad) 60%, transparent), 0 0 0 1px var(--bad); }
+.p3d-detail:hover, .p3d-tools .p3d-card:hover{ box-shadow:0 12px 30px -8px rgba(0,0,0,.35), 0 0 0 2px var(--chw); }
+.p3d-lab{ transition: box-shadow .15s ease, transform .15s ease; } .p3d-lab:hover{ box-shadow:0 0 0 2px var(--chw), 0 6px 16px rgba(0,0,0,.25); z-index:2000 !important; }
+table.data tbody tr{ transition: background-color .15s ease; } table.data tbody tr:hover{ background:color-mix(in srgb, var(--chw) 10%, transparent); }
+.nav button{ transition: background-color .15s ease, padding-left .15s ease; } .nav button:hover{ padding-left:calc(var(--nav-pl, 10px) + 4px); }
+.btn{ transition: transform .12s ease, box-shadow .12s ease; } .btn:hover{ transform:translateY(-1px); box-shadow:0 4px 10px -4px rgba(0,0,0,.35); }
+.p3d-nav button{ transition: transform .12s ease, box-shadow .12s ease; } .p3d-nav button:hover{ transform:translateX(2px); box-shadow:0 4px 10px -3px rgba(0,0,0,.3); }
+.ai-task{ transition: transform .18s ease, box-shadow .18s ease; } .ai-task:hover:not(:disabled){ transform:translateY(-3px); box-shadow:0 10px 22px -8px color-mix(in srgb, var(--chw) 55%, transparent); }
+@media (prefers-reduced-motion:reduce){ #view .panel:hover, .p3d-card:hover, .p3d-bottom .panel:hover, .p3d-kpi:hover, .ins-blk:hover, .p3d-te2:hover, .btn:hover, .ai-task:hover, .p3d-nav button:hover{ transform:none; } }
+/* ตาราง Chiller ดีที่สุด: หัวคอลัมน์กึ่งกลางเหนือตัวเลข */
+table.best th, table.best td{ text-align:center !important; } table.best tbody th[scope=row]{ text-align:left !important; }
+table.best td .lead, table.best td .sub{ display:block; white-space:nowrap; }
 </style>
 </head>
 <body data-role="user">
