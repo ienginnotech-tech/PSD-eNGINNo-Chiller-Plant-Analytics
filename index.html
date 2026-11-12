@@ -2698,7 +2698,9 @@ function p3dSnapshot(){
   const H = S.settings.hours>0 ? S.settings.hours : 2;
   const loads = P3D_LOADS.map(l=>{ let kwNow=0, kwh=0, has=false; for(const [p] of l.pumps){ const a=tsVals('schp_'+p); if(a.length) has=true; kwh+=a.reduce((x,y)=>x+y,0)*H; kwNow+=a.length?mean(a):0; } return { ...l, kw:has?kwNow:null, kwh:has?kwh:null, run:l.pumps.some(([p])=>st[p].st==='run') }; });
   const phase = ph => { const L=loads.filter(l=>l.phase===ph&&l.kw!=null); return L.length?{ kw:L.reduce((a,l)=>a+l.kw,0), kwh:L.reduce((a,l)=>a+l.kwh,0) }:null; };
-  return { rs, st, nT, loads, phaseI:phase('I'), phaseII:phase('II'), kpi:{ n:rs.length, tr:tr/nT, kw:kw/nT, kwtrp: tr>0?kw/tr:null, chs:avg(rs,'chs'), chr:avg(rs,'chr'), cds:avg(rs,'cds'), cdr:avg(rs,'cdr'), twb:mean(tsVals('twb')), oat:mean(tsVals('oat')), rh:mean(tsVals('rh')), theff:avg(rs,'theff'), ctkw:CT_NAMES.reduce((a,c)=>a+(st[c].st==='run'&&isNum(st[c].kw)?st[c].kw:0),0),
+  /* kW/TRp ใช้วิธีเดียวกับหลังบ้าน: ค่าเฉลี่ยรายบันทึก · ชุดบันทึกตามโหมดคำนวณ (ผ่านเกณฑ์ / ทั้งหมด) */
+  const kRecs = hour ? rs.filter(r=>ovAll() || !bad.has(r)) : ovRecs();
+  return { rs, st, nT, loads, phaseI:phase('I'), phaseII:phase('II'), kpi:{ n:rs.length, tr:tr/nT, kw:kw/nT, kwtrp: mean(kRecs.map(r=>r.kwtrp)), kwtrpW: tr>0?kw/tr:null, chs:avg(rs,'chs'), chr:avg(rs,'chr'), cds:avg(rs,'cds'), cdr:avg(rs,'cdr'), twb:mean(tsVals('twb')), oat:mean(tsVals('oat')), rh:mean(tsVals('rh')), theff:avg(rs,'theff'), ctkw:CT_NAMES.reduce((a,c)=>a+(st[c].st==='run'&&isNum(st[c].kw)?st[c].kw:0),0),
     ctRun:CT_NAMES.filter(c=>st[c].st==='run').length, chRun:P3D_SETS.filter(s=>(byCh.get(s.ch)||[]).length).length, chkw:perT('chkw') } };
 }
 
@@ -3077,7 +3079,7 @@ function p3dApply(){
   /* KPI ด้านบน */
   const std=S.settings.stdKwtrp, cls=!isNum(k.kwtrp)?'':k.kwtrp<=std?'good':k.kwtrp<=std*1.1?'warn':'bad';
   $('#p3dKpi').innerHTML=[
-    ['kW/TRp plant', f2(k.kwtrp,3), `มาตรฐาน ${fmt(std,3)}`, cls],
+    ['kW/TRp plant', f2(k.kwtrp,3), `มาตรฐาน ${fmt(std,3)} · ${ovAll()?'ทุกบันทึก':'ผ่านเกณฑ์'}`, cls],
     [hour?'Chiller ทำงาน':'Chiller ที่เดินในช่วง', `${k.chRun}/12`, `CT ${k.ctRun}/11`],
     ['โหลด', `${f2(k.tr,0)} TR`, `${f2(k.kw,0)} kW (ไม่รวม SCHP)`],
     ['CHS / CHR', `${f2(k.chs)} / ${f2(k.chr)} °F`, `ΔT ${isNum(k.chs)&&isNum(k.chr)?fmt(k.chr-k.chs,1):'–'} °F`],
