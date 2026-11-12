@@ -2826,7 +2826,8 @@ function p3dBuildScene(){
   const zA=Z_MAX+3, zB=Z_MIN-3;
   pipeRun([[X.cdsH,HT,zA],[X.cdsH,HT,zB]],0.5,H.cds); capEnd([X.cdsH,HT,zB],0.5,H.cds);
   pipeRun([[X.cdrH,H0,zB],[X.cdrH,H0,zA]],0.5,H.cdr); capEnd([X.cdrH,H0,zA],0.5,H.cdr);
-  pipeRun([[X.chrH,HT,zB],[X.chrH,HT,zA+40]],0.5,H.chr); capEnd([X.chrH,HT,zB],0.5,H.chr);
+  const ZR = ph => Z_MAX + (ph==='I'?9:24) + 8.6 + 2.6;   /* แนวท่อน้ำกลับ (CHR) หลังอาคารแต่ละเฟส */
+  pipeRun([[X.chrH,HT,zB],[X.chrH,HT,ZR('II')]],0.5,H.chr); capEnd([X.chrH,HT,zB],0.5,H.chr); capEnd([X.chrH,HT,ZR('II')],0.5,H.chr);
   /* CDS → CT (ปลาย +z) · CT → CDR (ปลาย −z) */
   const ctIn=X.ct+5.6, ctOut=X.ct+3.6, deckTop=deckY+0.25;
   pipeRun([[X.cdsH,HT,zA],[X.cdsH,HT,zA+0.01],[ctIn,HT,zA],[ctIn,deckTop+2.4,zA],[ctIn,deckTop+2.4,zB+2]],0.42,H.cds); capEnd([ctIn,deckTop+2.4,zB+2],0.42,H.cds);
@@ -2864,9 +2865,9 @@ function p3dBuildScene(){
 
   /* ---- CHS header → SCHP Phase I / Phase II → โหลดอาคาร ---- */
   const zI=Z_MAX+9, zII=Z_MAX+24;
-  pipeRun([[X.chsH,H0,zB],[X.chsH,H0,zII]],0.5,H.chs); capEnd([X.chsH,H0,zB],0.5,H.chs);
+  pipeRun([[X.chsH,H0,zB],[X.chsH,H0,zII]],0.5,H.chs); capEnd([X.chsH,H0,zB],0.5,H.chs); capEnd([X.chsH,H0,zII],0.5,H.chs);
   P.flows.push({ pts:[[X.chsH,H0,zB],[X.chsH,H0,zII]], color:0xffffff, n:30, key:'chw' });
-  P.flows.push({ pts:[[X.chrH,HT,zA+40],[X.chrH,HT,zB]], color:0xffffff, n:30, key:'chw' });
+  P.flows.push({ pts:[[X.chrH,HT,ZR('II')],[X.chrH,HT,zB]], color:0xffffff, n:30, key:'chw' });
   const phases=[['I',zI],['II',zII]];
   for(const [ph,zh] of phases){
     const L=P3D_LOADS.filter(l=>l.phase===ph); let x=-16; const xs=[];
@@ -2887,8 +2888,16 @@ function p3dBuildScene(){
       const body=box(w,2.4,2.6,bm); body.position.y=1.2; b.add(body); const roof=box(w+0.3,0.25,2.9,acc); roof.position.y=2.52; b.add(roof);
       for(let wi=0;wi<Math.floor(w/1.1);wi++){ const win=box(0.55,0.5,0.05,mat(0x5d8fb5,{m:.6,r:.2})); win.position.set(-w/2+0.7+wi*1.1,1.35,1.32); b.add(win); }
       b.traverse(o=>{ if(o.isMesh) o.castShadow=true; }); P.scene.add(b);
-      P.loadsObj.push({ key:l.key, phase:ph, name:l.name, mat:lm, pipes, acc, anchor:new THREE.Vector3(xc,3.6,lz) });
+      /* น้ำเย็นกลับจากอาคาร → แนว CHR ของเฟส */
+      const zr=ZR(ph); pipes.push(...pipeRun([[xc,1.6,lz+1.0],[xc,1.6,zr],[xc,HT,zr]],0.3,lm));
+      P.flows.push({ pts:[[xc,1.6,lz+1.0],[xc,1.6,zr],[xc,HT,zr]], color:0xffffff, n:4, key:'load_'+l.key });
+      P.loadsObj.push({ key:l.key, phase:ph, name:l.name, mat:lm, pipes, acc, anchor:new THREE.Vector3(xc,3.6,lz), xc });
     });
+    /* ท่อรวมน้ำกลับของเฟส → ต่อเข้า CHR header */
+    const rm=mat(0x9aa3a8,{m:.45,r:.4}), zr=ZR(ph), x0=(xs[0][0]+xs[0][xs[0].length-1])/2;
+    const rp=pipeRun([[x0,HT,zr],[X.chrH,HT,zr]],0.4,rm); rp.push(capEnd([x0,HT,zr],0.4,rm));
+    (P.returns=P.returns||[]).push({ phase:ph, mat:rm, pipes:rp });
+    P.flows.push({ pts:[[x0,HT,zr],[X.chrH,HT,zr]], color:0xffffff, n:16, key:'schp'+ph });
   }
   /* ป้ายโซน (ตำแหน่งตามที่กำหนด 8 / 9 / 10) */
   P.zones=[
@@ -3054,6 +3063,7 @@ function p3dApply(){
   for(const s of P3D_SETS){ const pp=P.setPipes.get(s.ch), st=(snap.st[s.ch]||{}).st; setPipeState(pp.mats, pp.pipes, st==='run'||st==='alarm', pal); }
   for(const lo of P.loadsObj){ const L=snap.loads.find(l=>l.key===lo.key); const on=!!(L&&L.run); setPipeState({p:lo.mat}, lo.pipes, on, {p:pal.chs}); lo.acc.color.setHex(on?COL.run:L&&L.kw==null?COL.nodata:COL.idle); lo.acc.emissive.setHex(on?COL.run:0); lo.acc.emissiveIntensity=on?0.5:0; lo.on=on;
     lo.lab.className='p3d-load'+(on?' on':''); lo.lab.innerHTML=`<b>${esc(lo.name)}</b><span>${L&&L.kw!=null?`${f2(L.kw)} kW · ${fmtInt(L.kwh)} kWh`:'ไม่มีข้อมูล SCHP'}</span>`; }
+  for(const r of P.returns||[]){ const on=snap.loads.some(l=>l.phase===r.phase&&l.run); setPipeState({p:r.mat}, r.pipes, on, {p:0x5cbcf5}); }
   const anyRun = snap.kpi.chRun>0, hm=P.hdrMat, pal2 = { cds:pal.cds, cdr:pal.cdr };
   hm.cds.color.setHex(anyRun?(p3s().cdwColor==='orange'?0xe2782b:0x2a9df4):COL.idle); hm.cdr.color.setHex(anyRun?(p3s().cdwColor==='orange'?0xe9b23c:0x7cc8f8):COL.idle); hm.chs.color.setHex(anyRun?0x1f8fe8:COL.idle); hm.chr.color.setHex(anyRun?0x5cbcf5:COL.idle);
   const flowOn={ cdw:anyRun, chw:anyRun, schpI: snap.loads.some(l=>l.phase==='I'&&l.run), schpII: snap.loads.some(l=>l.phase==='II'&&l.run) };
