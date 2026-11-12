@@ -574,6 +574,20 @@ body.mode3d .p3d-stage{ grid-area:stage; position:relative; inset:auto; height:c
 .p3set{ align-items:end; margin-bottom:12px; } .p3set input[type=checkbox]{ width:auto; margin:0; flex:none; } .p3set label.chk{ align-self:center; }
 .p3d-en .energy{ border:0; padding:0; margin:0; background:none; box-shadow:none; } .p3d-en .kwh{ font-size:clamp(30px,2.4vw,44px) !important; line-height:1.05; overflow-wrap:anywhere; } .p3d-en .kwh small, .p3d-en .kwh span{ font-size:16px; }
 .p3d-ref .refpanel, .p3d-ref{ overflow:hidden; }
+
+/* 3D v3: แผงล่าง = กราฟ 2 ตัว (ซ้าย) + Chiller ดีที่สุดรายวัน (ขวา) */
+body.mode3d .p3d-bottom{ display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:10px; align-items:stretch; }
+body.mode3d .p3d-bottom.one{ grid-template-columns:minmax(0,1fr); }
+.p3d-charts{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px; min-width:0; }
+.p3d-charts .panel, .p3d-best{ margin:0; padding:10px 12px; min-width:0; }
+.p3d-charts .chartbox{ height:240px; } .p3d-charts h3{ font-size:14px; } .p3d-charts .mtabs button{ padding:5px 8px; font-size:12px; }
+.p3d-best .ph{ flex-direction:column; align-items:flex-start; gap:2px; }
+.p3d-bestscroll{ max-height:292px; overflow:auto; } .p3d-best table.data{ font-size:12.5px; } .p3d-best table.data th, .p3d-best table.data td{ padding:5px 8px; vertical-align:top; }
+.p3d-best thead th{ position:sticky; top:0; background:var(--surface); z-index:1; }
+.p3d-ins{ max-height:640px; overflow:auto; } .p3d-ins h3{ font-size:15px; }
+.lg.stby{ background:#22c55e; }
+@media (max-width:1100px){ body.mode3d .p3d-bottom{ grid-template-columns:minmax(0,1fr); } }
+@media (max-width:640px){ .p3d-charts{ grid-template-columns:minmax(0,1fr); } }
 </style>
 </head>
 <body data-role="user">
@@ -2560,7 +2574,7 @@ const P3D_LIBS = [
 ];
 const FAULT_KEY = 'psd_fault_v1';
 const MODE_KEY = 'psd_mode_v1';
-const P3D_DEFAULTS = { labelScale:1, showValues:true, view:'main', timeMode:'hour', cdwColor:'blue', anim:true, spray:true, shadows:true, autoRotate:false, panelRef:true, panelEnergy:true, panelCharts:true, followLatest:true, sceneTheme:'auto' };
+const P3D_DEFAULTS = { labelScale:1, showValues:true, view:'main', timeMode:'hour', cdwColor:'blue', anim:true, spray:true, shadows:true, autoRotate:false, panelRef:true, panelEnergy:true, panelCharts:true, panelInsights:true, panelBest:true, followLatest:true, sceneTheme:'auto' };
 const p3s = () => ({ ...P3D_DEFAULTS, ...(S.settings.p3d||{}) });
 const P3D_SETS = [
   ...[1,2,3,4].map(i=>({ ch:`P1-CH-0${i}`, pchp:`P1-PCHP-0${i}`, cdp:`P1-CDP-0${i}`, side:'P1', ton:1000, pkw:45, ckw:55 })),
@@ -2668,7 +2682,7 @@ function p3dBuildDom(box){
     <aside class="p3d-left" id="p3dLeft"></aside>
     <div class="p3d-stage" id="p3dStage"><canvas id="p3dCanvas" aria-label="ภาพ 3 มิติ Chiller plant"></canvas><div class="p3d-zone" id="p3dZones"></div><div class="p3d-labels" id="p3dLabels"></div>
       <div class="p3d-tools"><div class="p3d-card"><div class="p3d-ttl">สถานะ <button type="button" class="p3d-min" id="p3dMin" aria-expanded="true" aria-label="ย่อ/ขยาย">–</button></div><div id="p3dToolBody">
-        <ul class="p3d-legend"><li><i class="lg run"></i>ทำงาน <small>ฟ้า · ขยาย · ไฟวิ่ง</small></li><li><i class="lg idle"></i>Standby <small>เทา</small></li><li><i class="lg fault"></i>ชำรุด / ผิดปกติ <small>กะพริบ</small></li></ul>
+        <ul class="p3d-legend"><li><i class="lg run"></i>ทำงาน <small>ฟ้า · ขยาย · ไฟวิ่ง</small></li><li><i class="lg stby"></i>Standby <small>เครื่องเทา · ป้ายเขียว</small></li><li><i class="lg fault"></i>ชำรุด / ผิดปกติ <small>ป้ายแดง · กะพริบ</small></li></ul>
         <div class="p3d-views"><button class="btn small" data-cam="main">มุมหลัก</button><button class="btn small" data-cam="top">มุมบน</button><button class="btn small" data-cam="ct">Cooling</button><button class="btn small" data-cam="ch">Chiller</button><button class="btn small" data-cam="schp">SCHP</button></div>
         <div class="p3d-ttl" style="margin-top:6px">แจ้งเตือน <span id="p3dAlertN" class="badge-n" hidden></span></div><div id="p3dAlerts" class="p3d-alerts"></div></div></div></div>
       <div class="p3d-detail" id="p3dDetail" hidden></div>
@@ -2853,10 +2867,29 @@ function p3dBuildScene(){
 }
 /* ---- โมเดลเครื่องจักร ---- */
 function accentMat(){ return new THREE.MeshStandardMaterial({ color:COL.idle, emissive:COL.idle, emissiveIntensity:0.2, metalness:.2, roughness:.45 }); }
+/* ป้ายชื่อติดเครื่อง (sprite) — ใช้กับเครื่องที่ไม่ได้ทำงาน: เขียว = Standby · แดง = ชำรุด · เทา = ไม่มีข้อมูล */
+function makeTag(text, w){
+  const cv=document.createElement('canvas'); cv.width=320; cv.height=72; const tex=new THREE.CanvasTexture(cv);
+  if('encoding' in tex) tex.encoding=THREE.sRGBEncoding;
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, transparent:true, depthWrite:false }));
+  sp.scale.set(w, w*72/320, 1); sp.userData={ cv, tex, text, st:null }; return sp;
+}
+function drawTag(sp, st){
+  if(sp.userData.st===st) return; sp.userData.st=st;
+  const { cv, tex, text }=sp.userData, g=cv.getContext('2d'), W=cv.width, Hh=cv.height;
+  const col = st==='fault'?'#dc2626': st==='nodata'?'#8a97a0':'#16a34a', bg = st==='fault'?'#fee2e2':'#ffffff';
+  g.clearRect(0,0,W,Hh); g.fillStyle=bg; g.strokeStyle=col; g.lineWidth=4;
+  const r=12; g.beginPath(); g.moveTo(r,2); g.arcTo(W-2,2,W-2,Hh-2,r); g.arcTo(W-2,Hh-2,2,Hh-2,r); g.arcTo(2,Hh-2,2,2,r); g.arcTo(2,2,W-2,2,r); g.closePath(); g.fill(); g.stroke();
+  g.fillStyle=col; g.beginPath(); g.arc(30,Hh/2,12,0,Math.PI*2); g.fill();
+  g.fillStyle='#16242c'; g.font='700 34px "IBM Plex Sans Condensed", "IBM Plex Sans Thai", sans-serif'; g.textBaseline='middle'; g.fillText(text,52,Hh/2+1,W-62);
+  tex.needsUpdate=true;
+}
 function p3dReg(id, kind, outer, anchor, o){
   outer.userData.id=id; P.scene.add(outer); P.pick.push(outer);
   const lab=document.createElement('div'); lab.className='p3d-lab k-'+kind; lab.dataset.id=id; lab.onclick=()=>p3dSelect(id); $('#p3dLabels').appendChild(lab);
-  const obj={ id, kind, group:outer, anchor:new THREE.Vector3(...anchor), lab, spin:[], leds:[], st:'nodata', baseScale:outer.scale.x, ...o };
+  const tw = kind==='ch'?4.4: kind==='ct'?3.6: 3.2;
+  const tag=makeTag(id, tw); tag.position.set(anchor[0], anchor[1]-(kind==='ch'?0.6:kind==='ct'?0.2:0.5), anchor[2]); tag.renderOrder=5; P.scene.add(tag);
+  const obj={ id, kind, group:outer, anchor:new THREE.Vector3(...anchor), lab, tag, spin:[], leds:[], st:'nodata', baseScale:outer.scale.x, ...o };
   P.objs.set(id,obj); return obj;
 }
 function p3dChiller(s,x,z,sc){
@@ -2941,7 +2974,7 @@ function p3dApply(){
   document.documentElement.style.setProperty('--p3d-ls', cfg.labelScale);
   for(const o of P.objs.values()){
     const s=snap.st[o.id]||{st:'nodata'}; o.st=s.st; o.data=s;
-    const run=s.st==='run', bad=s.st==='fault'||s.st==='alarm', col = run?COL.run : bad?COL.fault : s.st==='nodata'?COL.nodata : COL.idle;
+    const run=s.st==='run', bad=s.st==='fault'||s.st==='alarm', col = run?COL.run : bad?COL.fault : s.st==='nodata'?COL.nodata : 0x22c55e;
     for(const m of o.accents){ m.color.setHex(col); m.emissive.setHex(col); m.emissiveIntensity = run?0.6:0.2; }
     for(const m of o.bodies||[]) m.color.setHex(run ? o.bodyRun : (o.kind==='ch'?0xa9b1b6:0x9aa3a8));
     o.group.scale.setScalar(o.baseScale*(run?1.12:1));
@@ -2958,6 +2991,7 @@ function p3dApply(){
         else if(isNum(s.kw)) html+=`<span class="big">${f2(s.kw)} kW</span>`;
       }
     }
+    const showLab = run || s.st==='alarm' || P.sel===o.id; o.hideLab=!showLab; o.tag.visible=!showLab; if(!showLab) drawTag(o.tag, s.st);
     o.lab.className=`p3d-lab k-${o.kind} s-${s.st}${P.sel===o.id?' sel':''}${(run||bad)?' on':''}`;
     o.lab.innerHTML=html; o.lab.title=`${o.id} · ${stTxt}${isNum(s.kw)?' · '+f2(s.kw)+' kW':''}`;
   }
@@ -3015,18 +3049,35 @@ function p3dPanels(){
   L.innerHTML = (cfg.panelRef?`<div class="p3d-card refpanel p3d-ref">${refPanel(st,ba)}</div>`:'') + keepCool;
   R.innerHTML = cfg.panelEnergy ? `<div class="p3d-card p3d-en">${energyPanel(en,exE)}</div>` : '';
   const tv=S.sel.ovTrend||'rank', kv=S.sel.ovKwh||'sys', per2=ms.length?mLabel(ms[0])+(ms.length>1?' – '+mLabel(ms[ms.length-1]):''):'';
-  B.hidden=!cfg.panelCharts;
-  B.innerHTML = cfg.panelCharts ? `
-    <div class="panel"><div class="ph"><h3>${tv==='trend'?'แนวโน้ม'+GW():'kW/TR Chiller รายเครื่อง — ดีที่สุด → แย่ที่สุด'}</h3>${miniTabs('ovTrend',[['rank','อันดับ Chiller'],['trend','แนวโน้ม']],tv)}</div><div class="chartbox"><canvas id="p3T"></canvas></div><p class="legend-note" id="p3TN"></p></div>
-    <div class="panel"><div class="ph"><h3>พลังงานไฟฟ้า (kWh) ${kv==='sys'?'แยกระบบ — มาก → น้อย':kv==='unit'?'แยกชุด Chiller — มาก → น้อย':GW()}</h3>${miniTabs('ovKwh',[['sys','แยกระบบ'],['unit','แยกชุด'],['trend','แนวโน้ม']],kv)}</div><div class="chartbox"><canvas id="p3K"></canvas></div><p class="legend-note" id="p3KN"></p></div>` : '';
+  if(cfg.panelInsights) R.insertAdjacentHTML('beforeend', `<div class="p3d-card ins-panel p3d-ins"><h3>ข้อสังเกตและข้อเสนอแนะ</h3>${insightsHTML()}</div>`);
+  const showB = cfg.panelCharts || cfg.panelBest; B.hidden=!showB;
+  B.innerHTML = !showB ? '' : `
+    ${cfg.panelCharts?`<div class="p3d-charts">
+      <div class="panel"><div class="ph"><h3>${tv==='trend'?'แนวโน้ม'+GW():'kW/TR Chiller รายเครื่อง · ดี → แย่'}</h3>${miniTabs('ovTrend',[['rank','อันดับ'],['trend','แนวโน้ม']],tv)}</div><div class="chartbox"><canvas id="p3T"></canvas></div><p class="legend-note" id="p3TN"></p></div>
+      <div class="panel"><div class="ph"><h3>kWh ${kv==='sys'?'แยกระบบ · มาก → น้อย':kv==='unit'?'แยกชุด · มาก → น้อย':GW()}</h3>${miniTabs('ovKwh',[['sys','ระบบ'],['unit','ชุด'],['trend','แนวโน้ม']],kv)}</div><div class="chartbox"><canvas id="p3K"></canvas></div><p class="legend-note" id="p3KN"></p></div>
+    </div>`:''}
+    ${cfg.panelBest?`<div class="panel p3d-best">${p3dBestDayHTML()}</div>`:''}`;
+  B.classList.toggle('one', !(cfg.panelCharts && cfg.panelBest));
   const box=$('#view3d');
   $$('[data-ref]',box).forEach(b=>b.onclick=()=>{ S.sel.refBasis=b.dataset.ref; P.panelsDirty=true; p3dPanels(); });
   $$('[data-mt]',box).forEach(b=>b.onclick=()=>{ S.sel[b.dataset.mt]=b.dataset.val; P.panelsDirty=true; p3dPanels(); });
   if(cfg.panelCharts){ chartDefaults(); ovCharts({t:'p3T',k:'p3K'}, rs, ms, ea, en, tv, kv, per2); }
   if(P.snap) p3dSideCards(P.snap);
 }
+/* Chiller ที่ดีที่สุดในแต่ละวัน (ช่วงที่เลือก · ล่าสุดอยู่บน) — ใช้ตัดสินใจเปิด/ปิดเครื่อง */
+function p3dBestDayHTML(){
+  const recs=S.valid.filter(inR).map(r=>({...r, m:r.d})), days=[...new Set(recs.map(r=>r.d))].sort().reverse().slice(0,31);
+  const minD=Math.max(2,Math.ceil((S.settings.minN||10)/5)), bp=bestPerMonth(recs, days, minD);
+  const top3=(arr,k)=>arr.slice(0,3).map((x,i)=>`<div class="${i?'sub':'lead'}">${i+1}. ${esc(x.ch)} <span class="num">${fmt(x[k])}</span> <small>n ${x.n}</small></div>`).join('') || '<span class="na">ข้อมูลไม่พอ</span>';
+  const rec=(r,k)=>r?`<div class="lead">${esc(r.ch)} <span class="num">${fmt(r[k])}</span></div><div class="sub">${String(r.t||'').slice(0,5)} น.</div>`:'–';
+  return `<div class="ph"><h3>Chiller ที่ดีที่สุดในแต่ละวัน</h3><small class="legend-note" style="margin:0">อันดับค่าเฉลี่ยรายชุด (≥ ${minD} บันทึก/วัน) · เฉพาะบันทึกที่ผ่านเกณฑ์</small></div>
+  <div class="p3d-bestscroll"><table class="data best"><thead><tr><th>วัน</th><th>kW/TR เฉลี่ยต่ำสุด</th><th>kW/TRp เฉลี่ยต่ำสุด</th><th>kW/TR ต่ำสุด<br><small>บันทึกเดียว</small></th></tr></thead><tbody>
+  ${bp.length?bp.map(b=>`<tr><th scope="row">${esc(mLabel(b.m))}</th><td>${top3(b.rankKwtr,'kwtr')}</td><td>${top3(b.rankKwtrp,'kwtrp')}</td><td>${rec(b.recKwtr,'kwtr')}</td></tr>`).join(''):'<tr><td colspan="4" class="na">ไม่มีข้อมูลในช่วงนี้</td></tr>'}
+  </tbody></table></div>`;
+}
 function p3dSelect(id, fly){
   P.sel=id; for(const o of P.objs.values()) o.lab.classList.toggle('sel', o.id===id);
+  if(P.snap) p3dApply();
   if(!id){ $('#p3dDetail').hidden=true; return; }
   p3dDetail(id);
   if(fly){ const o=P.objs.get(id); const t=o.anchor.clone(); t.y=2; p3dFly(t, t.clone().add(new THREE.Vector3(16,14,6))); }
@@ -3084,7 +3135,7 @@ function p3dLoop(){
     /* ป้าย HTML */
     const st=$('#p3dStage'), W=st.clientWidth, Hh=st.clientHeight, v=P._vv||(P._vv=new THREE.Vector3()), cp=P.cam.position;
     const place=(el,vec,pz)=>{ v.copy(vec).project(P.cam); const vis=v.z<1 && v.x>-1.15 && v.x<1.15 && v.y>-1.15 && v.y<1.15; el.style.display=vis?'':'none'; if(vis){ el.style.transform=`translate(-50%,-100%) translate(${(v.x+1)/2*W}px,${(1-v.y)/2*Hh}px)`; if(pz) el.style.zIndex=String(1000-Math.round(v.z*1000)); } };
-    for(const o of P.objs.values()){ const on=o.st==='run'||o.st==='fault'||o.st==='alarm', d=cp.distanceTo(o.anchor), sel=P.sel===o.id; o.lab.classList.toggle('far', !sel && d > (on?165:(o.kind==='ch'?120:95))); o.lab.classList.toggle('mid', !sel && on && d > 80); place(o.lab,o.anchor,true); }
+    for(const o of P.objs.values()){ const on=o.st==='run'||o.st==='fault'||o.st==='alarm', d=cp.distanceTo(o.anchor), sel=P.sel===o.id; o.lab.classList.toggle('far', !sel && d > (on?165:(o.kind==='ch'?120:95))); o.lab.classList.toggle('mid', !sel && on && d > 80); if(o.hideLab){ o.lab.style.display='none'; continue; } place(o.lab,o.anchor,true); }
     place($('#p3dTE'),P.teAnchor,false);
     for(const lo of P.loadsObj) place(lo.lab,lo.anchor,false);
     const zs=$('#p3dZones').children; P.zones.forEach(([,p],i)=>{ v.set(...p).project(P.cam); const el=zs[i]; el.style.display=v.z<1?'':'none'; el.style.transform=`translate(-50%,-50%) translate(${(v.x+1)/2*W}px,${(1-v.y)/2*Hh}px)`; });
@@ -3114,10 +3165,12 @@ function viewP3dSet(v){
   <section class="panel"><h3>แผงข้อมูลรอบ Plant</h3><div class="p3set">
     ${chk('s3PRef',c.panelRef,'ซ้ายบน: เกณฑ์ประสิทธิภาพ Chiller plant')}
     ${chk('s3PEn',c.panelEnergy,'ขวาบน: พลังงานไฟฟ้าทั้ง Plant (kWh)')}
+    ${chk('s3PIns',c.panelInsights,'ขวา: ข้อสังเกตและข้อเสนอแนะ')}
     ${chk('s3PCh',c.panelCharts,'ด้านล่าง: กราฟ kW/TR รายเครื่อง และ kWh')}
+    ${chk('s3PBest',c.panelBest,'ด้านล่าง: Chiller ที่ดีที่สุดในแต่ละวัน')}
   </div><div class="row"><button class="btn primary" id="s3Save">บันทึก</button><button class="btn" id="s3Reset">คืนค่าเริ่มต้น</button><button class="btn" id="s3Go">เปิดหน้า 3D</button></div></section>
   <section class="panel"><h3>เครื่องที่แจ้งชำรุด</h3>${Object.keys(f).length?`<table class="data"><thead><tr><th>เครื่อง</th><th>อาการ</th><th>แจ้งโดย</th><th>เวลา</th><th></th></tr></thead><tbody>${Object.entries(f).map(([id,x])=>`<tr><td><b>${esc(id)}</b></td><td>${esc(x.note||'-')}</td><td>${esc(x.by||'')}</td><td>${esc(new Date(x.at).toLocaleString('th-TH'))}</td><td><button class="btn small" data-unfault="${esc(id)}">ซ่อมเสร็จ</button></td></tr>`).join('')}</tbody></table>`:'<p class="na">ไม่มีเครื่องที่แจ้งชำรุด — แจ้งได้โดยคลิกเครื่องในหน้า 3D</p>'}</section>`;
-  const read=()=>({ labelScale:+$('#s3Ls').value, view:$('#s3View').value, timeMode:$('#s3Time').value, cdwColor:$('#s3Cdw').value, showValues:$('#s3Vals').checked, anim:$('#s3Anim').checked, spray:$('#s3Spray').checked, shadows:$('#s3Shadow').checked, autoRotate:$('#s3Rot').checked, followLatest:$('#s3Follow').checked, panelRef:$('#s3PRef').checked, panelEnergy:$('#s3PEn').checked, panelCharts:$('#s3PCh').checked });
+  const read=()=>({ labelScale:+$('#s3Ls').value, view:$('#s3View').value, timeMode:$('#s3Time').value, cdwColor:$('#s3Cdw').value, showValues:$('#s3Vals').checked, anim:$('#s3Anim').checked, spray:$('#s3Spray').checked, shadows:$('#s3Shadow').checked, autoRotate:$('#s3Rot').checked, followLatest:$('#s3Follow').checked, panelRef:$('#s3PRef').checked, panelEnergy:$('#s3PEn').checked, panelCharts:$('#s3PCh').checked, panelInsights:$('#s3PIns').checked, panelBest:$('#s3PBest').checked });
   $('#s3Save').onclick=()=>{ S.settings.p3d=read(); saveSettings(); P.panelsDirty=true; if(P.ready) p3dApply(); toast('บันทึก 3D Setting แล้ว'); };
   $('#s3Reset').onclick=()=>{ S.settings.p3d={...P3D_DEFAULTS}; saveSettings(); render(); toast('คืนค่าเริ่มต้นแล้ว'); };
   $('#s3Go').onclick=()=>{ $('#s3Save').click(); setMode('3d'); };
