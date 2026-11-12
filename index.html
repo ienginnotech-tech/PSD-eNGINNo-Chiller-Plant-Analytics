@@ -588,6 +588,35 @@ body.mode3d .p3d-bottom.one{ grid-template-columns:minmax(0,1fr); }
 .lg.stby{ background:#22c55e; }
 @media (max-width:1100px){ body.mode3d .p3d-bottom{ grid-template-columns:minmax(0,1fr); } }
 @media (max-width:640px){ .p3d-charts{ grid-template-columns:minmax(0,1fr); } }
+
+/* 3D v4: แถบเครื่องมือ · พื้นหลัง · ความสูงเท่ากัน */
+.p3d-nav{ position:absolute; left:12px; bottom:40px; z-index:6; display:flex; flex-direction:column; gap:8px; padding:8px 6px; background:color-mix(in srgb, var(--surface) 88%, transparent); border:1px solid var(--line); border-radius:10px; box-shadow:0 4px 14px rgba(0,0,0,.15); }
+.p3d-nav button{ width:36px; height:36px; display:grid; place-items:center; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--ink); font:600 17px/1 var(--body); cursor:pointer; padding:0; }
+.p3d-nav button:hover{ border-color:var(--chw); } .p3d-nav button:focus-visible{ outline:2px solid var(--chw); outline-offset:2px; }
+.p3d-nav button.accent{ background:#f28c1b; border-color:#e07a0a; color:#fff; } .p3d-nav button.accent[aria-pressed="false"]{ background:var(--surface); color:var(--ink); border-color:var(--line); }
+.p3d-nav button[data-nav=rotate][aria-pressed="true"]{ background:var(--chw); color:#fff; border-color:var(--chw); }
+.p3d-nav.folded button:not([data-nav=fold]){ display:none; }
+body.mode3d .p3d-hint{ left:auto; right:12px; }
+.p3d-bgsel{ display:flex; align-items:center; gap:4px; font-size:12.5px; margin:6px 0 2px; flex-wrap:wrap; }
+.p3d-bgsel button{ font:600 11.5px/1 var(--body); padding:4px 8px; border:1px solid var(--line); border-radius:4px; background:var(--surface); color:var(--ink); cursor:pointer; }
+.p3d-bgsel button[aria-pressed="true"]{ background:var(--chw); color:#fff; border-color:var(--chw); }
+:root body.mode3d .p3d-stage.bg-blue{ background:radial-gradient(120% 90% at 50% 0%, #e6f3fb, #a9cfe4); }
+:root body.mode3d .p3d-stage.bg-gray{ background:radial-gradient(120% 90% at 50% 0%, #f3f4f5, #c3c7ca); }
+:root body.mode3d .p3d-stage.bg-dark{ background:radial-gradient(120% 90% at 50% 0%, #22343f, #0a1217); }
+.p3d-stage.bg-dark .p3d-zone span{ color:#e6eef2; background:rgba(16,28,36,.78); border-color:#3a4a55; }
+.p3d-stage.bg-dark .p3d-hint{ color:#c9d6dd; background:rgba(16,28,36,.7); }
+/* ซ้าย · 3D · ขวา สูงเท่ากัน (เลื่อนดูภายในคอลัมน์) */
+.p3d-grid{ --p3dH:clamp(560px, calc(100vh - var(--topH,90px) - 150px), 980px); align-items:stretch; }
+body.mode3d .p3d-stage{ height:var(--p3dH); }
+.p3d-left, .p3d-right{ height:var(--p3dH); overflow:auto; scrollbar-width:thin; }
+.p3d-left > .p3d-card:last-child, .p3d-right > .p3d-card:last-child{ flex:1 0 auto; }
+/* แถวล่าง: กรอบสูงเท่ากัน */
+body.mode3d .p3d-bottom{ align-items:stretch; }
+.p3d-charts .panel, .p3d-best{ height:360px; display:flex; flex-direction:column; }
+.p3d-charts .chartbox{ flex:1; height:auto; min-height:0; } .p3d-charts .legend-note{ margin:4px 0 0; }
+.p3d-best .p3d-bestscroll{ flex:1; max-height:none; min-height:0; }
+@media (max-width:1500px){ .p3d-left, .p3d-right{ height:auto; max-height:none; overflow:visible; } }
+@media (max-width:760px){ .p3d-nav{ bottom:10px; gap:6px; } .p3d-nav button{ width:32px; height:32px; } }
 </style>
 </head>
 <body data-role="user">
@@ -2574,7 +2603,7 @@ const P3D_LIBS = [
 ];
 const FAULT_KEY = 'psd_fault_v1';
 const MODE_KEY = 'psd_mode_v1';
-const P3D_DEFAULTS = { labelScale:1, showValues:true, view:'main', timeMode:'hour', cdwColor:'blue', anim:true, spray:true, shadows:true, autoRotate:false, panelRef:true, panelEnergy:true, panelCharts:true, panelInsights:true, panelBest:true, followLatest:true, sceneTheme:'auto' };
+const P3D_DEFAULTS = { labelScale:1, showValues:true, view:'main', timeMode:'hour', cdwColor:'blue', anim:true, spray:true, shadows:true, autoRotate:false, panelRef:true, panelEnergy:true, panelCharts:true, panelInsights:true, panelBest:true, idleTags:true, bg:'blue', followLatest:true, sceneTheme:'auto' };
 const p3s = () => ({ ...P3D_DEFAULTS, ...(S.settings.p3d||{}) });
 const P3D_SETS = [
   ...[1,2,3,4].map(i=>({ ch:`P1-CH-0${i}`, pchp:`P1-PCHP-0${i}`, cdp:`P1-CDP-0${i}`, side:'P1', ton:1000, pkw:45, ckw:55 })),
@@ -2683,15 +2712,41 @@ function p3dBuildDom(box){
     <div class="p3d-stage" id="p3dStage"><canvas id="p3dCanvas" aria-label="ภาพ 3 มิติ Chiller plant"></canvas><div class="p3d-zone" id="p3dZones"></div><div class="p3d-labels" id="p3dLabels"></div>
       <div class="p3d-tools"><div class="p3d-card"><div class="p3d-ttl">สถานะ <button type="button" class="p3d-min" id="p3dMin" aria-expanded="true" aria-label="ย่อ/ขยาย">–</button></div><div id="p3dToolBody">
         <ul class="p3d-legend"><li><i class="lg run"></i>ทำงาน <small>ฟ้า · ขยาย · ไฟวิ่ง</small></li><li><i class="lg stby"></i>Standby <small>เครื่องเทา · ป้ายเขียว</small></li><li><i class="lg fault"></i>ชำรุด / ผิดปกติ <small>ป้ายแดง · กะพริบ</small></li></ul>
+        <label class="p3d-chk"><input type="checkbox" id="p3dIdleTags"> แสดงชื่อเครื่องที่ไม่ได้ทำงาน</label>
+        <div class="p3d-bgsel" role="group" aria-label="สีพื้นหลัง">พื้นหลัง <button type="button" data-bg="blue">Blue</button><button type="button" data-bg="gray">Gray</button><button type="button" data-bg="dark">Dark</button></div>
         <div class="p3d-views"><button class="btn small" data-cam="main">มุมหลัก</button><button class="btn small" data-cam="top">มุมบน</button><button class="btn small" data-cam="ct">Cooling</button><button class="btn small" data-cam="ch">Chiller</button><button class="btn small" data-cam="schp">SCHP</button></div>
         <div class="p3d-ttl" style="margin-top:6px">แจ้งเตือน <span id="p3dAlertN" class="badge-n" hidden></span></div><div id="p3dAlerts" class="p3d-alerts"></div></div></div></div>
       <div class="p3d-detail" id="p3dDetail" hidden></div>
+      <div class="p3d-nav" id="p3dNav" role="toolbar" aria-label="ควบคุมมุมมอง 3D">
+        <button type="button" data-nav="home" title="มุมหลัก" aria-label="มุมหลัก">⌂</button>
+        <button type="button" data-nav="rotate" title="หมุนอัตโนมัติ" aria-label="หมุนอัตโนมัติ" aria-pressed="false">⟳</button>
+        <button type="button" data-nav="in" title="ซูมเข้า" aria-label="ซูมเข้า">+</button>
+        <button type="button" data-nav="out" title="ซูมออก" aria-label="ซูมออก">−</button>
+        <button type="button" data-nav="full" title="เต็มจอ" aria-label="เต็มจอ">⛶</button>
+        <button type="button" data-nav="tags" class="accent" title="แสดง/ซ่อนชื่อเครื่องที่ไม่ได้ทำงาน" aria-label="แสดง/ซ่อนชื่อเครื่องที่ไม่ได้ทำงาน" aria-pressed="true">🏷</button>
+        <button type="button" data-nav="bg" class="accent" title="สีพื้นหลัง: Blue / Gray / Dark" aria-label="เปลี่ยนสีพื้นหลัง">◐</button>
+        <button type="button" data-nav="fold" title="ย่อแถบ" aria-label="ย่อแถบเครื่องมือ" aria-expanded="true">‹</button>
+      </div>
       <p class="p3d-hint">ลากเพื่อหมุน · ล้อเมาส์ซูม · คลิกขวาลากเพื่อเลื่อน · คลิกเครื่องดูรายละเอียด</p>
     </div>
     <aside class="p3d-right" id="p3dRight"></aside>
   </div>
   <div class="p3d-bottom grid2" id="p3dBottom"></div>`;
   $$('[data-cam]',box).forEach(b=>b.onclick=()=>p3dCam(b.dataset.cam));
+  const setP=(k,v)=>{ S.settings.p3d={...p3s(), [k]:v}; saveSettings(); };
+  $('#p3dIdleTags').onchange=e=>{ setP('idleTags', e.target.checked); p3dApply(); };
+  $$('[data-bg]',box).forEach(b=>b.onclick=()=>{ setP('bg', b.dataset.bg); p3dBg(); });
+  $$('[data-nav]',box).forEach(b=>b.onclick=()=>{
+    const a=b.dataset.nav;
+    if(a==='home') p3dCam('main');
+    else if(a==='rotate'){ setP('autoRotate', !p3s().autoRotate); P.controls.autoRotate=p3s().autoRotate; p3dNavSync(); }
+    else if(a==='in'||a==='out'){ const t=P.controls.target, off=P.cam.position.clone().sub(t), k=a==='in'?0.78:1.28, d=Math.min(P.controls.maxDistance, Math.max(P.controls.minDistance, off.length()*k)); p3dFly(t.clone(), t.clone().add(off.setLength(d))); }
+    else if(a==='full'){ const st=$('#p3dStage'); if(document.fullscreenElement) document.exitFullscreen(); else if(st.requestFullscreen) st.requestFullscreen().catch(()=>toast('เบราว์เซอร์นี้ไม่รองรับเต็มจอ')); }
+    else if(a==='tags'){ setP('idleTags', !p3s().idleTags); p3dApply(); }
+    else if(a==='bg'){ const o=['blue','gray','dark'], n=o[(o.indexOf(p3s().bg)+1)%3]; setP('bg', n); p3dBg(); toast('พื้นหลัง: '+({blue:'Blue',gray:'Gray',dark:'Dark'})[n]); }
+    else if(a==='fold'){ const nav=$('#p3dNav'), f=nav.classList.toggle('folded'); b.textContent=f?'›':'‹'; b.setAttribute('aria-expanded', !f); }
+  });
+  document.addEventListener('fullscreenchange',()=>setTimeout(p3dResize,60));
   $('#p3dMin').onclick=e=>{ const b=$('#p3dToolBody'), open=b.hidden; b.hidden=!open; e.target.textContent=open?'–':'+'; e.target.setAttribute('aria-expanded',open); };
   if(matchMedia('(max-width:760px)').matches){ $('#p3dToolBody').hidden=true; $('#p3dMin').textContent='+'; }
 }
@@ -2757,8 +2812,8 @@ function p3dBuildScene(){
   Object.assign(sun.shadow.camera,{left:-75,right:75,top:75,bottom:-75,near:1,far:260}); scene.add(sun);
 
   /* พื้นห้อง Chiller (2M) + ลานปั๊ม SCHP + ดาดฟ้า CT (3M) */
-  const fl=box(70,0.4,104, mat(0xbcc6cc,{m:0.05,r:0.92})); fl.position.set(-6,-0.2,13); fl.receiveShadow=true; scene.add(fl);
-  const grid=new THREE.GridHelper(104,52,0x9aa7ae,0xaab6bc); grid.position.set(-6,0.01,13); grid.material.opacity=.32; grid.material.transparent=true; scene.add(grid);
+  const fl=box(70,0.4,104, mat(0xbcc6cc,{m:0.05,r:0.92})); fl.position.set(-6,-0.2,13); fl.receiveShadow=true; scene.add(fl); P.floor=fl;
+  const grid=new THREE.GridHelper(104,52,0x9aa7ae,0xaab6bc); grid.position.set(-6,0.01,13); grid.material.opacity=.32; grid.material.transparent=true; scene.add(grid); P.grid=grid;
   const deckY=4.2, deck=box(13,0.5,60, mat(0xa3b0b7,{m:0.1,r:0.8})); deck.position.set(X.ct,deckY,-1); deck.receiveShadow=true; deck.castShadow=true; scene.add(deck);
   for(const z of [-30,-16,-2,12,27]) for(const x of [X.ct-6,X.ct+6]){ const l=box(0.5,deckY,0.5,mat(0x7c8a92)); l.position.set(x,deckY/2,z); scene.add(l); }
   const pad=(x,z,w,d,c)=>{ const p=box(w,0.05,d,mat(c,{m:0,r:1,t:.5})); p.position.set(x,0.03,z); scene.add(p); };
@@ -2863,7 +2918,7 @@ function p3dBuildScene(){
   cv.addEventListener('pointermove',e=>{ cv.style.cursor=pick(e)?'pointer':''; });
   new ResizeObserver(()=>p3dResize()).observe($('#p3dStage'));
   document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible' && P.on) p3dLoop(); });
-  p3dCam(cfg.view||'main', true);
+  p3dCam(cfg.view||'main', true); p3dBg();
 }
 /* ---- โมเดลเครื่องจักร ---- */
 function accentMat(){ return new THREE.MeshStandardMaterial({ color:COL.idle, emissive:COL.idle, emissiveIntensity:0.2, metalness:.2, roughness:.45 }); }
@@ -2951,7 +3006,7 @@ function p3dCT(name,x,z,y,ctIn,ctOut){
   const N=260, pos=new Float32Array(N*3), spd=new Float32Array(N);
   for(let i=0;i<N;i++){ pos[i*3]=(Math.random()-.5)*3.5; pos[i*3+1]=0.8+Math.random()*2.4; pos[i*3+2]=(Math.random()-.5)*3.5; spd[i]=1.8+Math.random()*1.6; }
   const geo=new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
-  const rain=new THREE.Points(geo, new THREE.PointsMaterial({ color:0x3fb0ff, size:0.2, transparent:true, opacity:.95, depthWrite:false })); rain.visible=false; g.add(rain);
+  const rain=new THREE.Points(geo, new THREE.PointsMaterial({ color:0x0a4fb8, size:0.24, transparent:true, opacity:1, depthWrite:false })); rain.visible=false; g.add(rain);
   g.traverse(m=>{ if(m.isMesh) m.castShadow=true; });
   /* ท่อเข้า (CDS) ด้านบน / ออก (CDR) ใต้อ่าง */
   const pm=mat(0x9aa3a8,{m:.45,r:.4});
@@ -2991,7 +3046,7 @@ function p3dApply(){
         else if(isNum(s.kw)) html+=`<span class="big">${f2(s.kw)} kW</span>`;
       }
     }
-    const showLab = run || s.st==='alarm' || P.sel===o.id; o.hideLab=!showLab; o.tag.visible=!showLab; if(!showLab) drawTag(o.tag, s.st);
+    const showLab = run || s.st==='alarm' || P.sel===o.id; o.hideLab=!showLab; o.tag.visible=!showLab && (cfg.idleTags || s.st==='fault'); if(!showLab) drawTag(o.tag, s.st);
     o.lab.className=`p3d-lab k-${o.kind} s-${s.st}${P.sel===o.id?' sel':''}${(run||bad)?' on':''}`;
     o.lab.innerHTML=html; o.lab.title=`${o.id} · ${stTxt}${isNum(s.kw)?' · '+f2(s.kw)+' kW':''}`;
   }
@@ -3028,7 +3083,7 @@ function p3dApply(){
   p3dSideCards(snap);
   if(P.panelsDirty) p3dPanels();
   if(P.sel) p3dDetail(P.sel);
-  P.controls.autoRotate=cfg.autoRotate;
+  P.controls.autoRotate=cfg.autoRotate; p3dNavSync();
 }
 /* การ์ดข้าง: Cooling (ซ้าย) / น้ำเย็น (ขวา) — เปลี่ยนตามเวลา */
 function p3dSideCards(snap){
@@ -3103,6 +3158,18 @@ function p3dDetail(id){
     const fx=$('#p3dFix'); if(fx) fx.onclick=()=>{ const f=loadFaults(); delete f[id]; saveFaults(f); toast(`${id} กลับมาใช้งานได้`); p3dApply(); };
   }
 }
+/* ---------- พื้นหลัง Blue / Gray / Dark ---------- */
+const P3D_BG = { blue:{ floor:0xbcc6cc, grid:0x9aa7ae }, gray:{ floor:0xc9cbcd, grid:0xa5a8ab }, dark:{ floor:0x26313a, grid:0x3e4d58 } };
+function p3dBg(){
+  const k=P3D_BG[p3s().bg]?p3s().bg:'blue', t=P3D_BG[k], st=$('#p3dStage'); if(!st) return;
+  st.classList.remove('bg-blue','bg-gray','bg-dark'); st.classList.add('bg-'+k);
+  if(P.floor){ P.floor.material.color.setHex(t.floor); P.grid.material.color.setHex(t.grid); P.grid.material.opacity = k==='dark'?.55:.32; }
+  $$('[data-bg]').forEach(b=>b.setAttribute('aria-pressed', b.dataset.bg===k));
+}
+function p3dNavSync(){
+  const c=p3s(); const r=$('[data-nav=rotate]'), t=$('[data-nav=tags]'), it=$('#p3dIdleTags');
+  if(r) r.setAttribute('aria-pressed', !!c.autoRotate); if(t) t.setAttribute('aria-pressed', !!c.idleTags); if(it) it.checked=!!c.idleTags;
+}
 /* ---------- กล้อง ---------- */
 function p3dCam(v, now){
   const C={ main:[[-6,0,17],[84,72,18]], top:[[-4,0,10],[-3.9,150,10.1]], ct:[[X.ct,6,0],[-2,30,4]], ch:[[0,1,0],[34,26,-6]], schp:[[-2,1,48],[34,30,44]] }[v]||null; if(!C) return;
@@ -3155,7 +3222,9 @@ function viewP3dSet(v){
     <label>มุมกล้องเริ่มต้น ${sel('s3View',c.view,[['main','มุมหลัก'],['top','มุมบน'],['ct','Cooling'],['ch','Chiller'],['schp','SCHP']])}</label>
     <label>ช่วงเวลาเริ่มต้น ${sel('s3Time',c.timeMode,[['hour','ชั่วโมง (เวลาล่าสุด)'],['day','วัน'],['week','สัปดาห์'],['month','เดือน']])}</label>
     <label>สีท่อน้ำระบายความร้อน (CDS/CDR) ขณะทำงาน ${sel('s3Cdw',c.cdwColor,[['blue','ฟ้า'],['orange','ส้ม (แยกน้ำร้อน/น้ำเย็น)']])}</label>
+    <label>สีพื้นหลัง Plant ${sel('s3Bg',c.bg,[['blue','Blue'],['gray','Gray'],['dark','Dark']])}</label>
     ${chk('s3Vals',c.showValues,'แสดงค่าบนป้ายเครื่องที่ทำงาน')}
+    ${chk('s3Idle',c.idleTags,'แสดงชื่อเครื่องที่ไม่ได้ทำงาน (Standby)')}
     ${chk('s3Anim',c.anim,'ภาพเคลื่อนไหว (หมุน · ไฟวิ่ง · น้ำไหล)')}
     ${chk('s3Spray',c.spray,'น้ำโปรยใน Cooling tower ที่ทำงาน')}
     ${chk('s3Shadow',c.shadows,'เงา (ปิดเมื่อเครื่องช้า · มีผลหลังโหลดหน้าใหม่)')}
@@ -3170,8 +3239,8 @@ function viewP3dSet(v){
     ${chk('s3PBest',c.panelBest,'ด้านล่าง: Chiller ที่ดีที่สุดในแต่ละวัน')}
   </div><div class="row"><button class="btn primary" id="s3Save">บันทึก</button><button class="btn" id="s3Reset">คืนค่าเริ่มต้น</button><button class="btn" id="s3Go">เปิดหน้า 3D</button></div></section>
   <section class="panel"><h3>เครื่องที่แจ้งชำรุด</h3>${Object.keys(f).length?`<table class="data"><thead><tr><th>เครื่อง</th><th>อาการ</th><th>แจ้งโดย</th><th>เวลา</th><th></th></tr></thead><tbody>${Object.entries(f).map(([id,x])=>`<tr><td><b>${esc(id)}</b></td><td>${esc(x.note||'-')}</td><td>${esc(x.by||'')}</td><td>${esc(new Date(x.at).toLocaleString('th-TH'))}</td><td><button class="btn small" data-unfault="${esc(id)}">ซ่อมเสร็จ</button></td></tr>`).join('')}</tbody></table>`:'<p class="na">ไม่มีเครื่องที่แจ้งชำรุด — แจ้งได้โดยคลิกเครื่องในหน้า 3D</p>'}</section>`;
-  const read=()=>({ labelScale:+$('#s3Ls').value, view:$('#s3View').value, timeMode:$('#s3Time').value, cdwColor:$('#s3Cdw').value, showValues:$('#s3Vals').checked, anim:$('#s3Anim').checked, spray:$('#s3Spray').checked, shadows:$('#s3Shadow').checked, autoRotate:$('#s3Rot').checked, followLatest:$('#s3Follow').checked, panelRef:$('#s3PRef').checked, panelEnergy:$('#s3PEn').checked, panelCharts:$('#s3PCh').checked, panelInsights:$('#s3PIns').checked, panelBest:$('#s3PBest').checked });
-  $('#s3Save').onclick=()=>{ S.settings.p3d=read(); saveSettings(); P.panelsDirty=true; if(P.ready) p3dApply(); toast('บันทึก 3D Setting แล้ว'); };
+  const read=()=>({ labelScale:+$('#s3Ls').value, view:$('#s3View').value, timeMode:$('#s3Time').value, cdwColor:$('#s3Cdw').value, showValues:$('#s3Vals').checked, anim:$('#s3Anim').checked, spray:$('#s3Spray').checked, shadows:$('#s3Shadow').checked, autoRotate:$('#s3Rot').checked, followLatest:$('#s3Follow').checked, panelRef:$('#s3PRef').checked, panelEnergy:$('#s3PEn').checked, panelCharts:$('#s3PCh').checked, panelInsights:$('#s3PIns').checked, panelBest:$('#s3PBest').checked, idleTags:$('#s3Idle').checked, bg:$('#s3Bg').value });
+  $('#s3Save').onclick=()=>{ S.settings.p3d=read(); saveSettings(); P.panelsDirty=true; if(P.ready){ p3dApply(); p3dBg(); } toast('บันทึก 3D Setting แล้ว'); };
   $('#s3Reset').onclick=()=>{ S.settings.p3d={...P3D_DEFAULTS}; saveSettings(); render(); toast('คืนค่าเริ่มต้นแล้ว'); };
   $('#s3Go').onclick=()=>{ $('#s3Save').click(); setMode('3d'); };
   $$('[data-unfault]',v).forEach(b=>b.onclick=()=>{ const ff=loadFaults(); delete ff[b.dataset.unfault]; saveFaults(ff); render(); toast('ยกเลิกแจ้งชำรุดแล้ว'); });
