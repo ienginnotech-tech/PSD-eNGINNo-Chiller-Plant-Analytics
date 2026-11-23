@@ -638,6 +638,21 @@ table.data tbody tr{ transition: background-color .15s ease; } table.data tbody 
 /* ตาราง Chiller ดีที่สุด: หัวคอลัมน์กึ่งกลางเหนือตัวเลข */
 table.best th, table.best td{ text-align:center !important; } table.best tbody th[scope=row]{ text-align:left !important; }
 table.best td .lead, table.best td .sub{ display:block; white-space:nowrap; }
+
+/* Regression: ตารางคัดกรองตัวแปร */
+.rgctl{ display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; }
+.seg2{ display:inline-flex; border:1px solid var(--line); border-radius:4px; overflow:hidden; }
+.seg2 button{ font:600 13px/1 var(--body); padding:8px 12px; border:0; border-left:1px solid var(--line); background:var(--surface); color:var(--ink); cursor:pointer; }
+.seg2 button:first-child{ border-left:0; } .seg2 button[aria-pressed="true"]{ background:var(--chw); color:#fff; }
+table.rgscreen{ font-size:13px; } table.rgscreen td, table.rgscreen th{ padding:5px 8px; white-space:nowrap; } table.rgscreen thead th{ text-align:center; }
+table.rgscreen tr.grp th{ background:color-mix(in srgb, var(--sunk) 85%, transparent); font-size:12px; color:var(--muted); text-align:left; padding:4px 8px; }
+table.rgscreen tr.on th[scope=row]{ color:var(--chw); } table.rgscreen th[scope=row] small{ color:var(--muted); font-weight:400; }
+table.rgscreen td.warn{ color:#b26a00; font-weight:600; } table.rgscreen td.bad{ color:var(--bad); } table.rgscreen td.good{ color:var(--good); font-weight:600; }
+.rbar{ display:inline-block; width:34px; height:7px; margin-right:6px; vertical-align:1px; background:color-mix(in srgb, var(--line) 70%, transparent); border-radius:2px; position:relative; overflow:hidden; }
+.rbar::after{ content:""; position:absolute; inset:0 auto 0 0; width:var(--w); background:var(--c); }
+.st{ display:inline-block; font-size:11.5px; padding:2px 7px; border-radius:10px; font-weight:600; }
+.st.ok{ background:color-mix(in srgb, var(--good) 20%, transparent); color:var(--good); } .st.cut{ background:color-mix(in srgb, var(--bad) 14%, transparent); color:var(--bad); }
+.st.red{ background:color-mix(in srgb, #d08a12 20%, transparent); color:#9a5a00; } .st.no{ color:var(--muted); font-weight:400; }
 </style>
 </head>
 <body data-role="user">
@@ -805,6 +820,7 @@ function toRecord(arr, fields){
   r.dT = (isNum(r.chr)&&isNum(r.chs)) ? r.chr-r.chs : null;
   r.range = (isNum(r.cds)&&isNum(r.cdr)) ? r.cds-r.cdr : null;
   r.ctapp = (isNum(r.cdr)&&isNum(r.twb)) ? r.cdr-r.twb : null;
+  r.lift = (isNum(r.cds)&&isNum(r.chs)) ? r.cds-r.chs : null;
   if(!isNum(r.theff) && isNum(r.range) && isNum(r.ctapp) && (r.range+r.ctapp)>0) r.theff = r.range/(r.range+r.ctapp);
   const okTR = isNum(r.tr) && r.tr>0;
   r.chpkwtr = okTR && isNum(r.chp) ? r.chp/r.tr : null;
@@ -932,20 +948,28 @@ function ibeta(x,a,b){ if(x<=0) return 0; if(x>=1) return 1; const bt=Math.exp(l
 function pT(t,df){ const x=df/(df+t*t); return ibeta(x,df/2,0.5); } // two-sided
 function pF(F,d1,d2){ if(!(F>0)) return 1; return ibeta(d2/(d2+d1*F), d2/2, d1/2); }
 function invert(M){ const n=M.length, A=M.map((r,i)=>[...r, ...Array.from({length:n},(_,j)=>i===j?1:0)]);
-  for(let i=0;i<n;i++){ let p=i; for(let k=i+1;k<n;k++) if(Math.abs(A[k][i])>Math.abs(A[p][i])) p=k; if(Math.abs(A[p][i])<1e-12) return null; [A[i],A[p]]=[A[p],A[i]];
+  for(let i=0;i<n;i++){ let p=i; for(let k=i+1;k<n;k++) if(Math.abs(A[k][i])>Math.abs(A[p][i])) p=k; if(Math.abs(A[p][i])<1e-9*n*Math.max(1,Math.abs(M[0][0]))) return null; [A[i],A[p]]=[A[p],A[i]];
     const v=A[i][i]; for(let j=0;j<2*n;j++) A[i][j]/=v; for(let k=0;k<n;k++) if(k!==i){ const f=A[k][i]; if(f) for(let j=0;j<2*n;j++) A[k][j]-=f*A[i][j]; } }
   return A.map(r=>r.slice(n)); }
-function ols(y, X, names){ // X without intercept
-  const n=y.length, k=names.length+1; if(n<=k+1) return null;
-  const Z = X.map(r=>[1,...r]);
+function ols(y, X, names){ // X without intercept · แก้สมการบนตัวแปรมาตรฐาน (center/scale) เพื่อความแม่นยำเชิงตัวเลข
+  const n=y.length, p=names.length, k=p+1; if(n<=k+1) return null;
+  const mu=[], sd=[];
+  for(let j=0;j<p;j++){ let m=0; for(let r=0;r<n;r++) m+=X[r][j]; m/=n; let v=0; for(let r=0;r<n;r++) v+=(X[r][j]-m)**2; const s=Math.sqrt(v/n); mu.push(m); sd.push(s>0?s:1); if(!(s>1e-9*Math.max(1,Math.abs(m)))) return null; }
+  const Z = X.map(r=>[1,...r.map((v,j)=>(v-mu[j])/sd[j])]);
   const XtX = Array.from({length:k},(_,i)=>Array.from({length:k},(_,j)=>{ let s=0; for(let r=0;r<n;r++) s+=Z[r][i]*Z[r][j]; return s; }));
   const inv = invert(XtX); if(!inv) return null;
   const Xty = Array.from({length:k},(_,i)=>{ let s=0; for(let r=0;r<n;r++) s+=Z[r][i]*y[r]; return s; });
-  const b = inv.map(row=>row.reduce((s,v,j)=>s+v*Xty[j],0));
-  const yhat = Z.map(r=>r.reduce((s,v,j)=>s+v*b[j],0));
+  const bs = inv.map(row=>row.reduce((s,v,j)=>s+v*Xty[j],0));
+  const yhat = Z.map(r=>r.reduce((s,v,j)=>s+v*bs[j],0));
   const ym = mean(y); let sse=0, sst=0; for(let i=0;i<n;i++){ sse+=(y[i]-yhat[i])**2; sst+=(y[i]-ym)**2; }
   const df=n-k, s2=sse/df, r2=1-sse/sst, adj=1-(1-r2)*(n-1)/df;
-  const se = inv.map((row,i)=>Math.sqrt(Math.max(row[i]*s2,0)));
+  if(!(r2>=-1e-9) || !isFinite(r2)) return null;
+  /* แปลงกลับเป็นหน่วยจริง: b = T·bs , Cov = T·Cov_s·Tᵀ */
+  const T = Array.from({length:k},(_,i)=>Array.from({length:k},(_,j)=>0)); T[0][0]=1;
+  for(let j=1;j<k;j++){ T[j][j]=1/sd[j-1]; T[0][j]=-mu[j-1]/sd[j-1]; }
+  const b = T.map(row=>row.reduce((s,v,j)=>s+v*bs[j],0));
+  const TC = T.map(row=>Array.from({length:k},(_,j)=>row.reduce((s,v,m)=>s+v*inv[m][j],0)));
+  const se = Array.from({length:k},(_,i)=>{ let s=0; for(let m=0;m<k;m++) s+=TC[i][m]*T[i][m]; return Math.sqrt(Math.max(s*s2,0)); });
   const terms = ['const',...names].map((nm,i)=>{ const t=b[i]/se[i]; return { name:nm, coef:b[i], se:se[i], t, p: pT(Math.abs(t),df) }; });
   const F = ((sst-sse)/(k-1))/s2;
   return { n, k, df, r2, adj, rmse:Math.sqrt(s2), F, pF: pF(F,k-1,df), terms, yhat, y };
@@ -963,28 +987,80 @@ function backward(y, cols, names, alpha){
   if(fit) fit.dropped = dropped;
   return fit;
 }
+/* ตัวแปรต้น (X) · g = กลุ่ม · def = สูตรเมื่อเป็นค่าคำนวณ (ใช้เตือนเรื่องซ้ำซ้อนเชิงเส้น) */
 const REG_VARS = {
-  tr:{label:'TR', unit:'TR'}, loadPct:{label:'Load', unit:'%'}, twb:{label:'Twb', unit:'°F'}, oat:{label:'OAT', unit:'°C'},
-  chs:{label:'CHS', unit:'°F'}, chr:{label:'CHR', unit:'°F'}, cdr:{label:'CDR', unit:'°F'}, cds:{label:'CDS', unit:'°F'}, sp:{label:'Setpoint', unit:'°F'}
+  tr:{label:'TR', unit:'TR', g:'โหลด'}, loadPct:{label:'Load', unit:'%', g:'โหลด'},
+  chs:{label:'CHS', unit:'°F', g:'น้ำเย็น'}, chr:{label:'CHR', unit:'°F', g:'น้ำเย็น'}, sp:{label:'Setpoint', unit:'°F', g:'น้ำเย็น'}, dT:{label:'ΔT_CHW', unit:'°F', g:'น้ำเย็น', def:'CHR − CHS'},
+  cds:{label:'CDS', unit:'°F', g:'น้ำระบายความร้อน'}, cdr:{label:'CDR', unit:'°F', g:'น้ำระบายความร้อน'}, range:{label:'Range', unit:'°F', g:'น้ำระบายความร้อน', def:'CDS − CDR'}, lift:{label:'Lift', unit:'°F', g:'น้ำระบายความร้อน', def:'CDS − CHS'},
+  eapp:{label:'Evap_app', unit:'°F', g:'Approach'}, capp:{label:'Cond_app', unit:'°F', g:'Approach'}, ctapp:{label:'CT_app', unit:'°F', g:'Approach', def:'CDR − Twb'},
+  twb:{label:'Twb', unit:'°F', g:'อากาศ'}, oat:{label:'OAT', unit:'°C', g:'อากาศ'}, rh:{label:'RH', unit:'%', g:'อากาศ'},
+  gpm:{label:'CHW_GPM', unit:'GPM', g:'อัตราการไหล'}, cgpm:{label:'CDW_GPM', unit:'GPM', g:'อัตราการไหล'}
 };
-const REG_TARGETS = { allkw:'Plant kW (Chiller+CHP+CDP+CT)', chkw:'Chiller kW', kwtrp:'Plant kW/TRp' };
+const REG_TARGETS = { allkw:'Plant kW (Chiller+CHP+CDP+CT)', chkw:'Chiller kW', kwtrp:'Plant kW/TRp', kwtr:'Chiller kW/TR', chpkwtr:'CHP kW/TR', cdpkwtr:'CDP kW/TR', ctkwtr:'Cooling kW/TR' };
+const REG_LHS = { allkw:'kW_plant', chkw:'kW_chiller', kwtrp:'kW/TRp', kwtr:'kW/TR_chiller', chpkwtr:'kW/TR_CHP', cdpkwtr:'kW/TR_CDP', ctkwtr:'kW/TR_CT' };
+/* R² ของคอลัมน์ j เมื่อถดถอยกับคอลัมน์อื่นในชุด (ใช้หา VIF / ตัวแปรซ้ำซ้อน) */
+function auxR2(cols, j, others){
+  if(!others.length) return 0;
+  const y=cols.map(r=>r[j]), X=cols.map(r=>others.map(k=>r[k])), f=ols(y, X, others.map(String));
+  return f ? f.r2 : 1;
+}
+/* ตารางคัดกรองตัวแปร: r, P (ตัวแปรเดียว), P (ทุกตัวที่เลือก), VIF */
+function regScreen(rsP, target, selected, dummies){
+  const keys=Object.keys(REG_VARS), out={};
+  for(const k of keys){
+    const a=rsP.filter(r=>isNum(r[k])&&isNum(r[target])); const n=a.length;
+    if(n<5){ out[k]={ n }; continue; }
+    const xs=a.map(r=>r[k]), ys=a.map(r=>r[target]), mx=mean(xs), my=mean(ys);
+    let sxy=0,sxx=0,syy=0; for(let i=0;i<n;i++){ const dx=xs[i]-mx, dy=ys[i]-my; sxy+=dx*dy; sxx+=dx*dx; syy+=dy*dy; }
+    const r = sxx>0&&syy>0 ? sxy/Math.sqrt(sxx*syy) : null;
+    const t = isNum(r)&&Math.abs(r)<1 ? r*Math.sqrt((n-2)/(1-r*r)) : null;
+    out[k]={ n, mean:mx, r, p1: isNum(t)?pT(Math.abs(t),n-2):(isNum(r)?0:null) };
+  }
+  return out;
+}
+/* ตัดตัวแปรที่ซ้ำซ้อนเชิงเส้น (R² กับตัวที่รับไว้แล้ว ≥ 0.999 เช่น ΔT = CHR − CHS) */
+function dropRedundant(rs, vars, dch){
+  const keep=[], red=[], D=(dch||[]);
+  const std = vars.map(v=>{ const a=rs.map(r=>r[v]), m=mean(a), s=Math.sqrt(a.reduce((x,y)=>x+(y-m)**2,0)/Math.max(1,a.length-1))||1; return a.map(x=>(x-m)/s); });
+  const cols = rs.map((r,i)=>[...vars.map((_,j)=>std[j][i]), ...D.map(c=>r.ch===c?1:0)]);
+  const dIdx = D.map((_,k)=>vars.length+k);
+  const order=[...vars.keys()].sort((a,b)=>(!!REG_VARS[vars[a]].def)-(!!REG_VARS[vars[b]].def));
+  order.forEach(j=>{ const v=vars[j]; const raw=rs.map(r=>r[v]), rng=Math.max(...raw)-Math.min(...raw); if(!(rng>1e-9*Math.max(1,Math.abs(raw[0])))){ red.push({v, why:'ค่าคงที่'}); return; }
+    const r2=auxR2(cols, j, [...keep.map(k=>vars.indexOf(k)), ...dIdx]); if(r2>=0.999) red.push({v, why: REG_VARS[v].def ? '= '+REG_VARS[v].def : (D.length && auxR2(cols,j,dIdx)>=0.999 ? 'ค่าคงที่รายชุด (ซ้ำกับ C(chiller))' : 'อธิบายได้ด้วยตัวที่เลือกแล้ว (R² '+(r2*100).toFixed(2)+'%)')}); else keep.push(v); });
+  return { keep: vars.filter(v=>keep.includes(v)), red };
+}
 function regressionModel(recs, period, opt){
   const inP = r => r.m>=period[0] && r.m<=period[1];
-  const vars = opt.vars;
-  const rs = recs.filter(r=>inP(r) && isNum(r[opt.target]) && vars.every(v=>isNum(r[v])));
+  const vars0 = (opt.vars||[]).filter(v=>REG_VARS[v]);
+  const rsP = recs.filter(r=>inP(r) && isNum(r[opt.target]));
+  const rs0 = rsP.filter(r=>vars0.every(v=>isNum(r[v])));
+  const chs0 = [...new Set(rs0.map(r=>r.ch))].sort(sortCh);
+  const { keep:vars, red } = rs0.length>10 ? dropRedundant(rs0, vars0, opt.dummies ? chs0.slice(1) : []) : { keep:vars0, red:[] };
+  const rs = rs0;
   const chs = [...new Set(rs.map(r=>r.ch))].sort(sortCh);
   const dummies = opt.dummies ? chs.slice(1) : [];
   const names = [...vars.map(v=>REG_VARS[v].label), ...dummies.map(c=>'[' + c + ']')];
   const cols = rs.map(r=>[...vars.map(v=>r[v]), ...dummies.map(c=> r.ch===c?1:0)]);
   const y = rs.map(r=>r[opt.target]);
-  const fit = rs.length ? backward(y, cols, names, opt.alpha) : null;
+  const auto = opt.auto!==false;
+  let fit = null;
+  if(rs.length) fit = auto ? backward(y, cols, names, opt.alpha) : ols(y, cols, names);
+  if(fit && !auto) fit.dropped=[];
+  /* P-value เมื่อใส่ทุกตัวที่เลือก + VIF */
+  const full = rs.length ? ols(y, cols, names) : null, pFull={}, vif={};
+  if(full) vars.forEach((v,i)=>{ pFull[v]=full.terms[i+1].p; });
+  if(rs.length>vars.length+3){ const vc=rs.map(r=>vars.map(v=>r[v])); vars.forEach((v,j)=>{ const r2=auxR2(vc, j, vars.map((_,k)=>k).filter(k=>k!==j)); vif[v]= r2>=1 ? Infinity : 1/(1-r2); }); }
+  const screen = regScreen(rsP, opt.target, vars0, opt.dummies);
   const perCh = chs.map(c=>{
     const sub = rs.filter(r=>r.ch===c);
     if(sub.length < Math.max(opt.minN, vars.length+3)) return { ch:c, n:sub.length, fit:null };
-    const f = backward(sub.map(r=>r[opt.target]), sub.map(r=>vars.map(v=>r[v])), vars.map(v=>REG_VARS[v].label), opt.alpha);
+    /* รายชุด: ตัดตัวแปรที่คงที่/ซ้ำซ้อนภายในชุดนั้นก่อน (เช่น GPM ออกแบบของเครื่อง) */
+    const vs = dropRedundant(sub, vars, []).keep;
+    const yy=sub.map(r=>r[opt.target]), xx=sub.map(r=>vs.map(v=>r[v])), nn=vs.map(v=>REG_VARS[v].label);
+    const f = !vs.length ? null : auto ? backward(yy, xx, nn, opt.alpha) : ols(yy, xx, nn);
     return { ch:c, n:sub.length, fit:f };
   });
-  return { period, n:rs.length, baseCh: opt.dummies ? chs[0] : null, chs, fit, perCh, recs: rs };
+  return { period, n:rs.length, baseCh: opt.dummies ? chs[0] : null, chs, fit, perCh, recs: rs, vars, red, pFull, vif, screen, auto };
 }
 function predictWith(fit, r, vars, baseCh){
   if(!fit) return null; let y=0;
@@ -999,7 +1075,7 @@ function predictWith(fit, r, vars, baseCh){
 }
 function equationText(fit, target){
   if(!fit) return '—';
-  const lhs = target==='kwtrp' ? 'kW/TRp' : target==='chkw' ? 'kW_chiller' : 'kW_plant';
+  const lhs = REG_LHS[target] || target;
   let s = lhs + ' = ' + fmt(fit.terms[0].coef, 3);
   const dum = [];
   for(const t of fit.terms.slice(1)){
@@ -1081,7 +1157,7 @@ const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'
 
 const LS_KEY = 'psd_chiller_settings_v1';
 const DEFAULT_SETTINGS = { filter:{...DEFAULT_FILTER}, before:['2569-04','2569-05'], after:['2569-06','2569-08'], minN:10, groupMinN:5,
-  reg:{ target:'allkw', vars:['tr','twb','cdr','chs'], dummies:true, alpha:0.05, r2min:0.80, minN:20 }, stdKwtr:0.574, stdKwtrp:0.75, hours:2, calcMode:'valid', gran:'month', sync:{ url:'', key:'', auto:true, mins:5 } };
+  reg:{ target:'allkw', vars:['tr','twb','cdr','chs'], dummies:true, auto:true, alpha:0.05, r2min:0.80, minN:20 }, stdKwtr:0.574, stdKwtrp:0.75, hours:2, calcMode:'valid', gran:'month', sync:{ url:'', key:'', auto:true, mins:5 } };
 function loadSettings(){ try{ const s=JSON.parse(localStorage.getItem(LS_KEY)||'null'); if(s) return {...DEFAULT_SETTINGS, ...s, filter:{...DEFAULT_FILTER, ...(s.filter||{})}, reg:{...DEFAULT_SETTINGS.reg, ...(s.reg||{})}, sync:{...DEFAULT_SETTINGS.sync, ...(s.sync||{})}}; }catch(e){} return JSON.parse(JSON.stringify(DEFAULT_SETTINGS)); }
 function saveSettings(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(S.settings)); }catch(e){} }
 
@@ -1723,6 +1799,7 @@ function regCard(model, title, idx){
   </tbody></table></div>
   ${dums.length?`<details><summary>ค่าปรับเฉพาะชุด C(chiller) · ชุดฐาน ${esc(model.baseCh)} = 0</summary><div class="tscroll"><table class="data"><thead><tr><th>ชุด</th><th>C (kW)</th><th>P-value</th></tr></thead><tbody>${dums.map(t=>`<tr><th scope="row">${esc(t.name.slice(1,-1))}</th><td>${fmt(t.coef,2)}</td><td>${fmtP(t.p)}</td></tr>`).join('')}</tbody></table></div><p class="legend-note">ชุดที่ไม่มีนัยสำคัญถูกรวมกับชุดฐาน (C = 0)</p></details>`:''}
   ${f.dropped.length?`<p class="legend-note">ตัดออกเพราะ P-value ≥ ${o.alpha}: ${f.dropped.map(esc).join(', ')}</p>`:''}
+  ${model.red.length?`<p class="legend-note">ตัดเพราะซ้ำซ้อนเชิงเส้น: ${model.red.map(x=>esc(REG_VARS[x.v].label)+' ('+esc(x.why)+')').join(', ')}</p>`:''}${model.auto?'':`<p class="legend-note">โหมดทดสอบเอง: แสดงทุกตัวที่เลือก ตัวที่ P ≥ ${o.alpha} (สีแดง) ไม่มีนัยสำคัญ</p>`}
   <div class="chartbox"><canvas id="cRegSc${idx}"></canvas></div></div>`;
 }
 function perChTable(mb, ma){
@@ -1731,20 +1808,47 @@ function perChTable(mb, ma){
   return `<div class="tscroll"><table class="data"><thead><tr><th rowspan="2">ชุด</th><th colspan="3">ก่อนปรับปรุง</th><th colspan="3">หลังปรับปรุง</th></tr><tr><th>n</th><th>R²</th><th>สมการ</th><th>n</th><th>R²</th><th>สมการ</th></tr></thead><tbody>
   ${chs.map(c=>`<tr><th scope="row">${esc(c)}</th>${cell(mb.perCh.find(x=>x.ch===c))}${cell(ma.perCh.find(x=>x.ch===c))}</tr>`).join('')}</tbody></table></div>`;
 }
+/* ตารางคัดกรองตัวแปร X: เลือก/ยกเลิกได้จากตาราง · P-value ทุกตัว */
+function regScreenTable(mb, ma){
+  const o=S.settings.reg, a=o.alpha, sel=new Set(o.vars);
+  const pc = p => !isNum(p) ? '<td class="na">–</td>' : `<td class="${p<a?'good':'bad'}">${fmtP(p)}</td>`;
+  const rc = r => !isNum(r) ? '<td class="na">–</td>' : `<td><span class="rbar" style="--w:${Math.round(Math.abs(r)*100)}%;--c:${r>=0?'var(--chw)':'var(--cdw)'}"></span>${(r>=0?'+':'')+r.toFixed(2)}</td>`;
+  const vc = v => !isNum(v) ? '<td class="na">–</td>' : `<td class="${v>10?'bad':v>5?'warn':''}">${v===Infinity?'∞':v>=100?'>100':v.toFixed(1)}</td>`;
+  const status = (m,k) => {
+    if(!sel.has(k)) return '<span class="st no">ไม่ได้เลือก</span>';
+    const rd=m.red.find(x=>x.v===k); if(rd) return `<span class="st red" title="${esc(rd.why)}">ซ้ำซ้อน</span>`;
+    const inEq = m.fit && m.fit.terms.some(t=>t.name===REG_VARS[k].label);
+    return inEq ? '<span class="st ok">✓ ในสมการ</span>' : `<span class="st cut">ตัด (P ≥ ${a})</span>`;
+  };
+  const groups=[...new Set(Object.values(REG_VARS).map(x=>x.g))];
+  const side = (m,k) => { const s=m.screen[k]||{}; return `${rc(s.r)}${pc(s.p1)}${sel.has(k)?pc(m.pFull[k]):'<td class="na">–</td>'}${sel.has(k)?vc(m.vif[k]):'<td class="na">–</td>'}<td>${status(m,k)}</td>`; };
+  return `<div class="tscroll"><table class="data rgscreen"><thead>
+    <tr><th rowspan="2">ใช้</th><th rowspan="2">ตัวแปร X</th><th colspan="5">ก่อนปรับปรุง · n ${mb.n}</th><th colspan="5">หลังปรับปรุง · n ${ma.n}</th></tr>
+    <tr><th title="สหสัมพันธ์กับ Y">r</th><th title="P-value เมื่อใช้ตัวแปรนี้ตัวเดียว">P เดี่ยว</th><th title="P-value เมื่อใส่ทุกตัวที่เลือกพร้อมกัน">P รวม</th><th title="Variance Inflation Factor > 10 = ซ้ำซ้อนกับตัวอื่นสูง">VIF</th><th>สถานะ</th>
+        <th>r</th><th>P เดี่ยว</th><th>P รวม</th><th>VIF</th><th>สถานะ</th></tr></thead><tbody>
+    ${groups.map(g=>`<tr class="grp"><th colspan="12">${esc(g)}</th></tr>`+Object.entries(REG_VARS).filter(([,x])=>x.g===g).map(([k,x])=>`<tr class="${sel.has(k)?'on':''}"><td><input type="checkbox" class="rgx" value="${k}" ${sel.has(k)?'checked':''} aria-label="ใช้ ${esc(x.label)}"></td><th scope="row">${esc(x.label)} <small>${x.unit}${x.def?' · = '+esc(x.def):''}</small></th>${side(mb,k)}${side(ma,k)}</tr>`).join('')).join('')}
+  </tbody></table></div>
+  <p class="legend-note"><b>r</b> = สหสัมพันธ์กับ Y (−1 ถึง +1) · <b>P เดี่ยว</b> = ทดสอบตัวแปรนี้ตัวเดียว · <b>P รวม</b> = เมื่อใส่ทุกตัวที่ติ๊กพร้อมกัน (สีเขียว = มีนัยสำคัญ &lt; ${a}) · <b>VIF</b> &gt; 10 = ข้อมูลซ้อนกับตัวแปรอื่นมาก ค่าสัมประสิทธิ์จะแกว่ง · <b>ซ้ำซ้อน</b> = เป็นผลบวก/ลบของตัวที่เลือกแล้วพอดี (เช่น ΔT = CHR − CHS) ระบบตัดอัตโนมัติ</p>`;
+}
 function viewReg(v){
   const o=S.settings.reg;
   const mb=regressionModel(S.valid, S.settings.before, o), ma=regressionModel(S.valid, S.settings.after, o);
-  v.innerHTML = `<header class="vh"><h2>สมการ chiller plant ก่อน – หลังปรับปรุง</h2><p>Multiple linear regression ตัดตัวแปรที่ P-value ≥ ${o.alpha} ออกทีละตัว (backward elimination) แล้วตรวจ R² ≥ ${fmt(o.r2min*100,0)}%</p></header>
-  <section class="panel controls">
-    <label>ตัวแปรตาม <select id="rgT">${Object.entries(REG_TARGETS).map(([k,l])=>`<option value="${k}" ${k===o.target?'selected':''}>${l}</option>`).join('')}</select></label>
-    <fieldset><legend>ตัวแปรต้นที่ทดสอบ</legend>${Object.entries(REG_VARS).map(([k,x])=>`<label class="ck"><input type="checkbox" value="${k}" ${o.vars.includes(k)?'checked':''}> ${x.label} <small>${x.unit}</small></label>`).join('')}</fieldset>
+  const auto=o.auto!==false;
+  v.innerHTML = `<header class="vh"><h2>สมการ chiller plant ก่อน – หลังปรับปรุง</h2><p>Multiple linear regression · ${auto?`ตัดตัวแปรที่ P-value ≥ ${o.alpha} ออกทีละตัว (backward elimination)`:'ใช้ทุกตัวแปรที่เลือก (ทดสอบเอง)'} แล้วตรวจ R² ≥ ${fmt(o.r2min*100,0)}%</p></header>
+  <section class="panel controls rgctl">
+    <label>ตัวแปรตาม (Y) <select id="rgT">${Object.entries(REG_TARGETS).map(([k,l])=>`<option value="${k}" ${k===o.target?'selected':''}>${l}</option>`).join('')}</select></label>
+    <div class="seg2" role="group" aria-label="วิธีเลือกตัวแปร"><button type="button" data-rgauto="1" aria-pressed="${auto}">ตัดอัตโนมัติ (P ≥ α)</button><button type="button" data-rgauto="0" aria-pressed="${!auto}">ทดสอบเอง (ใช้ทุกตัวที่เลือก)</button></div>
+    <label>α <select id="rgA">${[0.01,0.05,0.10].map(x=>`<option value="${x}" ${x===o.alpha?'selected':''}>${x}</option>`).join('')}</select></label>
     <label class="ck"><input type="checkbox" id="rgD" ${o.dummies?'checked':''}> ค่าปรับเฉพาะชุด C(chiller)</label>
-    <button class="btn" id="rgReset">ใช้ค่าเริ่มต้น</button>
+    <button class="btn" id="rgAll">เลือกทั้งหมด</button><button class="btn" id="rgReset">ใช้ค่าเริ่มต้น</button>
   </section>
+  <section class="panel"><h3>คัดเลือกตัวแปรต้น (X) · Y = ${esc(REG_TARGETS[o.target])}</h3>${regScreenTable(mb,ma)}</section>
   <section class="grid2">${regCard(mb,'ก่อนปรับปรุง',0)}${regCard(ma,'หลังปรับปรุง',1)}</section>
   <section class="panel"><h3>สมการแยกรายชุด Chiller + CHP + CDP + Cooling (ไม่รวม SCHP)</h3>${perChTable(mb,ma)}</section>`;
-  const upd = ()=>{ o.target=$('#rgT').value; o.vars=$$('fieldset input:checked',v).map(i=>i.value); if(!o.vars.length) o.vars=['tr']; o.dummies=$('#rgD').checked; saveSettings(); render(); };
-  $('#rgT').onchange=upd; $('#rgD').onchange=upd; $$('fieldset input',v).forEach(i=>i.onchange=upd);
+  const upd = ()=>{ o.target=$('#rgT').value; o.alpha=+$('#rgA').value; o.vars=$$('.rgx:checked',v).map(i=>i.value); if(!o.vars.length) o.vars=['tr']; o.dummies=$('#rgD').checked; saveSettings(); render(); };
+  $('#rgT').onchange=upd; $('#rgA').onchange=upd; $('#rgD').onchange=upd; $$('.rgx',v).forEach(i=>i.onchange=upd);
+  $$('[data-rgauto]',v).forEach(b=>b.onclick=()=>{ o.auto=b.dataset.rgauto==='1'; saveSettings(); render(); });
+  $('#rgAll').onclick=()=>{ o.vars=Object.keys(REG_VARS); saveSettings(); render(); };
   $('#rgReset').onclick=()=>{ S.settings.reg={...DEFAULT_SETTINGS.reg, vars:[...DEFAULT_SETTINGS.reg.vars]}; saveSettings(); render(); };
   const p=PAL();
   [mb,ma].forEach((m,i)=>{ if(!m.fit) return;
