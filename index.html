@@ -724,6 +724,7 @@ tr.st-alert svg.spark path{ stroke:var(--bad); } tr.st-watch svg.spark path{ str
 .ml-tacc{ display:flex; flex-wrap:wrap; gap:6px 16px; font-size:13px; color:var(--muted); margin:2px 0 8px; } .ml-tacc b{ color:var(--ink); }
 .p3d-healthbox{ margin-top:10px; } .p3d-healthbox[hidden]{ display:none; } .p3d-healthbox .ml-health{ margin:0; }
 @media (max-width:760px){ .ml-trng select{ max-width:none; flex:1; } }
+.ml-imp-row{ grid-template-columns:minmax(120px,170px) minmax(0,1fr) 118px !important; } .ml-imp-row b small{ font-weight:400; color:var(--muted); font-size:11px; margin-left:4px; }
 </style>
 </head>
 <body data-role="user">
@@ -3704,7 +3705,8 @@ function mlRender(){
   mlKillCharts();
   const pc=s=>s.r2>=0.85?'good':s.r2>=0.7?'warn':'bad';
   const spVals=Object.keys(R.spCount).map(Number).sort((a,b)=>a-b), spN=R.rows.length;
-  const impMax=Math.max(...R.imp.map(x=>x.v),1e-9);
+  const impSum=R.imp.reduce((s,x)=>s+Math.max(0,x.v),0)||1e-9, impPct=x=>Math.max(0,x.v)/impSum*100;
+  const wx=R.imp.filter(x=>['oat','rh','twb'].includes(x.key)).reduce((s,x)=>s+impPct(x),0);
   box.innerHTML=`
   <header class="ml-head"><div><h2><span class="ml-mark" aria-hidden="true">◆</span>Chiller_ML <small>Machine Learning · ทำนายกำลังไฟฟ้าจากข้อมูลจริง</small></h2>
     <p>ฝึก ${R.nTr.toLocaleString()} บันทึก (${esc(mLabel(R.months[0]))} – ${esc(mLabel(R.months[R.months.length-R.testM.length-1]))}) · ทดสอบกับเดือนที่โมเดลไม่เคยเห็น ${R.nTe.toLocaleString()} บันทึก (${R.testM.map(m=>esc(mLabel(m))).join(', ')}) · ${(R.ms/1000).toFixed(1)} วินาที</p></div>
@@ -3713,8 +3715,8 @@ function mlRender(){
     <div class="ml-kpi"><small>ข้อมูล</small><b>${R.rows.length.toLocaleString()} บันทึก</b><span>${R.chs.length} เครื่อง · ${R.days} วัน</span></div></section>
   <section class="ml-grid">
     <div class="panel"><h3>ตัวแปรไหนมีผลกับค่าไฟมากที่สุด <small>(${esc(best)})</small></h3>
-      <div class="ml-imp">${R.imp.map(x=>`<div class="ml-imp-row"><span>${esc(x.label)}</span><i style="--w:${Math.max(0,x.v/impMax*100).toFixed(1)}%"></i><b>${x.v>0.05?'+'+fmt(x.v,1):'≈0'} ${unit}</b></div>`).join('')}</div>
-      <p class="legend-note">ค่า = ความคลาดเคลื่อนที่เพิ่มขึ้น (kW) เมื่อสุ่มสลับค่าตัวแปรนั้นในชุดทดสอบ (permutation importance) · ยิ่งมากยิ่งสำคัญ · ≈0 = โมเดลแทบไม่ใช้ตัวแปรนั้น</p></div>
+      <div class="ml-imp">${R.imp.map(x=>{ const p=impPct(x); return `<div class="ml-imp-row"><span>${esc(x.label)}</span><i style="--w:${p.toFixed(1)}%"></i><b>${p>=0.5?fmt(p,1)+'%':'≈0%'} <small>${x.v>0.05?'+'+fmt(x.v,1)+' kW':''}</small></b></div>`; }).join('')}</div>
+      <p class="legend-note"><b>% = สัดส่วนความสำคัญ</b> (รวม 100%) · วัดจากความคลาดเคลื่อนที่เพิ่มขึ้นเมื่อสุ่มสลับค่าตัวแปรนั้นในชุดทดสอบ (permutation importance · ตัวเลข kW เล็ก ๆ คือค่าที่วัดได้จริง) · บอกว่าโมเดล<b>พึ่ง</b>ตัวแปรไหนมาก ไม่ใช่ kW ที่จะประหยัดได้ · Outdoor temp, RH, Wet bulb เกี่ยวข้องกัน ควรอ่านรวมเป็น <b>สภาพอากาศ ≈ ${fmt(wx,1)}%</b> · Setpoint ≈0% เพราะข้อมูลเดิน 42°F เกือบตลอด ไม่ได้แปลว่าไม่มีผล</p></div>
     <div class="panel"><h3>ค่าจริงเทียบค่าทำนาย · เดือนทดสอบ</h3><div class="chartbox"><canvas id="mlSc"></canvas></div></div>
   </section>
   <section class="panel ml-trend"><div class="ph"><h3 id="mlTrT">ค่าไฟ · จริง vs ทำนาย</h3><div class="ml-tbar" id="mlTBar"></div></div><div class="ml-tacc" id="mlTAcc"></div><div class="chartbox" style="height:280px"><canvas id="mlDay"></canvas></div><p class="legend-note">เส้นทึบ = ช่วงทดสอบ (โมเดลไม่เคยเห็น) · เส้นประ = ช่วงที่ใช้ฝึก (ทายได้ใกล้เป็นปกติ) · kWh = kW ของบันทึก × ชั่วโมงต่อบันทึก รวมตามช่วงเวลา</p></section>
