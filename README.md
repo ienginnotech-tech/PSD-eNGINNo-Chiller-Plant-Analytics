@@ -44,6 +44,13 @@
 - SCHP ใช้คอลัมน์ Record_(kW)_SCHP-xx / H-SCHP-xx (ไม่รวมใน kW/TRp) · สถานะชำรุดเก็บในเบราว์เซอร์ที่แจ้ง
 - three.js r128 (cdnjs) + OrbitControls (jsdelivr) โหลดเมื่อเข้า 3D ครั้งแรก
 
+## Chiller_ML (Machine Learning)
+ปุ่ม **◆ Chiller_ML** ต่อจาก "หลังบ้าน" · ฝึกโมเดลในเบราว์เซอร์จากข้อมูลในระบบ (ไม่ส่งข้อมูลออก) · ใช้ได้ทุกผู้ใช้
+- Y: Chiller kW หรือ Plant kW (ไม่รวม SCHP) · X: TR, Setpoint, CDR, Twb, OAT, RH, ชั่วโมง + เครื่อง chiller
+- โมเดล: Linear Regression · Random Forest · Gradient Boosting · ทดสอบกับ 2 เดือนล่าสุดที่โมเดลไม่เคยเห็น
+- แสดง: ความแม่น (R², MAE, MAPE) · ความสำคัญของตัวแปร · จริง vs ทำนาย · What-if setpoint (kWh/บาทต่อปี) · จำลองว่าเครื่องไหนกินไฟน้อยสุดที่โหลดที่กำหนด
+- สคริปต์ Python เทียบผล: `tools/chiller_ml_real.py`
+
 ## Ai-eNGINNo (AI Analytics ด้วย Claude) — admin เท่านั้น
 เมนู "การตั้งค่าข้อมูลระบบ" → **✦ Ai-eNGINNo** (ใต้ "จัดการผู้ใช้") · 4 หัวข้อ: วิเคราะห์ประสิทธิภาพ · สาเหตุ kW/TRp สูง · ปัญหาที่ต้องแก้ด่วน · คำแนะนำและสรุป + Auto Analyze + แชตถามต่อ
 - ใช้ Web App URL/KEY เดียวกับการซิงก์ (ต้องวางโค้ด `tools/apps_script_Code.gs` เวอร์ชันใหม่ที่มี `doPost` แล้ว Deploy เป็นเวอร์ชันใหม่)
