@@ -687,6 +687,17 @@ body.modeml .viewml{ display:block; padding:14px 16px 24px; min-height:calc(100v
 table.ml-rank tr.ml-best{ background:color-mix(in srgb, var(--good) 16%, transparent); } table.ml-rank tr.over{ opacity:.55; }
 .ml-clean{ display:grid; grid-template-columns:minmax(240px,360px) minmax(0,1fr); gap:16px; align-items:start; }
 @media (max-width:1000px){ .ml-grid, .ml-clean{ grid-template-columns:minmax(0,1fr); } }
+
+.ml-sph{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; }
+.ml-spin-box{ display:inline-flex; align-items:center; gap:6px; }
+.ml-spin-box input{ width:92px; padding:5px 8px; font:700 20px/1.1 var(--cond); color:var(--chw); text-align:center; border:2px solid var(--chw); border-radius:6px; background:var(--paper); }
+.ml-spin-box input:focus-visible{ outline:2px solid var(--chw); outline-offset:2px; } .ml-spin-box small{ font-size:14px; color:var(--muted); font-weight:600; }
+.ml-slider{ flex:1 1 220px; position:relative; padding-bottom:20px; min-width:0; }
+.ml-slider input[type=range]{ width:100%; margin:0; accent-color:var(--chw); }
+.ml-scale{ position:absolute; left:8px; right:8px; top:22px; height:18px; }
+.ml-scale span{ position:absolute; top:0; transform:translateX(-50%); font-size:11px; color:var(--muted); line-height:1; padding-top:7px; }
+.ml-scale span::before{ content:""; position:absolute; left:50%; top:0; width:1px; height:6px; background:var(--muted); }
+.ml-scale span.h::before{ height:4px; opacity:.6; }
 </style>
 </head>
 <body data-role="user">
@@ -3588,8 +3599,9 @@ function mlRender(){
   </section>
   <section class="panel"><h3>ค่าไฟรายวัน · จริง vs ทำนาย (เดือนทดสอบ)</h3><div class="chartbox" style="height:260px"><canvas id="mlDay"></canvas></div></section>
   <section class="ml-grid">
-    <div class="panel ml-sp"><h3>ปรับ Setpoint น้ำเย็น ประหยัดไฟได้เท่าไร</h3>
-      <div class="ml-sprow"><label for="mlSp">Setpoint ใหม่</label><input type="range" id="mlSp" min="40" max="46" step="0.5" value="${ML.sp}"><b id="mlSpV">${ML.sp} °F</b>
+    <div class="panel ml-sp"><h3 class="ml-sph">ปรับ Setpoint น้ำเย็น ประหยัดไฟได้เท่าไร <span class="ml-spin-box"><input type="number" id="mlSpN" min="38" max="50" step="0.1" value="${ML.sp.toFixed(1)}" aria-label="Setpoint ใหม่ (°F) ทศนิยม 1 ตำแหน่ง"><small>°F</small></span></h3>
+      <div class="ml-sprow"><label for="mlSp">Setpoint ใหม่</label><div class="ml-slider"><input type="range" id="mlSp" min="40" max="46" step="${(ML.sp*2)%1?'any':'0.5'}" value="${ML.sp}" list="mlSpTicks"><datalist id="mlSpTicks">${Array.from({length:13},(_,i)=>`<option value="${40+i*0.5}"></option>`).join('')}</datalist>
+        <div class="ml-scale" aria-hidden="true">${Array.from({length:13},(_,i)=>{ const v=40+i*0.5; return `<span style="left:${(i/12*100).toFixed(3)}%" class="${v%1?'h':'w'}">${v%1?'':v}</span>`; }).join('')}</div></div>
         <label for="mlRate">ค่าไฟ</label><input type="number" id="mlRate" min="1" max="20" step="0.1" value="${ML.rate}"> <small>บาท/kWh</small></div>
       <div id="mlSpOut"></div>
       <div class="ml-spdist"><small>Setpoint ที่เดินจริงในข้อมูล:</small> ${spVals.map(v=>`<span class="${R.spCount[v]/spN<0.05?'thin':''}">${v}°F <b>${(R.spCount[v]/spN*100).toFixed(R.spCount[v]/spN<0.01?1:0)}%</b></span>`).join('')}</div></div>
@@ -3604,7 +3616,11 @@ function mlRender(){
   /* events */
   $$('[data-mlt]',box).forEach(b=>b.onclick=()=>{ if(ML.busy) return; ML.target=b.dataset.mlt; mlEnter(true); });
   $('#mlRetrain').onclick=()=>mlEnter(true);
-  const sl=$('#mlSp'); sl.oninput=()=>{ ML.sp=+sl.value; $('#mlSpV').textContent=ML.sp+' °F'; mlSpOut(); };
+  const sl=$('#mlSp'), sn=$('#mlSpN');
+  /* ลากแถบ = ทีละ 0.5 °F · พิมพ์ในกล่อง = ทศนิยม 1 ตำแหน่ง แถบวิ่งตาม */
+  sl.oninput=()=>{ const v=Math.round(+sl.value*2)/2; sl.step='0.5'; sl.value=v; ML.sp=v; sn.value=v.toFixed(1); mlSpOut(); };
+  sn.oninput=()=>{ const v=Math.round(parseFloat(sn.value)*10)/10; if(!isNum(v)||v<38||v>50) return; ML.sp=v; sl.step='any'; sl.value=Math.min(46,Math.max(40,v)); mlSpOut(); };
+  sn.onchange=()=>{ const v=Math.min(50,Math.max(38,Math.round((parseFloat(sn.value)||ML.sp)*10)/10)); sn.value=v.toFixed(1); ML.sp=v; sl.step=(v*2)%1?'any':'0.5'; sl.value=Math.min(46,Math.max(40,v)); mlSpOut(); };
   $('#mlRate').oninput=e=>{ ML.rate=+e.target.value||0; mlSpOut(); };
   /* ค่าเริ่มต้นของตัวจำลอง = ค่ากลางของเดือนล่าสุด */
   const last=R.rows.filter(r=>r.m===R.months[R.months.length-1]);
