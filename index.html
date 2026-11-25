@@ -698,6 +698,26 @@ table.ml-rank tr.ml-best{ background:color-mix(in srgb, var(--good) 16%, transpa
 .ml-scale span{ position:absolute; top:0; transform:translateX(-50%); font-size:11px; color:var(--muted); line-height:1; padding-top:7px; }
 .ml-scale span::before{ content:""; position:absolute; left:50%; top:0; width:1px; height:6px; background:var(--muted); }
 .ml-scale span.h::before{ height:4px; opacity:.6; }
+
+/* ---- Health Trend ---- */
+.ml-health .ph{ align-items:flex-start; }
+.hl-chips{ display:flex; flex-wrap:wrap; gap:6px; } .hl-chip{ font-size:12.5px; font-weight:700; padding:4px 10px; border-radius:12px; border:1px solid var(--line); }
+.hl-chip.alert{ color:#fff; background:var(--bad); border-color:var(--bad); } .hl-chip.watch{ color:#5a3400; background:#f6c36b; border-color:#e0a63e; }
+.hl-chip.ok{ color:var(--good); background:color-mix(in srgb, var(--good) 14%, transparent); } .hl-chip.cost{ background:var(--surface); }
+.ml-hgrid{ display:grid; grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr); gap:14px; align-items:start; }
+table.hl-tb{ font-size:12.5px; } table.hl-tb th, table.hl-tb td{ padding:5px 8px; white-space:nowrap; vertical-align:middle; } table.hl-tb td.num{ text-align:right; font-variant-numeric:tabular-nums; }
+table.hl-tb tr[data-hl]{ cursor:pointer; } table.hl-tb tr.sel{ outline:2px solid var(--chw); outline-offset:-2px; }
+table.hl-tb td.bad, table.hl-tb b.bad{ color:var(--bad); font-weight:700; } table.hl-tb td.warn{ color:#b26a00; font-weight:700; }
+tr.st-alert th[scope=row]{ border-left:4px solid var(--bad); } tr.st-watch th[scope=row]{ border-left:4px solid #e0a63e; }
+.hl-b{ display:inline-block; padding:2px 8px; border-radius:10px; font-size:11.5px; font-weight:700; }
+.hl-b.alert{ background:var(--bad); color:#fff; } .hl-b.watch{ background:#f6c36b; color:#5a3400; } .hl-b.ok{ background:color-mix(in srgb, var(--good) 18%, transparent); color:var(--good); } .hl-b.na{ color:var(--muted); border:1px dashed var(--line); }
+tr.hl-cause td{ white-space:normal !important; padding-top:0 !important; } .hl-c{ display:inline-block; margin:0 6px 4px 0; font-size:12px; padding:3px 8px; border-radius:4px; background:color-mix(in srgb, var(--sunk) 85%, transparent); border-left:3px solid var(--muted); }
+.hl-c.cond{ border-left-color:var(--cdw); } .hl-c.evap{ border-left-color:var(--chw); } .hl-c.mech{ border-left-color:var(--bad); }
+svg.spark path{ fill:none; stroke:var(--chw); stroke-width:1.6; } svg.spark line.z{ stroke:var(--muted); stroke-dasharray:2 2; stroke-width:.8; }
+tr.st-alert svg.spark path{ stroke:var(--bad); } tr.st-watch svg.spark path{ stroke:#d08a12; }
+@media (max-width:1200px){ .ml-hgrid{ grid-template-columns:minmax(0,1fr); } }
+.hl-chip.fleet{ background:var(--surface); border-style:dashed; } table.hl-tb td.muted{ color:var(--muted); }
+.hl-dot{ display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; vertical-align:0; }
 </style>
 </head>
 <body data-role="user">
@@ -3461,7 +3481,7 @@ function mlDataset(target){
     if(!bad && !isNum(r[target])) bad='ค่าว่าง ('+target+')';
     if(!bad) for(const [k,[lo,hi]] of Object.entries(ML_LIMITS)) if(isNum(x[k]) && (x[k]<lo||x[k]>hi)){ bad=k.toUpperCase()+' นอกช่วง'; break; }
     if(bad){ why[bad]=(why[bad]||0)+1; continue; }
-    rows.push({ ...x, ch:r.ch, m:r.m, d:r.d, y:r[target], kwtr:r.kwtr });
+    rows.push({ ...x, ch:r.ch, m:r.m, d:r.d, y:r[target], kwtr:r.kwtr, capp:r.capp, eapp:r.eapp });
   }
   log.push(['ตัดเพิ่มสำหรับ ML (ค่าว่าง / นอกช่วงกายภาพ)', base.length-rows.length]); log.push(['ใช้ฝึกและทดสอบ', rows.length]);
   return { rows, log, why };
@@ -3545,7 +3565,9 @@ async function mlTrain(target, onProg){
   /* พลังงานทั้งช่วง (kW × ชม.ต่อบันทึก) */
   const H=S.settings.hours>0?S.settings.hours:2, days=new Set(rows.map(r=>r.d)).size, kwh=rows.reduce((s,r)=>s+r.y,0)*H;
   const spCount={}; for(const r of rows){ const k=Math.round(r.sp*2)/2; spCount[k]=(spCount[k]||0)+1; }
-  return { target, ds, rows, chs, months, testM, names, toX, M, scores, best, imp, nTr:tr.length, nTe:te.length, te, yte, kwh, days, spCount, trainedAt:new Date() };
+  onProg('สุขภาพเครื่อง'); await tick();
+  const health=mlHealth();
+  return { health, target, ds, rows, chs, months, testM, names, toX, M, scores, best, imp, nTr:tr.length, nTe:te.length, te, yte, kwh, days, spCount, trainedAt:new Date() };
 }
 /* What-if setpoint: บันทึกที่เดินจริงที่ setpoint โหมดหลัก → เปลี่ยนเป็นค่าใหม่ โหลด/อากาศเท่าเดิม */
 function mlWhatIf(R, sp){
@@ -3561,6 +3583,94 @@ function mlMatched(R, a, b){
   for(const r of R.rows){ const s=Math.round(r.sp); if(s!==a&&s!==b) continue; const k=key(r); if(!G.has(k)) G.set(k,{a:[],b:[]}); G.get(k)[s===a?'a':'b'].push(r.kwtr); }
   const d=[]; for(const g of G.values()) if(g.a.length&&g.b.length){ const x=mean(g.a), y=mean(g.b); d.push((x-y)/x*100); }
   return d.length ? { pct:mean(d), groups:d.length } : null;
+}
+
+
+/* ======================= Health Trend: ติดตามการเสื่อมของแต่ละเครื่อง =======================
+   1) Linear Regression เรียน "ไฟปกติ" (Chiller kW) จากช่วงเริ่มต้น ที่โหลด/อากาศ/CDR/setpoint ต่าง ๆ
+   2) ทุกบันทึก: ส่วนต่าง % = (kW จริง − kW ที่ควรเป็น) / kW ที่ควรเป็น
+   3) เทียบกับช่วงเริ่มต้นของเครื่องนั้นเอง (baseline = 0%) → รายเดือน → แนวโน้ม %/เดือน
+   4) Cond / Evap approach รายเดือน ช่วยบอกสาเหตุ */
+const HL = { minN:8, watch:3, alert:6, slopeWatch:0.5, slopeAlert:1.0 };
+const wMean=(v,w)=>{ let a=0,b=0; v.forEach((x,i)=>{ if(isNum(x)){ a+=x*w[i]; b+=w[i]; } }); return b?a/b:null; };
+const wSlope=(x,y,w)=>{ const k=y.map((v,i)=>isNum(v)?i:-1).filter(i=>i>=0); if(k.length<3) return null; const W=k.reduce((s,i)=>s+w[i],0), mx=k.reduce((s,i)=>s+w[i]*x[i],0)/W, my=k.reduce((s,i)=>s+w[i]*y[i],0)/W; let a=0,b=0; for(const i of k){ a+=w[i]*(x[i]-mx)*(y[i]-my); b+=w[i]*(x[i]-mx)**2; } return b>0?a/b:null; };
+function mlHealth(){
+  const ds=mlDataset('chkw'), rows=ds.rows, months=[...new Set(rows.map(r=>r.m))].sort();
+  if(months.length<4) return { err:`ต้องมีข้อมูลอย่างน้อย 4 เดือน (ตอนนี้ ${months.length})` };
+  const baseM=months.slice(0, Math.min(3, months.length-2)), chs=[...new Set(rows.map(r=>r.ch))].sort(sortCh);
+  const toX=r=>[...ML_FEATS.map(f=>r[f[0]]), ...chs.slice(1).map(c=>r.ch===c?1:0)], names=[...ML_FEATS.map(f=>f[0]), ...chs.slice(1)];
+  const br=rows.filter(r=>baseM.includes(r.m)), lr=lrFit(br.map(toX), br.map(r=>r.y), names);
+  if(!lr) return { err:'สร้างโมเดลช่วงเริ่มต้นไม่ได้' };
+  for(const r of rows){ const p=lrPred(lr,toX(r)); r.res=(r.y-p)/p*100; }
+  const H=S.settings.hours>0?S.settings.hours:2, days=new Set(rows.map(r=>r.d)).size, mIdx=Object.fromEntries(months.map((m,i)=>[m,i]));
+  const okA=(v,lo,hi)=>isNum(v)&&v>=lo&&v<=hi;
+  const units=chs.map(ch=>{
+    const a=rows.filter(r=>r.ch===ch), byM=months.map(m=>{ const s=a.filter(r=>r.m===m); return { m, n:s.length, res:s.length>=HL.minN?mean(s.map(r=>r.res)):null,
+      capp:s.length>=HL.minN?mean(s.map(r=>r.capp).filter(v=>okA(v,-2,20))):null, eapp:s.length>=HL.minN?mean(s.map(r=>r.eapp).filter(v=>okA(v,-2,15))):null, kwtr:s.length>=HL.minN?mean(s.map(r=>r.kwtr)):null }; });
+    const have=byM.filter(x=>isNum(x.res));
+    /* baseline ของเครื่อง: ช่วงเริ่มต้นรวม ถ้ามี ≥20 บันทึก ไม่งั้นใช้ 2 เดือนแรกที่มีข้อมูลของเครื่องนั้น */
+    let bw=byM.filter(x=>baseM.includes(x.m)&&isNum(x.res)); if(bw.reduce((s,x)=>s+x.n,0)<20) bw=have.slice(0,2);
+    const off=wMean(bw.map(x=>x.res), bw.map(x=>x.n)), cB=wMean(bw.map(x=>x.capp), bw.map(x=>x.n)), eB=wMean(bw.map(x=>x.eapp), bw.map(x=>x.n));
+    const rel=byM.map(x=>isNum(x.res)&&isNum(off)?x.res-off:null), w=byM.map(x=>x.n), xi=months.map((_,i)=>i);
+    const last=have.slice(-2), cSl=wSlope(xi, byM.map(x=>x.capp), w), eSl=wSlope(xi, byM.map(x=>x.eapp), w);
+    const cL=last.length?wMean(last.map(x=>x.capp), last.map(x=>x.n)):null, eL=last.length?wMean(last.map(x=>x.eapp), last.map(x=>x.n)):null;
+    const kwhY=a.reduce((s,r)=>s+r.y,0)*H/days*365;
+    return { ch, byM, rel, w, xi, last, have, n:a.length, months:have.length, cB, cL, eB, eL, cSl, eSl, kwhY, bw:bw.map(x=>x.m) };
+  });
+  /* แนวโน้มทั้ง plant (ค่ากลางของทุกเครื่องในเดือนนั้น) = ผลร่วม เช่น ฤดูกาล / ทั้งระบบ → ตัดออกเพื่อชี้เครื่องที่ผิดจากเพื่อน */
+  const fleet=months.map((m,i)=>{ const v=units.map(u=>u.rel[i]).filter(isNum).sort((x,y)=>x-y); return v.length>=4 ? (v.length%2?v[v.length>>1]:(v[v.length/2-1]+v[v.length/2])/2) : null; });
+  const fleetLatest=wMean(fleet.slice(-2), [1,1]), fleetSlope=wSlope(months.map((_,i)=>i), fleet, months.map(()=>1));
+  for(const u of units){
+    const { ch, byM, w, xi, last, have, cB, cL, eB, eL, cSl, eSl, kwhY } = u;
+    const relF=u.rel.map((v,i)=>isNum(v)&&isNum(fleet[i])?v-fleet[i]:null);
+    const li=last.map(x=>months.indexOf(x.m)), latest=li.length?wMean(li.map(i=>relF[i]), li.map(i=>w[i])):null, latestAbs=li.length?wMean(li.map(i=>u.rel[i]), li.map(i=>w[i])):null;
+    const slope=wSlope(xi, relF, w), excess=isNum(latest)&&latest>0?kwhY*latest/100:0;
+    const longOk=have.length>=5; let st='ok'; if(have.length<3) st='na'; else if(latest>=HL.alert || (longOk && slope>=HL.slopeAlert && latest>=HL.watch)) st='alert'; else if(latest>=HL.watch || (longOk && slope>=HL.slopeWatch && latest>=1.5)) st='watch';
+    const causes=[];
+    if(isNum(cL)&&isNum(cB)&&(cL-cB>=1.0 || (cSl||0)>=0.25)) causes.push({ k:'cond', t:`Cond approach ${fmt(cB,1)}→${fmt(cL,1)} °F — ท่อ condenser สกปรก/ตะกรัน → ล้างท่อ, ตรวจคุณภาพน้ำ CT` });
+    if(isNum(eL)&&isNum(eB)&&(eL-eB>=1.0 || (eSl||0)>=0.25)) causes.push({ k:'evap', t:`Evap approach ${fmt(eB,1)}→${fmt(eL,1)} °F — ท่อ evaporator สกปรก หรือสารทำความเย็นต่ำ → ตรวจ refrigerant charge` });
+    if(st!=='ok' && st!=='na' && !causes.length) causes.push({ k:'mech', t:'approach ปกติ แต่ใช้ไฟมากขึ้น — คอมเพรสเซอร์/มอเตอร์/guide vane → ตรวจ vibration, oil, กระแสมอเตอร์' });
+    Object.assign(u, { relF, latest, latestAbs, slope, excess: (st==='watch'||st==='alert') ? excess : 0, st, causes });
+  }
+  const ord={alert:0,watch:1,ok:2,na:3};
+  units.sort((a,b)=>ord[a.st]-ord[b.st] || (b.latest??-99)-(a.latest??-99));
+  return { units, months, baseM, days, fleet, fleetLatest, fleetSlope };
+}
+const HL_TXT={ alert:['แย่ลงชัดเจน','alert'], watch:['เฝ้าระวัง','watch'], ok:['ปกติ','ok'], na:['ข้อมูลน้อย','na'] };
+function spark(vals){ const v=vals.map(x=>isNum(x)?x:null), ok=v.filter(isNum); if(ok.length<2) return '';
+  const lo=Math.min(0,...ok)-1, hi=Math.max(0,...ok)+1, W=110, Hh=28, X=i=>i/(v.length-1)*W, Y=y=>Hh-(y-lo)/(hi-lo)*Hh;
+  let d='', pen=false; v.forEach((y,i)=>{ if(!isNum(y)){ pen=false; return; } d+=(pen?'L':'M')+X(i).toFixed(1)+' '+Y(y).toFixed(1)+' '; pen=true; });
+  return `<svg class="spark" viewBox="0 0 ${W} ${Hh}" width="${W}" height="${Hh}" aria-hidden="true"><line x1="0" x2="${W}" y1="${Y(0).toFixed(1)}" y2="${Y(0).toFixed(1)}" class="z"/><path d="${d}"/></svg>`; }
+function mlHealthHTML(R){
+  const h=R.health; if(!h||h.err) return `<section class="panel"><h3>สุขภาพเครื่อง (Health Trend)</h3><p class="na">${esc(h?h.err:'—')}</p></section>`;
+  const cnt=k=>h.units.filter(u=>u.st===k).length, tot=h.units.reduce((s,u)=>s+u.excess,0);
+  const sg=v=>!isNum(v)?'–':(v>=0?'+':'−')+fmt(Math.abs(v),1);
+  return `<section class="panel ml-health"><div class="ph"><h3>สุขภาพเครื่อง (Health Trend) · ใช้ไฟมากกว่าตอนเริ่มต้นเท่าไร ที่สภาพเดียวกัน</h3>
+    <div class="hl-chips"><span class="hl-chip alert">แย่ลงชัดเจน ${cnt('alert')}</span><span class="hl-chip watch">เฝ้าระวัง ${cnt('watch')}</span><span class="hl-chip ok">ปกติ ${cnt('ok')}</span><span class="hl-chip fleet" title="ค่ากลางของทุกเครื่อง เทียบช่วงเริ่มต้น — ผลร่วมทั้งระบบ เช่น ฤดูกาล">ทั้ง plant ${isNum(h.fleetLatest)?(h.fleetLatest>=0?'+':'−')+fmt(Math.abs(h.fleetLatest),1)+'%':'–'}</span>${tot>0?`<span class="hl-chip cost">ไฟเกินรวม ≈ ${fmtInt(tot)} kWh/ปี · ${fmtInt(tot*ML.rate)} ฿</span>`:''}</div></div>
+    <div class="ml-hgrid"><div class="chartbox" style="height:300px"><canvas id="mlHealth"></canvas></div>
+    <div class="tscroll"><table class="data hl-tb"><thead><tr><th>เครื่อง</th><th>สถานะ</th><th title="2 เดือนล่าสุด เทียบช่วงเริ่มต้นของเครื่องนั้น หักแนวโน้มทั้ง plant แล้ว — ใช้ตัดสินสถานะ">เทียบเครื่องอื่น</th><th title="แนวโน้มเทียบเครื่องอื่น">แนวโน้ม /เดือน</th><th title="เทียบช่วงเริ่มต้นของตัวเอง ยังไม่หักผลทั้ง plant">เทียบตัวเอง</th><th>รายเดือน</th><th>Cond app °F</th><th>Evap app °F</th><th>ไฟเกิน/ปี</th></tr></thead><tbody>
+    ${(()=>{ const hot=['#d62828','#f77f00','#7b2cbf','#0077b6','#2a9d8f','#c9184a'], fl=h.units.filter(u=>u.st==='alert'||u.st==='watch'); h.units.forEach(u=>{ const i=fl.indexOf(u); u.dot=i>=0?hot[i%hot.length]:null; }); return ''; })()}${h.units.map(u=>`<tr class="st-${u.st}" data-hl="${esc(u.ch)}"><th scope="row">${u.dot?`<i class="hl-dot" style="background:${u.dot}"></i>`:''}${esc(u.ch)}</th><td><span class="hl-b ${HL_TXT[u.st][1]}">${HL_TXT[u.st][0]}</span></td>
+      <td class="num ${u.latest>=HL.alert?'bad':u.latest>=HL.watch?'warn':''}">${sg(u.latest)}%</td><td class="num ${u.slope>=HL.slopeAlert?'bad':u.slope>=HL.slopeWatch?'warn':''}">${sg(u.slope)}%</td><td class="num muted">${sg(u.latestAbs)}%</td><td>${spark(u.relF)}</td>
+      <td class="num">${isNum(u.cB)?fmt(u.cB,1):'–'} → <b class="${isNum(u.cL)&&isNum(u.cB)&&u.cL-u.cB>=1?'bad':''}">${isNum(u.cL)?fmt(u.cL,1):'–'}</b></td><td class="num">${isNum(u.eB)?fmt(u.eB,1):'–'} → <b class="${isNum(u.eL)&&isNum(u.eB)&&u.eL-u.eB>=1?'bad':''}">${isNum(u.eL)?fmt(u.eL,1):'–'}</b></td>
+      <td class="num">${u.excess>0?`${fmtInt(u.excess)} kWh<br><small>${fmtInt(u.excess*ML.rate)} ฿</small>`:'–'}</td></tr>
+      ${u.causes.length&&u.st!=='ok'?`<tr class="hl-cause st-${u.st}"><td></td><td colspan="8">${u.causes.map(c=>`<span class="hl-c ${c.k}">${esc(c.t)}</span>`).join('')}</td></tr>`:''}`).join('')}
+    </tbody></table></div></div>
+    <p class="legend-note"><b>กราฟ:</b> เส้นสีเข้ม = เครื่องที่ต้องเฝ้าระวัง (สีตรงกับจุดหน้าชื่อในตาราง) · เส้นเทาบาง = เครื่องปกติ · คลิกแถวในตารางเพื่อเน้นเส้น · <b>แนวโน้มทั้ง plant</b> (เส้นประดำ) = ค่ากลางของทุกเครื่อง ถ้าทุกเครื่องขึ้นพร้อมกัน มักเป็นผลฤดูกาลหรือทั้งระบบ (เช่น CT, คุณภาพน้ำ, เซนเซอร์) ไม่ใช่เครื่องใดเครื่องหนึ่งเสื่อม จึงหักออกก่อนตัดสินสถานะรายเครื่อง ·
+    <b>วิธีคิด:</b> Linear Regression เรียน "ไฟปกติ" ของแต่ละเครื่องจากช่วงเริ่มต้น (${h.baseM.map(m=>esc(mLabel(m))).join(', ')}) ที่โหลด TR, Setpoint, CDR, Twb, OAT, RH และเวลาต่าง ๆ แล้วเทียบไฟจริงทุกเดือนกับไฟที่ควรเป็นที่สภาพเดียวกัน — ตัดผลของโหลดและอากาศออกแล้ว · ช่วงเริ่มต้นของแต่ละเครื่อง = 0% ·
+    <b>เฝ้าระวัง</b> ≥ +${HL.watch}% หรือแย่ลง ≥ ${HL.slopeWatch}%/เดือน · <b>แย่ลงชัดเจน</b> ≥ +${HL.alert}% · เดือนที่มีน้อยกว่า ${HL.minN} บันทึกไม่นำมาคิด · ไฟเกิน/ปี = kWh/ปีของเครื่อง × ส่วนต่างเทียบเครื่องอื่น (คิดเฉพาะเครื่องที่เฝ้าระวัง/แย่ลง) · แนวโน้มรายเดือนใช้ตัดสินเมื่อมีข้อมูล ≥ 5 เดือน</p>
+    ${h.months.length<12?`<p class="ml-warn">ข้อมูล ${h.months.length} เดือน — ใช้ดูแนวโน้มเบื้องต้นได้ แต่ควรมี 12–18 เดือนก่อนตัดสินใจซ่อมใหญ่/เปลี่ยนเครื่อง เพื่อแยกผลฤดูกาลออกจากการเสื่อมจริง</p>`:''}</section>`;
+}
+function mlHealthChart(R){
+  const h=R.health; if(!h||h.err) return; const p=PAL(), hot=['#d62828','#f77f00','#7b2cbf','#0077b6','#2a9d8f','#c9184a'];
+  const flag=h.units.filter(u=>u.st==='alert'||u.st==='watch'), colOf=u=>{ const i=flag.indexOf(u); return i>=0?hot[i%hot.length]:'rgba(128,140,150,.45)'; };
+  mlChart('mlHealth',{ type:'line', data:{ labels:h.months.map(m=>mLabel(m)), datasets:[{ label:'ทั้ง plant (ค่ากลาง เทียบตัวเอง)', data:h.fleet, spanGaps:true, borderColor:p.ink, borderDash:[6,4], borderWidth:2, pointRadius:0, tension:.25 }, ...h.units.filter(u=>u.st!=='na').map((u,i)=>({ label:u.ch, data:u.relF, spanGaps:true,
+      borderColor:flag.includes(u)?colOf(u):'rgba(128,140,150,.45)', backgroundColor:flag.includes(u)?colOf(u):'rgba(128,140,150,.45)',
+      borderWidth:flag.includes(u)?2.8:1, pointRadius:flag.includes(u)?3:0, tension:.25, order:flag.includes(u)?0:2 }))] },
+    options:{ maintainAspectRatio:false, interaction:{ mode:'nearest', intersect:false }, plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ size:11 } } },
+      tooltip:{ callbacks:{ label:it=>`${it.dataset.label}: ${it.parsed.y>=0?'+':''}${it.parsed.y.toFixed(1)}%` } } },
+      scales:{ y:{ title:{ display:true, text:'% ไฟมากกว่าช่วงเริ่มต้น (เทียบเครื่องอื่น)' }, grid:{ color:c=>c.tick.value===0?p.ink:p.line } } } } });
+  $$('[data-hl]').forEach(tr=>tr.onclick=()=>{ const ch=ML.charts.find(c=>c.canvas.id==='mlHealth'); if(!ch) return; const nm=tr.dataset.hl;
+    ch.data.datasets.forEach((d,i)=>{ if(i) d.borderWidth = d.label===nm ? 4 : 1; }); ch.update(); $$('[data-hl]').forEach(t=>t.classList.toggle('sel', t===tr)); });
 }
 
 /* ---------- หน้า Chiller_ML ---------- */
@@ -3597,6 +3707,7 @@ function mlRender(){
       <p class="legend-note">ค่า = ความคลาดเคลื่อนที่เพิ่มขึ้น (kW) เมื่อสุ่มสลับค่าตัวแปรนั้นในชุดทดสอบ (permutation importance) · ยิ่งมากยิ่งสำคัญ · ≈0 = โมเดลแทบไม่ใช้ตัวแปรนั้น</p></div>
     <div class="panel"><h3>ค่าจริงเทียบค่าทำนาย · เดือนทดสอบ</h3><div class="chartbox"><canvas id="mlSc"></canvas></div></div>
   </section>
+  ${mlHealthHTML(R)}
   <section class="panel"><h3>ค่าไฟรายวัน · จริง vs ทำนาย (เดือนทดสอบ)</h3><div class="chartbox" style="height:260px"><canvas id="mlDay"></canvas></div></section>
   <section class="ml-grid">
     <div class="panel ml-sp"><h3 class="ml-sph">ปรับ Setpoint น้ำเย็น ประหยัดไฟได้เท่าไร <span class="ml-spin-box"><input type="number" id="mlSpN" min="38" max="50" step="0.1" value="${ML.sp.toFixed(1)}" aria-label="Setpoint ใหม่ (°F) ทศนิยม 1 ตำแหน่ง"><small>°F</small></span></h3>
@@ -3635,6 +3746,7 @@ function mlRender(){
     options:{ maintainAspectRatio:false, plugins:{ legend:{position:'bottom'} }, scales:{ x:{ title:{display:true,text:'ทำนาย (kW)'} }, y:{ title:{display:true,text:'จริง (kW)'} } } } });
   const days=[...new Set(R.te.map(r=>r.d))].sort(), H=S.settings.hours>0?S.settings.hours:2;
   const sumBy=(arr)=>days.map(d=>R.te.reduce((s,r,i)=>s+(r.d===d?arr[i]:0),0)*H);
+  mlHealthChart(R);
   mlChart('mlDay',{ type:'line', data:{ labels:days.map(d=>mLabel(d)), datasets:[
       { label:'จริง (kWh)', data:sumBy(yte), borderColor:p.ink, backgroundColor:p.ink, borderWidth:2, pointRadius:0, tension:.2 },
       ...ML_MODELS.map((k,i)=>({ label:k, data:sumBy(sc[k].p), borderColor:[p.chw,p.good,p.cdw][i], borderWidth:k===best?2:1.2, borderDash:k===best?[]:[4,3], pointRadius:0, tension:.2 })) ] },
